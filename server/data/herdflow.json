@@ -1,0 +1,182 @@
+{
+  "cattle": [
+    {
+      "id": 6,
+      "createdAt": "2026-06-14T12:00:50.310Z",
+      "tag": "12",
+      "breed": "Brahman",
+      "colorId": "#2563eb",
+      "gender": "Male",
+      "birthDate": "2026-06-14",
+      "status": "Active",
+      "weight": 25,
+      "campId": 1,
+      "note": ""
+    },
+    {
+      "id": 5,
+      "createdAt": "2026-06-14T11:33:09.534Z",
+      "tag": "13",
+      "breed": "Semmintaller",
+      "colorId": "#16a34a",
+      "gender": "Male",
+      "birthDate": "20008654",
+      "status": "Active",
+      "weight": 110,
+      "campId": 1,
+      "note": ""
+    },
+    {
+      "id": 4,
+      "createdAt": "2026-06-14T10:24:04.654Z",
+      "tag": "1",
+      "breed": "Brahman",
+      "colorId": "#2563eb",
+      "gender": "Male",
+      "birthDate": "3467889",
+      "status": "Active",
+      "weight": 5,
+      "campId": null,
+      "note": ""
+    },
+    {
+      "id": 1,
+      "tag": "A001",
+      "breed": "Angus",
+      "colorId": "#2563eb",
+      "gender": "Female",
+      "birthDate": "2023-03-15",
+      "status": "Active",
+      "weight": 450,
+      "campId": null,
+      "note": "Healthy cow, good milk production",
+      "createdAt": "2026-06-14T09:11:19.725Z"
+    },
+    {
+      "id": 2,
+      "tag": "B002",
+      "breed": "Hereford",
+      "colorId": "#16a34a",
+      "gender": "Male",
+      "birthDate": "2022-08-20",
+      "status": "Active",
+      "weight": 600,
+      "campId": null,
+      "note": "Strong bull for breeding",
+      "createdAt": "2026-06-14T09:11:19.725Z"
+    },
+    {
+      "id": 3,
+      "tag": "C003",
+      "breed": "Angus",
+      "colorId": "#c2410c",
+      "gender": "Female",
+      "birthDate": "2024-01-10",
+      "status": "Active",
+      "weight": 280,
+      "campId": null,
+      "note": "Young calf, watch growth",
+      "createdAt": "2026-06-14T09:11:19.725Z"
+    }
+  ],
+  "camps": [
+    {
+      "id": 6,
+      "createdAt": "2026-06-14T12:03:29.423Z",
+      "name": "Vlakfontein",
+      "colorId": "#7c3aed",
+      "description": ""
+    },
+    {
+      "id": 5,
+      "createdAt": "2026-06-14T11:33:50.655Z",
+      "name": "Welgelegen 2",
+      "colorId": "#16a34a",
+      "description": ""
+    },
+    {
+      "id": 4,
+      "createdAt": "2026-06-14T11:05:52.660Z",
+      "name": "Welgelegen",
+      "colorId": "#2563eb",
+      "description": ""
+    },
+    {
+      "id": 3,
+      "createdAt": "2026-06-14T10:24:37.181Z",
+      "name": "Brink trop",
+      "colorId": "1",
+      "description": "Welgelegen kamp"
+    }
+  ],
+  "vaccines": [
+    {
+      "id": 4,
+      "createdAt": "2026-06-14T11:12:39.688Z",
+      "cattleId": 598826655,
+      "vaccineName": "Ygghu",
+      "scheduledDate": "Yhhg",
+      "givenDate": "Gggh",
+      "note": ""
+    },
+    {
+      "id": 1,
+      "cattleId": 1,
+      "vaccineName": "BVD",
+      "scheduledDate": "2026-05-01",
+      "givenDate": null,
+      "note": "Annual booster due",
+      "createdAt": "2026-06-14T09:11:19.725Z"
+    },
+    {
+      "id": 2,
+      "cattleId": 2,
+      "vaccineName": "IBR",
+      "scheduledDate": "2026-04-15",
+      "givenDate": "2026-04-10",
+      "note": "Completed successfully",
+      "createdAt": "2026-06-14T09:11:19.725Z"
+    },
+    {
+      "id": 3,
+      "cattleId": 3,
+      "vaccineName": "Clostridial",
+      "scheduledDate": "2026-06-01",
+      "givenDate": null,
+      "note": "First vaccination for calf",
+      "createdAt": "2026-06-14T09:11:19.725Z"
+    }
+  ],
+  "counts": [
+    {
+      "id": 3,
+      "createdAt": "2026-06-14T12:03:57.133Z",
+      "campId": 3,
+      "countDate": "2026/06/14",
+      "bulls": 2,
+      "cows": 55,
+      "calves": 2,
+      "note": ""
+    },
+    {
+      "id": 1,
+      "campId": 1,
+      "countDate": "2026-04-01",
+      "bulls": 5,
+      "cows": 12,
+      "calves": 8,
+      "note": "Spring count - good numbers",
+      "createdAt": "2026-06-14T09:11:19.725Z"
+    },
+    {
+      "id": 2,
+      "campId": 2,
+      "countDate": "2026-04-01",
+      "bulls": 0,
+      "cows": 3,
+      "calves": 6,
+      "note": "Barn area - calves doing well",
+      "createdAt": "2026-06-14T09:11:19.725Z"
+    }
+  ]
+}

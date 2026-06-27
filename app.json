@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "HerdFlow",
+    "slug": "herdflow",
+    "version": "1.0.0",
+    "platforms": ["ios", "android", "web"],
+    "android": {
+      "package": "com.hannesgeyer101.herdflow",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9adc77e5-3ea3-4131-a3a6-b4c4091e3e4b"
+      }
+    }
+  }
+}

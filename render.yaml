@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: herdflow
+    env: node
+    plan: free
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: STATIC_DIR
+        value: client/dist
+      - key: DATABASE_URL
+        value: ""
+      - key: DATABASE_SSL
+        value: "true"

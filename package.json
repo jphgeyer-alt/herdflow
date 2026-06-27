@@ -1,0 +1,51 @@
+{
+  "name": "herdflow",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Professional cattle record keeping application with cattle profiles, health, breeding and tracking.",
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "start": "tsx server/index.ts",
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "vite --config vite.config.ts",
+    "dev:server": "tsx watch --clear-screen=false server/index.ts",
+    "build": "npm run build:client",
+    "build:client": "vite build --config vite.config.ts",
+    "preview": "vite preview --config vite.config.ts",
+    "expo:install": "cd expo && npm install",
+    "expo:start": "cd expo && npm run start",
+    "expo:android": "cd expo && npm run android",
+    "expo:web": "cd expo && npm run web",
+    "eas:install": "npm install -g eas-cli",
+    "eas:login": "eas login",
+    "eas:build:preview": "cd expo && eas build --platform android --profile preview",
+    "eas:build:production": "cd expo && eas build --platform android --profile production",
+    "apk:download": "echo 'Visit https://expo.io/builds to download your APK'",
+    "eas-build-pre-install": "npm config set legacy-peer-deps true"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.4",
+    "pg": "^8.11.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.14",
+    "@types/express": "^4.17.20",
+    "@types/node": "^20.14.2",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^8.2.2",
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.5.4",
+    "vite": "^8.0.9"
+  }
+}
