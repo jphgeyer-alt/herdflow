@@ -1,7 +1,7 @@
 services:
   - type: web
     name: herdflow
-    env: node
+    runtime: node
     plan: free
     buildCommand: npm install --legacy-peer-deps && npm run build
     startCommand: npm start
