@@ -62,7 +62,7 @@ interface CountLog {
   createdAt: string;
 }
 
-const API_BASE = 'http://192.168.0.107:4174'; // use your computer's local network IP for phone access
+const API_BASE = 'https://herdflow-h619.onrender.com'; // production Render backend for phone access anywhere
 const genders: Gender[] = ['Female', 'Male', 'Other'];
 const statuses: Status[] = ['Active', 'Sold', 'Quarantined', 'Veterinary'];
 const colors = [
