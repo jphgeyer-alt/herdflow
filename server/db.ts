@@ -12,6 +12,20 @@ interface DatabaseState {
   counts: CountLog[];
 }
 
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function hasDatabaseArrays(value: unknown): value is DatabaseState {
+  if (!isObject(value)) return false;
+  return (
+    Array.isArray(value.cattle) &&
+    Array.isArray(value.camps) &&
+    Array.isArray(value.vaccines) &&
+    Array.isArray(value.counts)
+  );
+}
+
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
@@ -256,4 +270,28 @@ export function getSummary() {
   const quarantined = state.cattle.filter((item) => item.status === 'Quarantined').length;
   const veterinary = state.cattle.filter((item) => item.status === 'Veterinary').length;
   return { total, active, sold, quarantined, veterinary };
+}
+
+export function getDatabaseSnapshot(): DatabaseState {
+  return {
+    cattle: [...state.cattle],
+    camps: [...state.camps],
+    vaccines: [...state.vaccines],
+    counts: [...state.counts]
+  };
+}
+
+export function importDatabaseSnapshot(payload: unknown): DatabaseState {
+  const source = isObject(payload) && isObject(payload.data) ? payload.data : payload;
+  if (!hasDatabaseArrays(source)) {
+    throw new Error('Invalid backup format. Expected cattle, camps, vaccines, and counts arrays.');
+  }
+
+  state.cattle = [...source.cattle];
+  state.camps = [...source.camps];
+  state.vaccines = [...source.vaccines];
+  state.counts = [...source.counts];
+  saveState();
+
+  return getDatabaseSnapshot();
 }

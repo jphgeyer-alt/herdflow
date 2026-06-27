@@ -17,7 +17,9 @@ import {
   getAllCountLogs,
   getAllVaccineRecords,
   getCattleById,
+  getDatabaseSnapshot,
   getSummary,
+  importDatabaseSnapshot,
   updateCamp,
   updateCattle,
   updateVaccineRecord
@@ -150,6 +152,26 @@ app.delete('/api/counts/:id', (req, res) => {
 
 app.get('/api/summary', (_req, res) => {
   res.json(getSummary());
+});
+
+app.get('/api/backup/export', (_req, res) => {
+  const backup = {
+    version: '1.0.0',
+    exportedAt: new Date().toISOString(),
+    data: getDatabaseSnapshot()
+  };
+  const fileStamp = backup.exportedAt.replace(/[:.]/g, '-');
+  res.setHeader('Content-Disposition', `attachment; filename="herdflow-backup-${fileStamp}.json"`);
+  res.json(backup);
+});
+
+app.post('/api/backup/import', (req, res) => {
+  try {
+    importDatabaseSnapshot(req.body);
+    res.json({ status: 'ok', summary: getSummary() });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Invalid backup payload.' });
+  }
 });
 
 app.get('/health', (_req, res) => {

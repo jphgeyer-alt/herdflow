@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 type Gender = 'Female' | 'Male' | 'Other';
 type Status = 'Active' | 'Sold' | 'Quarantined' | 'Veterinary';
@@ -86,11 +86,6 @@ const initialCountForm = {
   note: ''
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
-function apiUrl(path: string) {
-  return `${API_BASE}${path}`;
-}
-
 function App() {
   const [section, setSection] = useState<ViewSection>('dashboard');
   const [cattle, setCattle] = useState<CattleRecord[]>([]);
@@ -101,8 +96,6 @@ function App() {
   const [campForm, setCampForm] = useState(initialCampForm);
   const [vaccineForm, setVaccineForm] = useState(initialVaccineForm);
   const [countForm, setCountForm] = useState(initialCountForm);
-  const [viewingCount, setViewingCount] = useState<CountLog | null>(null);
-  const nativeDateRef = useRef<HTMLInputElement | null>(null);
   const [editingCattleId, setEditingCattleId] = useState<number | null>(null);
   const [editingCampId, setEditingCampId] = useState<number | null>(null);
   const [editingVaccineId, setEditingVaccineId] = useState<number | null>(null);
@@ -110,6 +103,7 @@ function App() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [syncMessage, setSyncMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const backupInputRef = useRef<HTMLInputElement | null>(null);
 
   const summary = useMemo(() => {
     const total = cattle.length;
@@ -176,10 +170,10 @@ function App() {
 
     try {
       const [cattleData, campsData, vaccinesData, countsData] = await Promise.all([
-        fetch(apiUrl('/api/cattle')).then((res) => res.json()),
-        fetch(apiUrl('/api/camps')).then((res) => res.json()),
-        fetch(apiUrl('/api/vaccines')).then((res) => res.json()),
-        fetch(apiUrl('/api/counts')).then((res) => res.json())
+        fetch('/api/cattle').then((res) => res.json()),
+        fetch('/api/camps').then((res) => res.json()),
+        fetch('/api/vaccines').then((res) => res.json()),
+        fetch('/api/counts').then((res) => res.json())
       ]);
 
       setCattle(cattleData);
@@ -242,19 +236,6 @@ function App() {
     setCountForm((current) => ({ ...current, [key]: value }));
   }
 
-  function openNativeDatePicker() {
-    // Try to invoke the platform's native picker when available
-    const picker = nativeDateRef.current as any;
-    if (picker && typeof picker.showPicker === 'function') {
-      picker.showPicker();
-      return;
-    }
-
-    // Fallback to a simple prompt for unsupported browsers
-    const val = window.prompt('Enter date (YYYY-MM-DD)', countForm.countDate || '');
-    if (val) handleCountField('countDate', val);
-  }
-
   function resetCattleForm() {
     setCattleForm(initialCattleForm);
     setEditingCattleId(null);
@@ -276,6 +257,61 @@ function App() {
   function resetCountForm() {
     setCountForm(initialCountForm);
     setError(null);
+  }
+
+  async function exportBackup() {
+    try {
+      const response = await fetch('/api/backup/export');
+      if (!response.ok) {
+        throw new Error('Could not export backup.');
+      }
+
+      const backup = await response.json();
+      const fileName = `herdflow-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      setSyncMessage('Backup exported successfully.');
+    } catch {
+      setSyncMessage('Backup export failed.');
+    }
+  }
+
+  async function importBackupFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const payload = JSON.parse(text);
+      const response = await fetch('/api/backup/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({ error: 'Invalid backup file.' }));
+        throw new Error(body.error || 'Invalid backup file.');
+      }
+
+      await fetchRemoteData();
+      setSyncMessage('Backup imported successfully.');
+    } catch {
+      setSyncMessage('Backup import failed. Check that this file is a HerdFlow backup.');
+    } finally {
+      event.target.value = '';
+    }
+  }
+
+  function openBackupPicker() {
+    backupInputRef.current?.click();
   }
 
   async function saveCattle(event: React.FormEvent) {
@@ -303,7 +339,7 @@ function App() {
 
     if (!isOffline) {
       try {
-        const url = editingCattleId ? apiUrl(`/api/cattle/${editingCattleId}`) : apiUrl('/api/cattle');
+        const url = editingCattleId ? `/api/cattle/${editingCattleId}` : '/api/cattle';
         const method = editingCattleId ? 'PUT' : 'POST';
         await fetch(url, {
           method,
@@ -342,7 +378,7 @@ function App() {
 
     if (!isOffline) {
       try {
-        await fetch(apiUrl(`/api/cattle/${record.id}`), { method: 'DELETE' });
+        await fetch(`/api/cattle/${record.id}`, { method: 'DELETE' });
         fetchRemoteData();
       } catch {
         setSyncMessage('Removed locally. Remote delete may be pending.');
@@ -369,7 +405,7 @@ function App() {
     resetCampForm();
 
     if (!isOffline) {
-      const url = editingCampId ? apiUrl(`/api/camps/${editingCampId}`) : apiUrl('/api/camps');
+      const url = editingCampId ? `/api/camps/${editingCampId}` : '/api/camps';
       const method = editingCampId ? 'PUT' : 'POST';
       try {
         await fetch(url, {
@@ -403,7 +439,7 @@ function App() {
 
     if (!isOffline) {
       try {
-        await fetch(apiUrl(`/api/camps/${camp.id}`), { method: 'DELETE' });
+        await fetch(`/api/camps/${camp.id}`, { method: 'DELETE' });
         fetchRemoteData();
       } catch {
         setSyncMessage('Camp removed locally. Remote delete may be pending.');
@@ -422,7 +458,8 @@ function App() {
     const localVaccine: VaccineRecord = {
       id: editingVaccineId || buildRecordId(),
       createdAt: new Date().toISOString(),
-      ...vaccineForm
+      ...vaccineForm,
+      cattleId: vaccineForm.cattleId
     };
     const updated = editingVaccineId ? vaccines.map((item) => (item.id === editingVaccineId ? localVaccine : item)) : [localVaccine, ...vaccines];
     setVaccines(updated);
@@ -430,7 +467,7 @@ function App() {
     resetVaccineForm();
 
     if (!isOffline) {
-      const url = editingVaccineId ? apiUrl(`/api/vaccines/${editingVaccineId}`) : apiUrl('/api/vaccines');
+      const url = editingVaccineId ? `/api/vaccines/${editingVaccineId}` : '/api/vaccines';
       const method = editingVaccineId ? 'PUT' : 'POST';
       try {
         await fetch(url, {
@@ -471,7 +508,7 @@ function App() {
 
     if (!isOffline) {
       try {
-        await fetch(apiUrl(`/api/vaccines/${vaccine.id}`), { method: 'DELETE' });
+        await fetch(`/api/vaccines/${vaccine.id}`, { method: 'DELETE' });
         fetchRemoteData();
       } catch {
         setSyncMessage('Vaccine removed locally. Remote delete may be pending.');
@@ -490,7 +527,8 @@ function App() {
     const localCount: CountLog = {
       id: buildRecordId(),
       createdAt: new Date().toISOString(),
-      ...countForm
+      ...countForm,
+      campId: countForm.campId
     };
     const updated = [localCount, ...counts];
     setCounts(updated);
@@ -499,7 +537,7 @@ function App() {
 
     if (!isOffline) {
       try {
-        await fetch(apiUrl('/api/counts'), {
+        await fetch('/api/counts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(localCount)
@@ -519,7 +557,7 @@ function App() {
 
     if (!isOffline) {
       try {
-        await fetch(apiUrl(`/api/counts/${log.id}`), { method: 'DELETE' });
+        await fetch(`/api/counts/${log.id}`, { method: 'DELETE' });
         fetchRemoteData();
       } catch {
         setSyncMessage('Count removed locally. Remote delete may be pending.');
@@ -621,6 +659,24 @@ function App() {
                 </div>
               ))}
               {!vaccines.some((v) => !v.givenDate) && <p className="muted">No upcoming vaccines scheduled.</p>}
+            </div>
+
+            <div className="panel">
+              <h2>Data Backup</h2>
+              <p className="muted">Export your herd data to a JSON file or import a previous backup.</p>
+              <div className="backup-actions">
+                <button type="button" className="secondary" onClick={exportBackup}>Export Backup</button>
+                <button type="button" className="primary" onClick={openBackupPicker}>Import Backup</button>
+              </div>
+              <input
+                ref={backupInputRef}
+                className="backup-file-input"
+                type="file"
+                accept="application/json"
+                aria-label="Import backup file"
+                title="Import backup file"
+                onChange={importBackupFile}
+              />
             </div>
           </section>
         </>
@@ -897,12 +953,7 @@ function App() {
 
             <label>
               Count Date
-              <div className="date-row">
-                <input type="date" value={countForm.countDate} onChange={(event) => handleCountField('countDate', event.target.value)} />
-                <button type="button" className="secondary date-btn" onClick={openNativeDatePicker}>Pick</button>
-              </div>
-              {/* Hidden native picker used to call showPicker() when available */}
-              <input ref={nativeDateRef} type="date" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }} onChange={(e) => handleCountField('countDate', e.target.value)} />
+              <input type="date" value={countForm.countDate} onChange={(event) => handleCountField('countDate', event.target.value)} />
             </label>
 
             <div className="field-row">
@@ -950,8 +1001,7 @@ function App() {
                     <td>{log.cows}</td>
                     <td>{log.calves}</td>
                     <td className="actions-cell">
-                            <button type="button" className="secondary" onClick={() => setViewingCount(log)}>View</button>
-                            <button type="button" className="danger" onClick={() => removeCount(log)}>Delete</button>
+                      <button type="button" className="danger" onClick={() => removeCount(log)}>Delete</button>
                     </td>
                   </tr>
                 ))}
@@ -961,25 +1011,6 @@ function App() {
               </tbody>
             </table>
           </section>
-        </div>
-      )}
-      {viewingCount && (
-        <div className="modal-backdrop" onClick={() => setViewingCount(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Count Details</h3>
-              <button type="button" className="secondary" onClick={() => setViewingCount(null)}>Close</button>
-            </div>
-            <div className="modal-body">
-              <p><strong>Camp:</strong> {getCampName(viewingCount.campId)}</p>
-              <p><strong>Date:</strong> {formatDate(viewingCount.countDate)}</p>
-              <p><strong>Bulls:</strong> {viewingCount.bulls}</p>
-              <p><strong>Cows:</strong> {viewingCount.cows}</p>
-              <p><strong>Calves:</strong> {viewingCount.calves}</p>
-              <p><strong>Notes:</strong></p>
-              <p className="muted">{viewingCount.note || '—'}</p>
-            </div>
-          </div>
         </div>
       )}
     </div>

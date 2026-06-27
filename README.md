@@ -236,6 +236,23 @@ After deploy completes, verify:
 - Frontend build output is served from `dist`.
 - Every push to `main` triggers automatic deploys.
 
+### Custom Domain On Render
+
+1. Open your Render service dashboard.
+2. Go to **Settings** -> **Custom Domains**.
+3. Click **Add Custom Domain** and enter your domain (for example `app.yourdomain.com`).
+4. Render will show the DNS record to create at your domain registrar.
+
+Typical DNS options:
+
+- Subdomain (`app.yourdomain.com`): create a **CNAME** to your `onrender.com` service hostname.
+- Apex/root (`yourdomain.com`): use **ALIAS/ANAME** if your DNS provider supports it, or use provider-specific flattening.
+
+5. Wait for DNS propagation.
+6. Back in Render, verify the domain status becomes **Verified** and **TLS Active**.
+
+After verification, HerdFlow will be available at your custom domain and HTTPS will be managed by Render.
+
 ## License
 
 This project is open source and available under the MIT License.

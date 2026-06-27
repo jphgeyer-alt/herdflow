@@ -238,6 +238,17 @@ header p {
   display: block;
 }
 
+.backup-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.backup-file-input {
+  display: none;
+}
+
 .muted {
   color: #64748b;
   font-size: 0.95rem;
@@ -443,6 +454,10 @@ button:hover {
     gap: 8px;
   }
 
+  .backup-actions {
+    flex-direction: column;
+  }
+
   .item-row span {
     font-size: 0.9rem;
   }
@@ -644,63 +659,4 @@ button:hover {
   button:hover {
     transform: none;
   }
-}
-
-/* Prevent select dropdowns or wrapped action buttons from being clipped
-   by ancestor containers (fixes dropdowns or rows cutting off on some devices) */
-.table-panel,
-.record-form,
-.panel {
-  overflow: visible;
-}
-
-.table-panel th,
-.table-panel td {
-  vertical-align: middle;
-}
-
-.actions-cell button {
-  line-height: 1;
-}
-
-.date-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.date-btn {
-  padding: 10px 12px;
-  border-radius: 10px;
-}
-
-/* Simple modal for viewing count details */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(2,6,23,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 60;
-}
-
-.modal {
-  width: min(600px, 92%);
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 18px;
-  box-shadow: 0 20px 50px rgba(2,6,23,0.4);
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.modal-body p {
-  margin: 8px 0;
 }
