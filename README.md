@@ -84,26 +84,6 @@ The app works offline using browser localStorage:
 - Server: JSON file storage (`server/data/herdflow.json`)
 - Client: localStorage fallback for offline mode
 
-## Render Deployment
-
-This repo includes a Render config in [render.yaml](render.yaml).
-
-### Render setup
-
-1. Create a new Web Service on Render and connect this repository.
-2. Use these values:
-   - Build Command: `npm install --legacy-peer-deps && npm run build`
-   - Start Command: `npm start`
-3. Add environment variables:
-   - `NODE_ENV=production`
-   - `PORT=10000`
-   - `STATIC_DIR=client/dist`
-   - `DATABASE_URL=` (leave blank for JSON storage, or add a Postgres URL for cloud DB)
-   - `DATABASE_SSL=true`
-4. Deploy.
-
-The health endpoint is `/health`.
-
 ## API Endpoints
 
 - `GET/POST/PUT/DELETE /api/cattle` - Cattle records
@@ -199,6 +179,62 @@ You can build a native Android APK using Expo Application Services (EAS) and dow
 - Configuration options
 - Building from scratch
 - Advanced features (EAS Updates, code signing, etc.)
+
+## Deploy To Render (GitHub)
+
+This repository is configured for Render using `render.yaml`.
+
+### 1. Push Project To GitHub
+
+```bash
+git init
+git add .
+git commit -m "Prepare HerdFlow for Render"
+git branch -M main
+git remote add origin https://github.com/<your-username>/herdflow.git
+git push -u origin main
+```
+
+### 2. Create Render Web Service
+
+1. Sign in to Render.
+2. Click **New** -> **Blueprint**.
+3. Connect your GitHub account and select this repository.
+4. Render will detect `render.yaml` and create the `herdflow` web service.
+
+### 3. Verify Build Settings
+
+Render should use these values from `render.yaml`:
+
+- Build command: `npm install --legacy-peer-deps && npm run build`
+- Start command: `npm start`
+- Health check path: `/health`
+
+### 4. Environment Variables
+
+Configured in `render.yaml`:
+
+- `NODE_ENV=production`
+- `STATIC_DIR=dist`
+
+Optional database values (only if using PostgreSQL):
+
+- `DATABASE_URL`
+- `DATABASE_SSL=true`
+
+### 5. First Deploy Check
+
+After deploy completes, verify:
+
+- `https://<your-render-url>/health` returns `{ "status": "ok" }`
+- `https://<your-render-url>/` loads the web app
+- `https://<your-render-url>/api/summary` returns JSON summary data
+
+### Notes
+
+- The server uses `PORT` provided by Render automatically.
+- Frontend build output is served from `dist`.
+- Every push to `main` triggers automatic deploys.
 
 ## License
 

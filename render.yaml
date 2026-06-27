@@ -13,7 +13,7 @@ services:
       - key: PORT
         value: 10000
       - key: STATIC_DIR
-        value: client/dist
+        value: dist
       - key: DATABASE_URL
         value: ""
       - key: DATABASE_SSL
