@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 async function getSessions() {
   try {
     const sessions = await prisma.auctionSession.findMany({
-      orderBy: { startTime: "desc" },
+      orderBy: { scheduledAt: "desc" },
       include: {
         lots: {
           orderBy: { lotNumber: "asc" },
