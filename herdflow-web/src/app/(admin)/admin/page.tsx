@@ -1,0 +1,193 @@
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+
+type MonthSales = {
+  month: string;
+  totalCents: number;
+};
+
+type DashboardData = {
+  totalSalesCents: number;
+  pendingSellerRegistrations: number;
+  pendingLogisticsRegistrations: number;
+  recentOrders: Array<{
+    orderNumber: string;
+    totalCents: number;
+    status: string;
+    createdAt: Date;
+  }>;
+  monthlySales: MonthSales[];
+};
+
+function toCurrency(cents: number) {
+  return new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
+}
+
+function buildMonthKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function buildLastSixMonths() {
+  const months: string[] = [];
+  const cursor = new Date();
+  cursor.setDate(1);
+
+  for (let i = 5; i >= 0; i -= 1) {
+    const d = new Date(cursor.getFullYear(), cursor.getMonth() - i, 1);
+    months.push(buildMonthKey(d));
+  }
+
+  return months;
+}
+
+async function getDashboardData(): Promise<DashboardData> {
+  try {
+    const [pendingSellerRegistrations, pendingLogisticsRegistrations, paidOrders, recentOrders] = await Promise.all([
+      prisma.seller.count({ where: { status: "PENDING" } }),
+      prisma.logisticsPartner.count({ where: { status: "PENDING" } }),
+      prisma.order.findMany({
+        where: {
+          status: {
+            in: ["PAID", "PROCESSING", "SHIPPED", "COMPLETED"],
+          },
+        },
+        select: {
+          totalCents: true,
+          createdAt: true,
+        },
+      }),
+      prisma.order.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        select: {
+          orderNumber: true,
+          totalCents: true,
+          status: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+
+    const totalSalesCents = paidOrders.reduce((sum, order) => sum + order.totalCents, 0);
+    const monthBuckets = new Map<string, number>();
+
+    for (const key of buildLastSixMonths()) {
+      monthBuckets.set(key, 0);
+    }
+
+    for (const order of paidOrders) {
+      const key = buildMonthKey(order.createdAt);
+      if (!monthBuckets.has(key)) {
+        continue;
+      }
+      monthBuckets.set(key, (monthBuckets.get(key) || 0) + order.totalCents);
+    }
+
+    const monthlySales = Array.from(monthBuckets.entries()).map(([month, totalCents]) => ({ month, totalCents }));
+
+    return {
+      totalSalesCents,
+      pendingSellerRegistrations,
+      pendingLogisticsRegistrations,
+      recentOrders,
+      monthlySales,
+    };
+  } catch {
+    return {
+      totalSalesCents: 0,
+      pendingSellerRegistrations: 0,
+      pendingLogisticsRegistrations: 0,
+      recentOrders: [],
+      monthlySales: buildLastSixMonths().map((month) => ({ month, totalCents: 0 })),
+    };
+  }
+}
+
+export default async function AdminPage() {
+  const data = await getDashboardData();
+  const maxMonthly = Math.max(1, ...data.monthlySales.map((month) => month.totalCents));
+
+  return (
+    <main className="space-y-5 pb-10">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold text-brand-navy">Admin Dashboard</h1>
+          <p className="text-sm text-[#38537a]">Overview of sales, approvals, and current store order activity.</p>
+        </div>
+
+        <form action="/api/admin/logout" method="post">
+          <button className="inline-flex rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm font-semibold text-[#244367]" type="submit">
+            Log Out
+          </button>
+        </form>
+      </header>
+
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <article className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">Total Sales</p>
+          <p className="mt-2 text-2xl font-semibold text-brand-gold">{toCurrency(data.totalSalesCents)}</p>
+        </article>
+
+        <article className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">Pending Sellers</p>
+          <p className="mt-2 text-2xl font-semibold text-brand-navy">{data.pendingSellerRegistrations}</p>
+        </article>
+
+        <article className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">Pending Logistics</p>
+          <p className="mt-2 text-2xl font-semibold text-brand-navy">{data.pendingLogisticsRegistrations}</p>
+        </article>
+
+        <article className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">Recent Orders</p>
+          <p className="mt-2 text-2xl font-semibold text-brand-navy">{data.recentOrders.length}</p>
+        </article>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+        <article className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
+          <h2 className="text-lg font-semibold text-brand-navy">Sales by Month (Last 6 Months)</h2>
+          <div className="mt-4 grid gap-3">
+            {data.monthlySales.map((month) => {
+              const width = `${Math.max(4, Math.round((month.totalCents / maxMonthly) * 100))}%`;
+              return (
+                <div key={month.month} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs font-semibold text-[#5d7497]">
+                    <span>{month.month}</span>
+                    <span>{toCurrency(month.totalCents)}</span>
+                  </div>
+                  <div className="h-3 rounded-full bg-[#ebf1f9]">
+                    <div className="h-3 rounded-full bg-brand-navy" style={{ width }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </article>
+
+        <article className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
+          <h2 className="text-lg font-semibold text-brand-navy">Recent Orders</h2>
+
+          {data.recentOrders.length === 0 ? (
+            <p className="mt-3 text-sm text-[#5d7497]">No orders found yet.</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {data.recentOrders.map((order) => (
+                <li key={order.orderNumber} className="rounded-lg border border-[#e4ebf5] p-3 text-sm">
+                  <p className="font-semibold text-brand-navy">{order.orderNumber}</p>
+                  <p className="text-[#38537a]">{toCurrency(order.totalCents)}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">{order.status}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </article>
+      </section>
+    </main>
+  );
+}

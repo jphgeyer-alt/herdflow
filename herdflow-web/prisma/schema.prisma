@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String            @id @default(cuid())
+  email             String            @unique
+  fullName          String
+  phone             String?
+  passwordHash      String?
+  role              UserRole          @default(CUSTOMER)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  sellerProfile     Seller?
+  logisticsProfile  LogisticsPartner?
+  orders            Order[]
+}
+
+model Seller {
+  id                 String              @id @default(cuid())
+  userId             String              @unique
+  farmName           String
+  location           String
+  region             String
+  contactPhone       String
+  nationalIdNumber   String
+  idDocumentUrl      String
+  status             VerificationStatus  @default(PENDING)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  livestockListings  Listing[]
+  products           Product[]
+}
+
+model LogisticsPartner {
+  id                    String              @id @default(cuid())
+  userId                String              @unique
+  companyName           String
+  fleetSize             Int
+  routesCovered         String
+  vehicleDocumentsUrl   String
+  status                VerificationStatus  @default(PENDING)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id            String        @id @default(cuid())
+  name          String
+  slug          String        @unique
+  kind          CategoryKind  @default(BOTH)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  listings      Listing[]
+  products      Product[]
+}
+
+model Listing {
+  id            String         @id @default(cuid())
+  slug          String         @unique
+  title         String
+  description   String
+  priceCents    Int
+  region        String
+  breed         String
+  weightKg      Int?
+  ageMonths     Int?
+  photos        String[]
+  status        ListingStatus  @default(ACTIVE)
+  isFeatured    Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  sellerId      String
+  categoryId    String
+
+  seller        Seller         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category      Category       @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId, region])
+  @@index([status, isFeatured])
+}
+
+model Product {
+  id            String         @id @default(cuid())
+  slug          String         @unique
+  name          String
+  description   String
+  priceCents    Int
+  stockOnHand   Int            @default(0)
+  photos        String[]
+  region        String?
+  status        ProductStatus  @default(ACTIVE)
+  isFeatured    Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  sellerId      String?
+  categoryId    String
+
+  seller        Seller?        @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  category      Category       @relation(fields: [categoryId], references: [id])
+  orderItems    OrderItem[]
+
+  @@index([categoryId, status])
+}
+
+model Order {
+  id                String         @id @default(cuid())
+  orderNumber       String         @unique
+  userId            String?
+  guestEmail        String?
+  status            OrderStatus    @default(PENDING)
+  totalCents        Int
+  currency          String         @default("ZAR")
+  paymentMethod     String         @default("PayFast")
+  paymentReference  String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  user              User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items             OrderItem[]
+
+  @@index([status, createdAt])
+}
+
+model ContactInquiry {
+  id             String   @id @default(cuid())
+  inquiryNumber  String   @unique
+  fullName       String
+  email          String
+  phone          String?
+  subject        String
+  message        String
+  status         String   @default("NEW")
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id              String    @id @default(cuid())
+  orderId         String
+  productId       String
+  quantity        Int
+  unitPriceCents  Int
+  lineTotalCents  Int
+
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product   @relation(fields: [productId], references: [id])
+}
+
+model SiteConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CategoryKind {
+  LIVESTOCK
+  PRODUCT
+  BOTH
+}
+
+enum ListingStatus {
+  ACTIVE
+  DRAFT
+  SOLD
+  ARCHIVED
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  OUT_OF_STOCK
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  COMPLETED
+  CANCELLED
+  FAILED
+}
