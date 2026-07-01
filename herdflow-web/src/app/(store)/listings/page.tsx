@@ -1,6 +1,9 @@
 import Link from "next/link";
-import { listingData } from "@/lib/marketplace-data";
+import { Search } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 import { HerdflowTrusted } from "@/components/ui/HerdflowTrusted";
+
+export const dynamic = "force-dynamic";
 
 type ListingsPageProps = {
   searchParams: Promise<{
@@ -10,147 +13,225 @@ type ListingsPageProps = {
   }>;
 };
 
-const categoryOptions = [
-  "Cattle",
-  "Sheep",
-  "Goats",
-  "Pigs",
-  "Farm Products",
-  "Equipment",
-] as const;
-
 const regionOptions = ["All Regions", "North West", "Free State", "Limpopo", "Gauteng", "Mpumalanga", "Northern Cape"];
-
-function normalize(value: string) {
-  return value.trim().toLowerCase();
-}
 
 export default async function ListingsPage({ searchParams }: ListingsPageProps) {
   const params = await searchParams;
-  const q = (params.q || "").trim();
+  const q = (params.q || "").trim().toLowerCase();
   const selectedCategory = params.category || "All Categories";
   const selectedRegion = params.region || "All Regions";
 
-  const filtered = listingData.filter((item) => {
-    const matchesSearch = !q
-      ? true
-      : [item.title, item.seller, item.category, item.region, item.breed || ""].some((entry) =>
-          normalize(entry).includes(normalize(q)),
-        );
-
-    const matchesCategory = selectedCategory === "All Categories" ? true : item.category === selectedCategory;
-    const matchesRegion = selectedRegion === "All Regions" ? true : item.region === selectedRegion;
-
-    return matchesSearch && matchesCategory && matchesRegion;
+  // Fetch categories from database
+  const categories = await prisma.category.findMany({
+    where: { kind: { in: ["LIVESTOCK", "BOTH"] } },
+    orderBy: { name: "asc" },
   });
 
+  // Build Prisma where clause
+  const where: any = {
+    status: "ACTIVE",
+  };
+
+  if (selectedCategory && selectedCategory !== "All Categories") {
+    const category = categories.find((c) => c.name === selectedCategory);
+    if (category) {
+      where.categoryId = category.id;
+    }
+  }
+
+  if (selectedRegion && selectedRegion !== "All Regions") {
+    where.region = selectedRegion;
+  }
+
+  // Fetch listings
+  let listings = await prisma.listing.findMany({
+    where,
+    include: {
+      seller: { include: { user: true } },
+      category: true,
+    },
+    orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+  });
+
+  // Client-side search filter (for title, breed, seller name)
+  if (q) {
+    listings = listings.filter((listing) => {
+      const searchableText = [
+        listing.title,
+        listing.breed,
+        listing.seller.farmName,
+        listing.seller.user.fullName,
+        listing.category.name,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return searchableText.includes(q);
+    });
+  }
+
   return (
-    <main className="space-y-5 pb-10">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold text-brand-navy">Livestock and Product Listings</h1>
-        <p className="text-sm text-[#38537a] sm:text-base">
-          Filter by category and region, or search by listing name, seller, or breed.
-        </p>
-      </header>
+    <div className="min-h-screen bg-[#f5f4ef] pb-12">
+      {/* Hero Header */}
+      <div className="bg-[#1B3A6B] text-white py-12 px-4 md:px-8">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="text-4xl font-black mb-2">Livestock Listings</h1>
+          <p className="text-lg text-white/80">Browse quality livestock from verified farmers across South Africa</p>
+        </div>
+      </div>
 
-      <section className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
-        <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" method="GET">
-          <div className="space-y-1 lg:col-span-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-brand-navy" htmlFor="q">
-              Search
-            </label>
-            <input
-              className="w-full rounded-lg border border-[#c8d3e5] px-3 py-2 text-sm text-[#13263f]"
-              id="q"
-              name="q"
-              defaultValue={q}
-              placeholder="Search listings, seller, breed..."
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold uppercase tracking-wide text-brand-navy" htmlFor="category">
-              Category
-            </label>
-            <select
-              className="w-full rounded-lg border border-[#c8d3e5] px-3 py-2 text-sm text-[#13263f]"
-              id="category"
-              name="category"
-              defaultValue={selectedCategory}
-            >
-              <option>All Categories</option>
-              {categoryOptions.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold uppercase tracking-wide text-brand-navy" htmlFor="region">
-              Region
-            </label>
-            <select
-              className="w-full rounded-lg border border-[#c8d3e5] px-3 py-2 text-sm text-[#13263f]"
-              id="region"
-              name="region"
-              defaultValue={selectedRegion}
-            >
-              {regionOptions.map((region) => (
-                <option key={region} value={region}>
-                  {region}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white" type="submit">
-            Apply Filters
-          </button>
-        </form>
-      </section>
-
-      <section className="space-y-2">
-        <p className="text-sm text-[#38537a]">{filtered.length} listing(s) found</p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((item) => (
-            <article key={item.slug} className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
-              <div
-                className={
-                  item.kind === "Livestock"
-                    ? "h-28 rounded-md bg-[linear-gradient(180deg,#e8eef9,#dce6f6)]"
-                    : "h-28 rounded-md bg-[linear-gradient(180deg,#f8f4ea,#f0e5cd)]"
-                }
-              />
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <h2 className="text-base font-semibold text-brand-navy">{item.title}</h2>
-                <span className="rounded-full bg-[#eef3fb] px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-navy">
-                  {item.kind}
-                </span>
+      {/* Main Content */}
+      <div className="mx-auto max-w-7xl px-4 md:px-8 py-12 space-y-8">
+        {/* Filters */}
+        <section className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] p-6">
+          <form className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" method="GET">
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-semibold text-[#244367] mb-2" htmlFor="q">
+                Search
+              </label>
+              <div className="relative">
+                <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5d7497]" />
+                <input
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
+                  id="q"
+                  name="q"
+                  defaultValue={params.q || ""}
+                  placeholder="Search by breed, seller, or title..."
+                />
               </div>
-              <p className="mt-1 text-sm text-[#38537a]">
-                {item.category} • {item.region}
-              </p>
-              {item.kind === "Livestock" && (
-                <>
-                  <p className="mt-1 text-sm text-[#38537a]">
-                    {item.breed} • {item.weight}
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#244367] mb-2" htmlFor="category">
+                Category
+              </label>
+              <select
+                className="w-full px-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
+                id="category"
+                name="category"
+                defaultValue={selectedCategory}
+              >
+                <option>All Categories</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.name}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#244367] mb-2" htmlFor="region">
+                Region
+              </label>
+              <select
+                className="w-full px-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
+                id="region"
+                name="region"
+                defaultValue={selectedRegion}
+              >
+                {regionOptions.map((region) => (
+                  <option key={region} value={region}>
+                    {region}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              className="md:col-span-2 lg:col-span-4 bg-[#2E7D32] hover:bg-[#1d5e20] text-white font-bold uppercase tracking-wide py-3 rounded-lg shadow-lg transition"
+              type="submit"
+            >
+              Apply Filters
+            </button>
+          </form>
+        </section>
+
+        {/* Results Count */}
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-[#5d7497]">
+            <span className="font-bold text-[#244367]">{listings.length}</span> listing(s) found
+          </p>
+        </div>
+
+        {/* Listings Grid */}
+        {listings.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] p-12 text-center">
+            <p className="text-[#5d7497] text-lg mb-4">No listings found matching your criteria.</p>
+            <Link
+              href="/listings"
+              className="inline-block px-8 py-3 bg-[#1B3A6B] hover:bg-[#122844] text-white font-bold rounded-lg transition"
+            >
+              Clear Filters
+            </Link>
+          </div>
+        ) : (
+          <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {listings.map((listing) => (
+              <article key={listing.id} className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] overflow-hidden hover:shadow-xl transition group">
+                {listing.photos.length > 0 ? (
+                  <img
+                    src={listing.photos[0]}
+                    alt={listing.title}
+                    className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-48 bg-gradient-to-br from-[#e8eef9] to-[#dce6f6] flex items-center justify-center">
+                    <span className="text-[#5d7497] text-sm">No Image</span>
+                  </div>
+                )}
+
+                <div className="p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <h2 className="text-lg font-bold text-[#1B3A6B] line-clamp-2">{listing.title}</h2>
+                    {listing.isFeatured && (
+                      <span className="px-2 py-1 bg-[#A07C3A] text-white text-[10px] font-bold uppercase rounded-full">
+                        Featured
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-sm text-[#5d7497]">
+                    {listing.category.name} • {listing.region}
                   </p>
-                  <div className="mt-2">
+
+                  <div className="flex items-center gap-3 text-sm text-[#5d7497]">
+                    <span className="font-semibold">Breed:</span> {listing.breed}
+                  </div>
+
+                  {listing.weightKg && (
+                    <div className="flex items-center gap-3 text-sm text-[#5d7497]">
+                      <span className="font-semibold">Weight:</span> {listing.weightKg}kg
+                    </div>
+                  )}
+
+                  {listing.ageMonths && (
+                    <div className="flex items-center gap-3 text-sm text-[#5d7497]">
+                      <span className="font-semibold">Age:</span> {Math.floor(listing.ageMonths / 12)} years {listing.ageMonths % 12} months
+                    </div>
+                  )}
+
+                  <div className="pt-2">
                     <HerdflowTrusted compact />
                   </div>
-                </>
-              )}
-              <p className="mt-2 text-lg font-semibold text-brand-gold">{item.price}</p>
-              <p className="mt-1 text-sm text-[#38537a]">Seller: {item.seller}</p>
-              <Link className="mt-3 inline-block text-sm font-semibold text-brand-navy" href={`/listings/${item.slug}`}>
-                View Listing
-              </Link>
-            </article>
-          ))}
-        </div>
-      </section>
-    </main>
+
+                  <p className="text-2xl font-black text-[#2E7D32]">R{(listing.priceCents / 100).toLocaleString()}</p>
+
+                  <p className="text-sm text-[#5d7497]">
+                    Seller: <span className="font-semibold text-[#244367]">{listing.seller.farmName || listing.seller.user.fullName}</span>
+                  </p>
+
+                  <Link
+                    href={`/listings/${listing.slug}`}
+                    className="block w-full text-center bg-[#1B3A6B] hover:bg-[#122844] text-white font-bold py-3 rounded-lg transition"
+                  >
+                    View Details
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
+      </div>
+    </div>
   );
 }
