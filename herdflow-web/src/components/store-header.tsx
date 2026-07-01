@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, Search, Menu, X, User, LogOut, Settings, Package, Truck, List } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useCart } from '@/lib/cart-context';
 
 type UserData = {
   id: string;
@@ -15,6 +16,7 @@ type UserData = {
 
 export function StoreHeader() {
   const router = useRouter();
+  const { totalItems, openDrawer } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
@@ -94,15 +96,17 @@ export function StoreHeader() {
             <button className="hidden md:flex p-2 text-white hover:text-[#A07C3A] transition">
               <Search size={20} />
             </button>
-            <Link 
-              href="/cart"
+            <button 
+              onClick={openDrawer}
               className="relative p-2 text-white hover:text-[#A07C3A] transition"
             >
               <ShoppingCart size={20} />
-              <span className="absolute -top-1 -right-1 bg-[#2E7D32] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                0
-              </span>
-            </Link>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#2E7D32] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  {totalItems}
+                </span>
+              )}
+            </button>
 
             {/* User Menu or Login */}
             {!loading && (

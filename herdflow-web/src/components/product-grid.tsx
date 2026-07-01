@@ -2,6 +2,7 @@
 
 import { Star, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
+import { useCart } from '@/lib/cart-context';
 
 interface Product {
   id: string;
@@ -21,12 +22,24 @@ interface ProductGridProps {
 }
 
 export function ProductGrid({ products }: ProductGridProps) {
+  const { addToCart } = useCart();
+
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat('en-ZA', {
       style: 'currency',
       currency: 'ZAR',
       minimumFractionDigits: 2,
     }).format(cents / 100);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart({
+      productId: product.id,
+      productName: product.name,
+      priceCents: product.priceCents,
+    });
   };
 
   if (products.length === 0) {
@@ -40,12 +53,11 @@ export function ProductGrid({ products }: ProductGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {products.map((product) => (
-        <Link
+        <div
           key={product.id}
-          href={`/products/${product.slug}`}
-          className="group"
+          className="group bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-lg transition duration-300"
         >
-          <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-lg transition duration-300">
+          <Link href={`/products/${product.slug}`}>
             {/* Product Image Placeholder */}
             <div className="h-48 bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center group-hover:from-neutral-200 group-hover:to-neutral-300 transition">
               <div className="text-center">
@@ -87,13 +99,21 @@ export function ProductGrid({ products }: ProductGridProps) {
                 <span className="text-lg font-bold text-brand-navy">
                   {formatPrice(product.priceCents)}
                 </span>
-                <button aria-label={`Add ${product.name} to cart`} className="p-2 bg-brand-navy text-white rounded-lg hover:bg-blue-900 transition">
-                  <ShoppingCart size={18} />
-                </button>
               </div>
             </div>
+          </Link>
+          
+          {/* Add to Cart Button Outside Link */}
+          <div className="px-4 pb-4">
+            <button
+              onClick={(e) => handleAddToCart(e, product)}
+              className="w-full flex items-center justify-center gap-2 bg-brand-navy text-white py-2 rounded-lg hover:bg-blue-900 transition font-semibold"
+            >
+              <ShoppingCart size={18} />
+              Add to Cart
+            </button>
           </div>
-        </Link>
+        </div>
       ))}
     </div>
   );
