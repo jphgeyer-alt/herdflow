@@ -34,7 +34,7 @@ export default async function BuyerDashboard() {
     where: { status: "ACTIVE" },
     take: 4,
     orderBy: { createdAt: "desc" },
-    select: { id: true, name: true, priceCents: true, imageUrl: true },
+    select: { id: true, name: true, priceCents: true, photos: true },
   });
 
   return (
@@ -167,7 +167,7 @@ export default async function BuyerDashboard() {
               {recommendedProducts.map((product) => (
                 <div key={product.id} className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] overflow-hidden hover:shadow-xl transition">
                   <img
-                    src={product.imageUrl || "/placeholder-product.jpg"}
+                    src={product.photos[0] || "/placeholder-product.jpg"}
                     alt={product.name}
                     className="w-full h-48 object-cover"
                   />

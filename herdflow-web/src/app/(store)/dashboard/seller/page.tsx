@@ -33,35 +33,35 @@ export default async function SellerDashboard() {
       id: true,
       name: true,
       priceCents: true,
-      imageUrl: true,
-      stock: true,
+      photos: true,
+      stockOnHand: true,
       status: true,
     },
   });
 
   const pendingListings = await prisma.product.findMany({
-    where: { sellerId: user.sellerProfile.id, status: "PENDING" },
+    where: { sellerId: user.sellerProfile.id, status: "DRAFT" },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
       name: true,
       priceCents: true,
-      imageUrl: true,
-      stock: true,
+      photos: true,
+      stockOnHand: true,
       status: true,
     },
   });
 
   const soldListings = await prisma.product.findMany({
-    where: { sellerId: user.sellerProfile.id, status: "SOLD" },
+    where: { sellerId: user.sellerProfile.id, status: "ARCHIVED" },
     orderBy: { createdAt: "desc" },
     take: 10,
     select: {
       id: true,
       name: true,
       priceCents: true,
-      imageUrl: true,
-      stock: true,
+      photos: true,
+      stockOnHand: true,
       status: true,
     },
   });
@@ -188,7 +188,7 @@ export default async function SellerDashboard() {
               {activeListings.map((product) => (
                 <div key={product.id} className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] overflow-hidden">
                   <img
-                    src={product.imageUrl || "/placeholder-product.jpg"}
+                    src={product.photos[0] || "/placeholder-product.jpg"}
                     alt={product.name}
                     className="w-full h-48 object-cover"
                   />
@@ -196,7 +196,7 @@ export default async function SellerDashboard() {
                     <h3 className="font-bold text-[#244367] line-clamp-2">{product.name}</h3>
                     <div className="flex items-center justify-between">
                       <p className="text-xl font-black text-[#2E7D32]">R{(product.priceCents / 100).toFixed(2)}</p>
-                      <p className="text-sm text-[#5d7497]">Stock: {product.stock || 0}</p>
+                      <p className="text-sm text-[#5d7497]">Stock: {product.stockOnHand}</p>
                     </div>
                     <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
                       {product.status}
