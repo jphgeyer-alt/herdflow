@@ -5,10 +5,8 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <StoreHeader />
-      <main className="min-h-screen bg-neutral-50">
-        <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </section>
+      <main className="min-h-screen">
+        {children}
       </main>
       <footer className="bg-brand-navy text-white py-16 mt-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -35,9 +33,9 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
               <h4 className="font-bold mb-4 text-brand-green">Store</h4>
               <ul className="space-y-2 text-sm text-white/70">
                 <li><a href="/shop" className="hover:text-white transition">All Products</a></li>
-                <li><a href="/shop" className="hover:text-white transition">Livestock</a></li>
-                <li><a href="/shop" className="hover:text-white transition">Produce</a></li>
-                <li><a href="/shop" className="hover:text-white transition">Supplies</a></li>
+                <li><a href="/listings" className="hover:text-white transition">Livestock</a></li>
+                <li><a href="/auction" className="hover:text-white transition">Live Auctions</a></li>
+                <li><a href="/checkout" className="hover:text-white transition">Checkout</a></li>
               </ul>
             </div>
 
@@ -47,8 +45,8 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
               <ul className="space-y-2 text-sm text-white/70">
                 <li><a href="/about" className="hover:text-white transition">About Us</a></li>
                 <li><a href="/contact" className="hover:text-white transition">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition">Careers</a></li>
+                <li><a href="/register/seller" className="hover:text-white transition">Sell on HerdFlow</a></li>
+                <li><a href="/register/logistics" className="hover:text-white transition">Logistics Partners</a></li>
               </ul>
             </div>
 
@@ -56,10 +54,10 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
             <div>
               <h4 className="font-bold mb-4 text-brand-green">Legal</h4>
               <ul className="space-y-2 text-sm text-white/70">
-                <li><a href="#" className="hover:text-white transition">Privacy</a></li>
-                <li><a href="#" className="hover:text-white transition">Terms</a></li>
-                <li><a href="#" className="hover:text-white transition">FAQ</a></li>
-                <li><a href="#" className="hover:text-white transition">Support</a></li>
+                <li><a href="/privacy" className="hover:text-white transition">Privacy Policy</a></li>
+                <li><a href="/terms" className="hover:text-white transition">Terms of Service</a></li>
+                <li><a href="/contact" className="hover:text-white transition">Support</a></li>
+                <li><a href="/auth/register" className="hover:text-white transition">Create Account</a></li>
               </ul>
             </div>
           </div>
@@ -101,9 +99,9 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
                 &copy; 2026 HerdFlow. All rights reserved. | Proudly South African 🇿🇦
               </p>
               <div className="flex gap-4 mt-4 md:mt-0">
-                <a href="#" className="text-white/60 hover:text-white transition">Facebook</a>
-                <a href="#" className="text-white/60 hover:text-white transition">Twitter</a>
-                <a href="#" className="text-white/60 hover:text-white transition">Instagram</a>
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition">Facebook</a>
+                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition">Twitter</a>
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition">Instagram</a>
               </div>
             </div>
           </div>

@@ -76,7 +76,8 @@ export default async function ShopPage({
   });
 
   return (
-    <div className="space-y-8">
+    <div className="bg-[#f5f4ef] min-h-screen">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Hero Banner */}
       <StoreBanner />
 
@@ -188,6 +189,7 @@ export default async function ShopPage({
           </a>
         </div>
       </section>
+      </div>
     </div>
   );
 }

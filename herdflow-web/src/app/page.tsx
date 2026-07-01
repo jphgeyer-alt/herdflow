@@ -104,7 +104,7 @@ export default function Home() {
             {/* Login Button */}
             <div className="flex items-center gap-4">
               <Link
-                href="/admin/login"
+                href="/auth/login"
                 className="hidden lg:inline-flex rounded-lg px-6 py-2.5 text-sm font-bold uppercase text-white shadow-lg hover:opacity-90 transition"
                 style={{ backgroundColor: '#2E7D32' }}
               >
@@ -141,7 +141,7 @@ export default function Home() {
                 Contact
               </Link>
               <Link
-                href="/admin/login"
+                href="/auth/login"
                 className="block mx-4 mt-4 rounded-lg px-6 py-2.5 text-center text-sm font-bold uppercase text-white"
                 style={{ backgroundColor: '#2E7D32' }}
               >
@@ -183,12 +183,12 @@ export default function Home() {
                 >
                   Get Started
                 </Link>
-                <button className="inline-flex items-center gap-2 md:gap-3 rounded-lg border-2 border-white bg-transparent px-6 md:px-8 py-3 md:py-4 text-sm md:text-base font-bold uppercase tracking-wide text-white hover:bg-white/10 transition">
-                  <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                  Watch Video
-                </button>
+                <Link
+                  href="/listings"
+                  className="inline-flex items-center gap-2 md:gap-3 rounded-lg border-2 border-white bg-transparent px-6 md:px-8 py-3 md:py-4 text-sm md:text-base font-bold uppercase tracking-wide text-white hover:bg-white/10 transition"
+                >
+                  Browse Livestock
+                </Link>
               </div>
             </div>
 
