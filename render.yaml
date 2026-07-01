@@ -2,19 +2,30 @@ services:
   - type: web
     name: herdflow
     runtime: node
+    rootDir: herdflow-web
     plan: free
-    buildCommand: npm ci --legacy-peer-deps --include=dev && npm run build
+    buildCommand: npm ci && npx prisma generate && npm run build
     startCommand: npm start
-    healthCheckPath: /health
+    healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
-      - key: STATIC_DIR
-        value: dist
       - key: DATABASE_URL
-        value: ""
-      - key: DATABASE_SSL
-        value: "true"
+        sync: false
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://www.herdflow.co.za
+      - key: PAYFAST_MERCHANT_ID
+        sync: false
+      - key: PAYFAST_MERCHANT_KEY
+        sync: false
+      - key: PAYFAST_PASSPHRASE
+        sync: false
+      - key: PAYFAST_PROCESS_URL
+        value: https://sandbox.payfast.co.za/eng/process
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_SESSION_SECRET
+        sync: false
