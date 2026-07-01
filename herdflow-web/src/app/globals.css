@@ -3,15 +3,17 @@
 :root {
   --background: #f7f9fc;
   --foreground: #13263f;
-  --brand-navy: #1b3a6b;
-  --brand-gold: #a07c3a;
+  --brand-navy: #1b3a5c;
+  --brand-green: #6ba640;
+  --accent-blue: #1e4068;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-brand-navy: var(--brand-navy);
-  --color-brand-gold: var(--brand-gold);
+  --color-brand-green: var(--brand-green);
+  --color-accent-blue: var(--accent-blue);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -27,4 +29,17 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+}
+
+/* Premium button styles */
+.btn-primary {
+  @apply px-6 py-3 bg-brand-green text-white font-semibold rounded-lg hover:bg-emerald-700 transition-all shadow-md hover:shadow-lg;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 bg-brand-navy text-white font-semibold rounded-lg hover:bg-blue-900 transition-all shadow-md hover:shadow-lg;
+}
+
+.btn-outline {
+  @apply px-6 py-3 border-2 border-brand-navy text-brand-navy font-semibold rounded-lg hover:bg-brand-navy hover:text-white transition-all;
 }
