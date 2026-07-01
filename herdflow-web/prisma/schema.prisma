@@ -208,14 +208,14 @@ model AuctionLot {
 }
 
 model AuctionBid {
-  id         String     @id @default(cuid())
-  lotId      String
-  bidderId   String
-  amount     Int
-  isWinning  Boolean    @default(false)
-  createdAt  DateTime   @default(now())
+  id           String     @id @default(cuid())
+  lotId        String
+  bidderName   String
+  bidderEmail  String
+  amountCents  Int
+  createdAt    DateTime   @default(now())
 
-  lot        AuctionLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  lot          AuctionLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
 
   @@index([lotId, createdAt])
 }
