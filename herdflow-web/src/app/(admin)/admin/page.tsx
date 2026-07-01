@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +44,21 @@ function buildLastSixMonths() {
   }
 
   return months;
+}
+
+function barWidthClass(totalCents: number, maxMonthly: number) {
+  const pct = Math.max(4, Math.round((totalCents / maxMonthly) * 100));
+
+  if (pct >= 95) return "w-full";
+  if (pct >= 85) return "w-[90%]";
+  if (pct >= 75) return "w-[80%]";
+  if (pct >= 65) return "w-[70%]";
+  if (pct >= 55) return "w-[60%]";
+  if (pct >= 45) return "w-[50%]";
+  if (pct >= 35) return "w-[40%]";
+  if (pct >= 25) return "w-[30%]";
+  if (pct >= 15) return "w-[20%]";
+  return "w-[10%]";
 }
 
 async function getDashboardData(): Promise<DashboardData> {
@@ -154,7 +170,7 @@ export default async function AdminPage() {
           <h2 className="text-lg font-semibold text-brand-navy">Sales by Month (Last 6 Months)</h2>
           <div className="mt-4 grid gap-3">
             {data.monthlySales.map((month) => {
-              const width = `${Math.max(4, Math.round((month.totalCents / maxMonthly) * 100))}%`;
+              const widthClass = barWidthClass(month.totalCents, maxMonthly);
               return (
                 <div key={month.month} className="space-y-1">
                   <div className="flex items-center justify-between text-xs font-semibold text-[#5d7497]">
@@ -162,7 +178,7 @@ export default async function AdminPage() {
                     <span>{toCurrency(month.totalCents)}</span>
                   </div>
                   <div className="h-3 rounded-full bg-[#ebf1f9]">
-                    <div className="h-3 rounded-full bg-brand-navy" style={{ width }} />
+                    <div className={`h-3 rounded-full bg-brand-navy ${widthClass}`} />
                   </div>
                 </div>
               );
@@ -187,6 +203,33 @@ export default async function AdminPage() {
             </ul>
           )}
         </article>
+      </section>
+
+      {/* Quick navigation */}
+      <section>
+        <h2 className="mb-3 text-lg font-semibold text-brand-navy">Admin Sections</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { label: "Listings", href: "/admin/products", desc: "Approve, edit, and feature products & livestock" },
+            { label: "Orders", href: "/admin/orders", desc: "View and update store order statuses" },
+            { label: "Sellers", href: "/admin/sellers", desc: "Approve or reject seller registrations" },
+            { label: "Logistics", href: "/admin/logistics", desc: "Manage logistics partner approvals" },
+            { label: "Customers", href: "/admin/customers", desc: "Browse registered users and accounts" },
+            { label: "Reports", href: "/admin/reports", desc: "Revenue, commission, and seller analytics" },
+            { label: "Live Auctions", href: "/admin/auctions", desc: "Create auction sessions and manage lots" },
+            { label: "Site Content", href: "/admin/content", desc: "Edit homepage banner and categories" },
+            { label: "Payment Settings", href: "/admin/settings/payments", desc: "Configure PayFast credentials" },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex flex-col rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm hover:border-brand-navy hover:shadow-md transition-shadow"
+            >
+              <p className="font-semibold text-brand-navy">{item.label}</p>
+              <p className="mt-1 text-xs text-[#5d7497]">{item.desc}</p>
+            </Link>
+          ))}
+        </div>
       </section>
     </main>
   );

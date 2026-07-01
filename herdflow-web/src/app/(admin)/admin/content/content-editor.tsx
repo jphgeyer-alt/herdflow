@@ -105,7 +105,7 @@ export function ContentEditor({ initialContent, initialCategories }: ContentEdit
                 backgroundImage: banner.banner_image_url ? `url(${banner.banner_image_url})` : undefined,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
-                backgroundColor: banner.banner_image_url ? undefined : "#1b3a5c",
+                backgroundColor: banner.banner_image_url ? undefined : "#1B3A6B",
               }}
             >
               <div className="absolute inset-0 bg-black/40" />

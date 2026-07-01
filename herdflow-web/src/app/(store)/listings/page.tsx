@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listingData } from "@/lib/marketplace-data";
+import { HerdflowTrusted } from "@/components/ui/HerdflowTrusted";
 
 type ListingsPageProps = {
   searchParams: Promise<{
@@ -132,9 +133,14 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
                 {item.category} • {item.region}
               </p>
               {item.kind === "Livestock" && (
-                <p className="mt-1 text-sm text-[#38537a]">
-                  {item.breed} • {item.weight}
-                </p>
+                <>
+                  <p className="mt-1 text-sm text-[#38537a]">
+                    {item.breed} • {item.weight}
+                  </p>
+                  <div className="mt-2">
+                    <HerdflowTrusted compact />
+                  </div>
+                </>
               )}
               <p className="mt-2 text-lg font-semibold text-brand-gold">{item.price}</p>
               <p className="mt-1 text-sm text-[#38537a]">Seller: {item.seller}</p>

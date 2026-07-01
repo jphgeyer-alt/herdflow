@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { listingData } from "@/lib/marketplace-data";
+import { HerdflowTrusted } from "@/components/ui/HerdflowTrusted";
 
 type ListingDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -58,7 +59,10 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
           )}
 
           <div className="rounded-lg border border-[#d8e0ec] p-3 text-sm text-[#244367]">
-            <p className="font-semibold text-brand-navy">Seller Information</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-semibold text-brand-navy">Seller Information</p>
+              <HerdflowTrusted compact />
+            </div>
             <p>{listing.seller}</p>
             <p>{listing.sellerPhone}</p>
             <p>{listing.sellerEmail}</p>

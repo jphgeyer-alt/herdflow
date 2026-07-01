@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { env } from "@/lib/env";
+import type { PayFastConfig } from "@/lib/payfast/config";
 
 type InitializePaymentInput = {
   amount: number;
@@ -13,15 +13,17 @@ type InitializePaymentInput = {
   customerEmail?: string;
 };
 
-export function getPayFastProcessUrl() {
-  if (env.PAYFAST_PROCESS_URL) {
-    return env.PAYFAST_PROCESS_URL;
+const DEFAULT_PROCESS_URL = "https://sandbox.payfast.co.za/eng/process";
+
+export function getPayFastProcessUrl(config?: Pick<PayFastConfig, "processUrl">) {
+  if (config?.processUrl) {
+    return config.processUrl;
   }
 
-  return "https://sandbox.payfast.co.za/eng/process";
+  return DEFAULT_PROCESS_URL;
 }
 
-function createPayFastSignature(fields: Record<string, string>) {
+export function createPayFastSignature(fields: Record<string, string>, passphrase?: string) {
   const sortedEntries = Object.entries(fields)
     .filter(([, value]) => value !== "")
     .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
@@ -30,17 +32,17 @@ function createPayFastSignature(fields: Record<string, string>) {
     .map(([key, value]) => `${key}=${encodeURIComponent(value).replace(/%20/g, "+")}`)
     .join("&");
 
-  const withPassphrase = env.PAYFAST_PASSPHRASE
-    ? `${query}&passphrase=${encodeURIComponent(env.PAYFAST_PASSPHRASE).replace(/%20/g, "+")}`
+  const withPassphrase = passphrase
+    ? `${query}&passphrase=${encodeURIComponent(passphrase).replace(/%20/g, "+")}`
     : query;
 
   return createHash("md5").update(withPassphrase).digest("hex");
 }
 
-export function buildPayFastInitializePayload(input: InitializePaymentInput) {
+export function buildPayFastInitializePayload(input: InitializePaymentInput, config: PayFastConfig) {
   const fields = {
-    merchant_id: env.PAYFAST_MERCHANT_ID,
-    merchant_key: env.PAYFAST_MERCHANT_KEY,
+    merchant_id: config.merchantId,
+    merchant_key: config.merchantKey,
     m_payment_id: input.paymentId,
     amount: input.amount.toFixed(2),
     item_name: input.itemName,
@@ -52,7 +54,7 @@ export function buildPayFastInitializePayload(input: InitializePaymentInput) {
     email_address: input.customerEmail || "",
   };
 
-  const signature = createPayFastSignature(fields);
+  const signature = createPayFastSignature(fields, config.passphrase);
 
   return {
     ...fields,

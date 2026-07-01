@@ -1,4 +1,4 @@
-import { listingData, type MarketplaceListing } from "@/lib/marketplace-data";
+import { prisma } from "@/lib/prisma";
 
 export type CartLine = {
   slug: string;
@@ -6,20 +6,21 @@ export type CartLine = {
 };
 
 export type CartItem = {
-  product: MarketplaceListing;
+  product: {
+    id: string;
+    slug: string;
+    title: string;
+    category: string;
+  };
   quantity: number;
+  unitPriceCents: number;
   unitPrice: number;
   lineTotal: number;
+  lineTotalCents: number;
 };
 
 function parseIntSafe(value: string) {
   const parsed = Number.parseInt(value, 10);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-export function parsePriceToNumber(price: string) {
-  const normalized = price.replace(/[^\d.]/g, "");
-  const parsed = Number.parseFloat(normalized);
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
@@ -52,18 +53,15 @@ export function serializeCartParam(lines: CartLine[]) {
     .join(",");
 }
 
-export function addToCart(lines: CartLine[], slug: string) {
-  const product = listingData.find((entry) => entry.slug === slug && entry.kind === "Product");
-  if (!product) {
-    return lines;
-  }
+export function addToCart(lines: CartLine[], slug: string, quantity = 1) {
+  const qty = Number.isFinite(quantity) ? Math.max(1, Math.floor(quantity)) : 1;
 
   const next = [...lines];
   const index = next.findIndex((line) => line.slug === slug);
   if (index === -1) {
-    next.push({ slug, quantity: 1 });
+    next.push({ slug, quantity: qty });
   } else {
-    next[index] = { slug, quantity: next[index].quantity + 1 };
+    next[index] = { slug, quantity: next[index].quantity + qty };
   }
   return next;
 }
@@ -89,21 +87,46 @@ export function removeFromCart(lines: CartLine[], slug: string) {
   return lines.filter((line) => line.slug !== slug);
 }
 
-export function buildCartItems(lines: CartLine[]) {
+export async function buildCartItems(lines: CartLine[]) {
   const items: CartItem[] = [];
 
+  const slugs = lines.map((line) => line.slug);
+  if (slugs.length === 0) {
+    return items;
+  }
+
+  const products = await prisma.product.findMany({
+    where: {
+      slug: { in: slugs },
+      status: { in: ["ACTIVE", "OUT_OF_STOCK"] },
+    },
+    include: {
+      category: { select: { name: true } },
+    },
+  });
+
+  const productMap = new Map(products.map((product) => [product.slug, product]));
+
   for (const line of lines) {
-    const product = listingData.find((entry) => entry.slug === line.slug && entry.kind === "Product");
+    const product = productMap.get(line.slug);
     if (!product) {
       continue;
     }
 
-    const unitPrice = parsePriceToNumber(product.price);
+    const unitPriceCents = product.priceCents;
+    const lineTotalCents = unitPriceCents * line.quantity;
     items.push({
-      product,
+      product: {
+        id: product.id,
+        slug: product.slug,
+        title: product.name,
+        category: product.category.name,
+      },
       quantity: line.quantity,
-      unitPrice,
-      lineTotal: unitPrice * line.quantity,
+      unitPriceCents,
+      unitPrice: unitPriceCents / 100,
+      lineTotal: lineTotalCents / 100,
+      lineTotalCents,
     });
   }
 

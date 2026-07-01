@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { buildPayFastInitializePayload, getPayFastProcessUrl } from "@/lib/payfast/client";
 import { buildCartItems, calculateCartTotals, parseCartParam } from "@/lib/storefront-cart";
 import { env } from "@/lib/env";
+import { prisma } from "@/lib/prisma";
+import { getPayFastConfig } from "@/lib/payfast/config";
 
 type CheckoutBody = {
   cart?: string;
@@ -28,7 +30,7 @@ function isValidEmail(value: string) {
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as CheckoutBody;
   const cart = parseCartParam(body.cart);
-  const items = buildCartItems(cart);
+  const items = await buildCartItems(cart);
 
   if (items.length === 0) {
     return NextResponse.json({ error: "Cart is empty or invalid." }, { status: 400 });
@@ -49,28 +51,56 @@ export async function POST(request: Request) {
   const totals = calculateCartTotals(items);
   const paymentId = `HF-${Date.now()}`;
   const baseUrl = getBaseUrl(request);
+  const payFastConfig = await getPayFastConfig();
 
-  const payload = buildPayFastInitializePayload({
-    amount: totals.subtotal,
-    itemName: `HerdFlow Store Order (${totals.totalItems} item${totals.totalItems > 1 ? "s" : ""})`,
-    paymentId,
-    returnUrl: `${baseUrl}/checkout?status=return&paymentId=${encodeURIComponent(paymentId)}`,
-    cancelUrl: `${baseUrl}/checkout?status=cancel&paymentId=${encodeURIComponent(paymentId)}`,
-    notifyUrl: `${baseUrl}/api/payfast/notify`,
-    customerFirstName: firstName,
-    customerLastName: lastName,
-    customerEmail: email,
-  });
-
-  if (!payload.merchant_id || !payload.merchant_key) {
+  if (!payFastConfig.merchantId || !payFastConfig.merchantKey) {
     return NextResponse.json(
       { error: "PayFast merchant configuration is missing." },
       { status: 500 },
     );
   }
 
+  try {
+    await prisma.order.create({
+      data: {
+        orderNumber: paymentId,
+        guestEmail: email.toLowerCase(),
+        status: "PENDING",
+        totalCents: Math.round(totals.subtotal * 100),
+        currency: "ZAR",
+        paymentMethod: "PayFast",
+        paymentReference: paymentId,
+        items: {
+          create: items.map((item) => ({
+            productId: item.product.id,
+            quantity: item.quantity,
+            unitPriceCents: item.unitPriceCents,
+            lineTotalCents: item.lineTotalCents,
+          })),
+        },
+      },
+    });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to create order for checkout." },
+      { status: 500 },
+    );
+  }
+
+  const payload = buildPayFastInitializePayload({
+    amount: totals.subtotal,
+    itemName: `HerdFlow Store Order (${totals.totalItems} item${totals.totalItems > 1 ? "s" : ""})`,
+    paymentId,
+    returnUrl: `${baseUrl}/api/payfast/return?orderNumber=${encodeURIComponent(paymentId)}`,
+    cancelUrl: `${baseUrl}/api/payfast/cancel?orderNumber=${encodeURIComponent(paymentId)}`,
+    notifyUrl: `${baseUrl}/api/payfast/notify`,
+    customerFirstName: firstName,
+    customerLastName: lastName,
+    customerEmail: email,
+  }, payFastConfig);
+
   return NextResponse.json({
-    processUrl: getPayFastProcessUrl(),
+    processUrl: getPayFastProcessUrl(payFastConfig),
     fields: payload,
     orderReference: paymentId,
   });

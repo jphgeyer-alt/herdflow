@@ -13,6 +13,7 @@ type CartPageProps = {
   searchParams: Promise<{
     cart?: string;
     add?: string;
+    addQty?: string;
     inc?: string;
     dec?: string;
     remove?: string;
@@ -37,7 +38,9 @@ export default async function CartPage({ searchParams }: CartPageProps) {
   }
 
   if (query.add) {
-    lines = addToCart(lines, query.add);
+    const parsedQty = Number.parseInt(query.addQty || "1", 10);
+    const addQty = Number.isNaN(parsedQty) ? 1 : Math.max(1, parsedQty);
+    lines = addToCart(lines, query.add, addQty);
   }
 
   if (query.inc) {
@@ -54,7 +57,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
 
   const cartParam = serializeCartParam(lines);
   const encodedCartParam = encodeURIComponent(cartParam);
-  const items = buildCartItems(lines);
+  const items = await buildCartItems(lines);
   const totals = calculateCartTotals(items);
 
   return (

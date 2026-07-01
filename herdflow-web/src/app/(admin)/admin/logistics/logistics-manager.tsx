@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { HerdflowTrusted } from "@/components/ui/HerdflowTrusted";
 
 type Partner = {
   id: string;
@@ -77,6 +78,7 @@ export function LogisticsManager({ initialPartners }: LogisticsManagerProps) {
           className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40 w-full sm:w-64"
         />
         <select
+          aria-label="Filter logistics partners by status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40"
@@ -109,7 +111,12 @@ export function LogisticsManager({ initialPartners }: LogisticsManagerProps) {
             )}
             {filtered.map((partner) => (
               <tr key={partner.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-gray-800">{partner.companyName}</td>
+                <td className="px-4 py-3 font-medium text-gray-800">
+                  <div className="space-y-1">
+                    <div>{partner.companyName}</div>
+                    {partner.status === "APPROVED" && <HerdflowTrusted compact />}
+                  </div>
+                </td>
                 <td className="px-4 py-3">
                   <div className="text-gray-700">{partner.user.fullName}</div>
                   <div className="text-xs text-gray-500">{partner.user.email}</div>
@@ -138,6 +145,7 @@ export function LogisticsManager({ initialPartners }: LogisticsManagerProps) {
                 </td>
                 <td className="px-4 py-3">
                   <select
+                    aria-label={`Update status for ${partner.companyName}`}
                     disabled={savingId === partner.id}
                     value={partner.status}
                     onChange={(e) => updateStatus(partner.id, e.target.value)}

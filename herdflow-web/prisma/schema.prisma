@@ -167,6 +167,59 @@ model SiteConfig {
   updatedAt DateTime @updatedAt
 }
 
+model AuctionSession {
+  id          String               @id @default(cuid())
+  slug        String               @unique
+  title       String
+  description String
+  scheduledAt DateTime
+  closedAt    DateTime?
+  status      AuctionSessionStatus @default(UPCOMING)
+  createdBy   String               @default("admin")
+  createdAt   DateTime             @default(now())
+
+  lots        AuctionLot[]
+
+  @@index([status, scheduledAt])
+}
+
+model AuctionLot {
+  id                  String           @id @default(cuid())
+  sessionId           String
+  livestockListingId  String?
+  lotNumber           Int
+  title               String
+  description         String
+  breed               String?
+  weightKg            Int?
+  region              String?
+  startingPriceCents  Int
+  reservePriceCents   Int?
+  currentBidCents     Int              @default(0)
+  winnerName          String?
+  winnerEmail         String?
+  status              AuctionLotStatus @default(PENDING)
+
+  session             AuctionSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  bids                AuctionBid[]
+
+  @@unique([sessionId, lotNumber])
+  @@index([status])
+}
+
+model AuctionBid {
+  id         String     @id @default(cuid())
+  lotId      String
+  bidderId   String
+  amount     Int
+  isWinning  Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+
+  lot        AuctionLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
+
+  @@index([lotId, createdAt])
+}
+
 enum UserRole {
   CUSTOMER
   ADMIN
@@ -206,4 +259,19 @@ enum OrderStatus {
   COMPLETED
   CANCELLED
   FAILED
+}
+
+enum AuctionSessionStatus {
+  UPCOMING
+  LIVE
+  CLOSED
+  CANCELLED
+}
+
+enum AuctionLotStatus {
+  PENDING
+  OPEN
+  SOLD
+  PASSED
+  CANCELLED
 }

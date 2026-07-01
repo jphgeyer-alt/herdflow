@@ -21,7 +21,7 @@ function toCurrency(value: number) {
 export default async function CheckoutPage({ searchParams }: CheckoutPageProps) {
   const query = await searchParams;
   const lines = parseCartParam(query.cart);
-  const items = buildCartItems(lines);
+  const items = await buildCartItems(lines);
   const totals = calculateCartTotals(items);
   const cartParam = serializeCartParam(lines);
 

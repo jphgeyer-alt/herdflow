@@ -7,8 +7,15 @@ export const dynamic = 'force-dynamic';
 interface FilterParams {
   search?: string;
   category?: string;
-  minPrice?: number;
-  maxPrice?: number;
+  minPrice?: string;
+  maxPrice?: string;
+}
+
+function parseRandToCents(value?: string) {
+  if (!value) return undefined;
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return undefined;
+  return Math.round(parsed * 100);
 }
 
 export default async function ShopPage({
@@ -17,6 +24,8 @@ export default async function ShopPage({
   searchParams: Promise<FilterParams>;
 }) {
   const params = await searchParams;
+  const minPriceCents = parseRandToCents(params.minPrice);
+  const maxPriceCents = parseRandToCents(params.maxPrice);
 
   // Fetch products from database
   const allProducts = await prisma.product.findMany({
@@ -29,8 +38,13 @@ export default async function ShopPage({
         ],
       }),
       ...(params.category && { categoryId: params.category }),
-      ...(params.minPrice && { priceCents: { gte: params.minPrice } }),
-      ...(params.maxPrice && { priceCents: { lte: params.maxPrice } }),
+      ...(minPriceCents !== undefined && { priceCents: { gte: minPriceCents } }),
+      ...(maxPriceCents !== undefined && {
+        priceCents: {
+          ...(minPriceCents !== undefined ? { gte: minPriceCents } : {}),
+          lte: maxPriceCents,
+        },
+      }),
     },
     include: {
       seller: {
@@ -69,6 +83,7 @@ export default async function ShopPage({
       {/* Filters and Search */}
       <div className="bg-white rounded-lg border border-neutral-200 p-6">
         <h2 className="text-lg font-bold mb-4">Shop Filters</h2>
+        <form method="GET" className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
           <div>
@@ -76,6 +91,7 @@ export default async function ShopPage({
               Search Products
             </label>
             <input
+              name="search"
               type="text"
               placeholder="Search..."
               defaultValue={params.search || ''}
@@ -85,10 +101,12 @@ export default async function ShopPage({
 
           {/* Category Filter */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
+            <label htmlFor="shop-category" className="block text-sm font-medium text-neutral-700 mb-2">
               Category
             </label>
             <select 
+              id="shop-category"
+              name="category"
               defaultValue={params.category || ''}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-navy"
             >
@@ -107,7 +125,10 @@ export default async function ShopPage({
               Min Price (ZAR)
             </label>
             <input
+              name="minPrice"
               type="number"
+              min="0"
+              step="0.01"
               placeholder="0"
               defaultValue={params.minPrice || ''}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-navy"
@@ -119,16 +140,20 @@ export default async function ShopPage({
               Max Price (ZAR)
             </label>
             <input
+              name="maxPrice"
               type="number"
+              min="0"
+              step="0.01"
               placeholder="999999"
               defaultValue={params.maxPrice || ''}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-navy"
             />
           </div>
         </div>
-        <button className="mt-4 px-6 py-2 bg-brand-navy text-white font-semibold rounded-lg hover:bg-blue-900 transition">
+        <button type="submit" className="mt-4 px-6 py-2 bg-brand-navy text-white font-semibold rounded-lg hover:bg-blue-900 transition">
           Apply Filters
         </button>
+        </form>
       </div>
 
       {/* Products Section */}

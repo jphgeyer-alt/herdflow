@@ -42,7 +42,7 @@ export function ProductGrid({ products }: ProductGridProps) {
       {products.map((product) => (
         <Link
           key={product.id}
-          href={`/shop/product/${product.slug}`}
+          href={`/products/${product.slug}`}
           className="group"
         >
           <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-lg transition duration-300">
@@ -87,7 +87,7 @@ export function ProductGrid({ products }: ProductGridProps) {
                 <span className="text-lg font-bold text-brand-navy">
                   {formatPrice(product.priceCents)}
                 </span>
-                <button className="p-2 bg-brand-navy text-white rounded-lg hover:bg-blue-900 transition">
+                <button aria-label={`Add ${product.name} to cart`} className="p-2 bg-brand-navy text-white rounded-lg hover:bg-blue-900 transition">
                   <ShoppingCart size={18} />
                 </button>
               </div>

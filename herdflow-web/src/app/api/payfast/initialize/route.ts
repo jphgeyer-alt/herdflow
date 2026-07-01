@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildPayFastInitializePayload, getPayFastProcessUrl } from "@/lib/payfast/client";
+import { getPayFastConfig } from "@/lib/payfast/config";
 
 type InitializeBody = {
   amount?: number;
@@ -15,6 +16,7 @@ type InitializeBody = {
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as InitializeBody;
+  const payFastConfig = await getPayFastConfig();
 
   if (!body.amount || body.amount <= 0 || !body.itemName || !body.returnUrl || !body.cancelUrl || !body.notifyUrl) {
     return NextResponse.json(
@@ -24,6 +26,14 @@ export async function POST(request: Request) {
   }
 
   const paymentId = body.paymentId || `HF-${Date.now()}`;
+
+  if (!payFastConfig.merchantId || !payFastConfig.merchantKey) {
+    return NextResponse.json(
+      { error: "PayFast merchant configuration is missing." },
+      { status: 500 },
+    );
+  }
+
   const fields = buildPayFastInitializePayload({
     amount: body.amount,
     itemName: body.itemName,
@@ -34,11 +44,11 @@ export async function POST(request: Request) {
     customerFirstName: body.customerFirstName,
     customerLastName: body.customerLastName,
     customerEmail: body.customerEmail,
-  });
+  }, payFastConfig);
 
   return NextResponse.json({
     provider: "PayFast",
-    processUrl: getPayFastProcessUrl(),
+    processUrl: getPayFastProcessUrl(payFastConfig),
     fields,
   });
 }

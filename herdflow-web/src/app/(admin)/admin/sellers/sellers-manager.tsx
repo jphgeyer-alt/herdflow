@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { HerdflowTrusted } from "@/components/ui/HerdflowTrusted";
 
 type Seller = {
   id: string;
@@ -86,6 +87,7 @@ export function SellersManager({ initialSellers }: SellersManagerProps) {
           className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40 w-full sm:w-64"
         />
         <select
+          aria-label="Filter sellers by status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40"
@@ -121,6 +123,7 @@ export function SellersManager({ initialSellers }: SellersManagerProps) {
               <tr key={seller.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3">
                   <div className="font-medium text-gray-800">{seller.farmName}</div>
+                  {seller.status === "APPROVED" && <div className="mt-1"><HerdflowTrusted compact /></div>}
                   <div className="text-xs text-gray-500">{seller.location}</div>
                 </td>
                 <td className="px-4 py-3">
@@ -139,6 +142,7 @@ export function SellersManager({ initialSellers }: SellersManagerProps) {
                 </td>
                 <td className="px-4 py-3">
                   <select
+                    aria-label={`Update status for ${seller.farmName}`}
                     disabled={savingId === seller.id}
                     value={seller.status}
                     onChange={(e) => updateStatus(seller.id, e.target.value)}
