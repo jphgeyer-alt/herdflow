@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 async function getListingData() {
   try {
-    const [initialLivestock, initialProducts] = await Promise.all([
+    const [initialLivestock, initialProducts, categories, sellers] = await Promise.all([
       prisma.listing.findMany({
         orderBy: { createdAt: "desc" },
         include: {
@@ -20,16 +20,18 @@ async function getListingData() {
           seller: { select: { farmName: true } },
         },
       }),
+      prisma.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+      prisma.seller.findMany({ orderBy: { farmName: "asc" }, select: { id: true, farmName: true } }),
     ]);
 
-    return { initialLivestock, initialProducts };
+    return { initialLivestock, initialProducts, categories, sellers };
   } catch {
-    return { initialLivestock: [], initialProducts: [] };
+    return { initialLivestock: [], initialProducts: [], categories: [], sellers: [] };
   }
 }
 
 export default async function AdminProductsPage() {
-  const { initialLivestock, initialProducts } = await getListingData();
+  const { initialLivestock, initialProducts, categories, sellers } = await getListingData();
 
   return (
     <main className="space-y-4 pb-10">
@@ -40,7 +42,12 @@ export default async function AdminProductsPage() {
         </p>
       </header>
 
-      <ListingsManager initialLivestock={initialLivestock} initialProducts={initialProducts} />
+      <ListingsManager
+        initialLivestock={initialLivestock}
+        initialProducts={initialProducts}
+        categories={categories}
+        sellers={sellers}
+      />
     </main>
   );
 }

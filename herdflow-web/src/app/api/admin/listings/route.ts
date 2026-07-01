@@ -18,6 +18,20 @@ type ListingActionBody = {
   };
 };
 
+type ListingCreateBody = {
+  kind?: "product";
+  data?: {
+    name?: string;
+    description?: string;
+    priceCents?: number;
+    stockOnHand?: number;
+    region?: string;
+    categoryId?: string;
+    sellerId?: string;
+    photos?: string[];
+  };
+};
+
 function ensureAdmin(request: NextRequest) {
   const session = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
   return isValidAdminSession(session);
@@ -123,5 +137,77 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Unable to complete listing action." }, { status: 500 });
+  }
+}
+
+function toSlug(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+export async function POST(request: NextRequest) {
+  if (!ensureAdmin(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = (await request.json().catch(() => ({}))) as ListingCreateBody;
+
+  if (body.kind !== "product") {
+    return NextResponse.json({ error: "Only product uploads are supported here." }, { status: 400 });
+  }
+
+  const name = (body.data?.name || "").trim();
+  const description = (body.data?.description || "").trim();
+  const categoryId = (body.data?.categoryId || "").trim();
+  const priceCents = Number(body.data?.priceCents ?? 0);
+  const stockOnHand = Number(body.data?.stockOnHand ?? 0);
+
+  if (!name || !description || !categoryId) {
+    return NextResponse.json({ error: "Name, description and category are required." }, { status: 400 });
+  }
+
+  if (!Number.isInteger(priceCents) || priceCents < 0) {
+    return NextResponse.json({ error: "priceCents must be a non-negative integer." }, { status: 400 });
+  }
+
+  if (!Number.isInteger(stockOnHand) || stockOnHand < 0) {
+    return NextResponse.json({ error: "stockOnHand must be a non-negative integer." }, { status: 400 });
+  }
+
+  const sellerId = (body.data?.sellerId || "").trim() || null;
+  const photos = Array.isArray(body.data?.photos)
+    ? body.data?.photos.filter((item) => typeof item === "string" && item.trim().length > 0).map((item) => item.trim())
+    : [];
+
+  try {
+    const baseSlug = toSlug(name);
+    const slug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
+
+    const product = await prisma.product.create({
+      data: {
+        name,
+        slug,
+        description,
+        priceCents,
+        stockOnHand,
+        region: (body.data?.region || "").trim() || null,
+        categoryId,
+        sellerId,
+        photos,
+        status: "ACTIVE",
+      },
+      include: {
+        category: { select: { name: true } },
+        seller: { select: { farmName: true } },
+      },
+    });
+
+    return NextResponse.json({ ok: true, product });
+  } catch {
+    return NextResponse.json({ error: "Unable to create product." }, { status: 500 });
   }
 }

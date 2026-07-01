@@ -28,6 +28,8 @@ type ProductItem = {
 type ListingsManagerProps = {
   initialLivestock: LivestockItem[];
   initialProducts: ProductItem[];
+  categories: Array<{ id: string; name: string }>;
+  sellers: Array<{ id: string; farmName: string }>;
 };
 
 function toCurrency(cents: number) {
@@ -38,12 +40,22 @@ function toCurrency(cents: number) {
   }).format(cents / 100);
 }
 
-export function ListingsManager({ initialLivestock, initialProducts }: ListingsManagerProps) {
+export function ListingsManager({ initialLivestock, initialProducts, categories, sellers }: ListingsManagerProps) {
   const [livestock, setLivestock] = useState(initialLivestock);
   const [products, setProducts] = useState(initialProducts);
   const [activeTab, setActiveTab] = useState<"livestock" | "products">("livestock");
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: "",
+    description: "",
+    priceCents: "",
+    stockOnHand: "0",
+    region: "",
+    categoryId: categories[0]?.id || "",
+    sellerId: "",
+  });
 
   const filteredLivestock = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -200,6 +212,51 @@ export function ListingsManager({ initialLivestock, initialProducts }: ListingsM
     setProducts((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, name: nextName, priceCents: parsedPrice } : entry)));
   }
 
+  async function createProduct() {
+    setError(null);
+
+    const payload = {
+      kind: "product",
+      data: {
+        name: createForm.name.trim(),
+        description: createForm.description.trim(),
+        priceCents: Number.parseInt(createForm.priceCents, 10),
+        stockOnHand: Number.parseInt(createForm.stockOnHand, 10),
+        region: createForm.region.trim(),
+        categoryId: createForm.categoryId,
+        sellerId: createForm.sellerId,
+      },
+    };
+
+    const response = await fetch("/api/admin/listings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(typeof body.error === "string" ? body.error : "Unable to create product.");
+      return;
+    }
+
+    const created = body.product as ProductItem;
+    if (created) {
+      setProducts((prev) => [created, ...prev]);
+    }
+
+    setCreateForm({
+      name: "",
+      description: "",
+      priceCents: "",
+      stockOnHand: "0",
+      region: "",
+      categoryId: categories[0]?.id || "",
+      sellerId: "",
+    });
+    setCreateOpen(false);
+  }
+
   return (
     <section className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -227,6 +284,81 @@ export function ListingsManager({ initialLivestock, initialProducts }: ListingsM
           value={search}
         />
       </div>
+
+      {activeTab === "products" && (
+        <div className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-semibold text-brand-navy">Upload New Product</h3>
+            <button
+              className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm"
+              onClick={() => setCreateOpen((prev) => !prev)}
+              type="button"
+            >
+              {createOpen ? "Hide" : "Add Product"}
+            </button>
+          </div>
+
+          {createOpen && (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <input
+                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
+                placeholder="Product name"
+                value={createForm.name}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, name: event.target.value }))}
+              />
+              <input
+                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
+                placeholder="Price in cents (e.g. 19900)"
+                value={createForm.priceCents}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, priceCents: event.target.value }))}
+              />
+              <input
+                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
+                placeholder="Stock on hand"
+                value={createForm.stockOnHand}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, stockOnHand: event.target.value }))}
+              />
+              <input
+                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
+                placeholder="Region (optional)"
+                value={createForm.region}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, region: event.target.value }))}
+              />
+              <select
+                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
+                value={createForm.categoryId}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, categoryId: event.target.value }))}
+              >
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+              <select
+                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
+                value={createForm.sellerId}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, sellerId: event.target.value }))}
+              >
+                <option value="">HerdFlow Supply (no seller)</option>
+                {sellers.map((seller) => (
+                  <option key={seller.id} value={seller.id}>{seller.farmName}</option>
+                ))}
+              </select>
+              <textarea
+                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm sm:col-span-2"
+                placeholder="Product description"
+                rows={3}
+                value={createForm.description}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, description: event.target.value }))}
+              />
+              <div className="sm:col-span-2">
+                <button className="rounded-md bg-brand-navy px-4 py-2 text-sm font-semibold text-white" onClick={createProduct} type="button">
+                  Save Product
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {error && (
         <p aria-live="polite" className="text-sm font-semibold text-[#8b1f1f]" role="status">
