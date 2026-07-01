@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
@@ -56,12 +57,14 @@ export default function Home() {
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3">
-              <div className="relative">
-                <svg className="w-12 h-12 text-white" viewBox="0 0 48 48" fill="currentColor">
-                  <path d="M24 8c-4 0-8 2-10 5-1 2-2 4-2 7 0 5 3 9 8 11v8h8v-8c5-2 8-6 8-11 0-3-1-5-2-7-2-3-6-5-10-5z" />
-                  <circle cx="24" cy="20" r="3" fill="white" />
-                </svg>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="HerdFlow logo"
+                width={40}
+                height={40}
+                className="object-contain"
+                priority
+              />
               <div className="leading-tight">
                 <div className="text-2xl font-black text-white tracking-tight">HerdFlow</div>
                 <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-gold">
@@ -164,9 +167,6 @@ export default function Home() {
           <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 md:gap-12 items-center">
             {/* Left Side - Text */}
             <div className="text-white space-y-4 md:space-y-6">
-              <p className="inline-block rounded-full bg-green/20 border border-green px-4 md:px-6 py-2 text-xs font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] text-green">
-                The all-in-one platform for the agricultural community
-              </p>
               
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-white leading-tight w-full break-words hyphens-auto uppercase">
                 The all-in-one platform for the agricultural community
