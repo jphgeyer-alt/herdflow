@@ -41,17 +41,6 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
               </ul>
             </div>
 
-            {/* Auctions */}
-            <div>
-              <h4 className="font-bold mb-4 text-brand-green">Auctions</h4>
-              <ul className="space-y-2 text-sm text-white/70">
-                <li><a href="/auction" className="hover:text-white transition">Live Bidding</a></li>
-                <li><a href="/auction" className="hover:text-white transition">Upcoming</a></li>
-                <li><a href="/auction" className="hover:text-white transition">My Bids</a></li>
-                <li><a href="#" className="hover:text-white transition">Rules</a></li>
-              </ul>
-            </div>
-
             {/* Company */}
             <div>
               <h4 className="font-bold mb-4 text-brand-green">Company</h4>
@@ -99,6 +88,11 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
                 <p className="text-xs font-semibold text-brand-green">Secure</p>
                 <p className="text-xs text-white/60">Protected transactions</p>
               </div>
+            </div>
+
+            <div className="mb-8 rounded-xl border border-white/10 bg-white/5 p-4 text-center">
+              <p className="text-sm font-semibold text-white">Live auctions are accessible from inside the store.</p>
+              <p className="mt-1 text-xs text-white/70">Open Shop to view products and auction entry points together.</p>
             </div>
 
             {/* Copyright */}

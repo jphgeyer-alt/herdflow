@@ -147,6 +147,22 @@ export default async function ShopPage({
         {/* Products Grid */}
         <ProductGrid products={products} />
       </div>
+
+      <section className="rounded-2xl bg-gradient-to-r from-brand-navy to-[#254f8e] p-6 text-white shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d9c08f]">Inside HerdFlow</p>
+        <h2 className="mt-2 text-2xl font-semibold">Looking for live auction lots?</h2>
+        <p className="mt-2 max-w-2xl text-sm text-[#ecf1f8]">
+          Auctions are kept separate from the storefront. You can access them from here when you want to bid on verified livestock lots.
+        </p>
+        <div className="mt-4">
+          <a
+            href="/auction"
+            className="inline-flex rounded-lg bg-brand-green px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+          >
+            Go to Live Auctions
+          </a>
+        </div>
+      </section>
     </div>
   );
 }

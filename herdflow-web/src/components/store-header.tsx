@@ -32,13 +32,6 @@ export function StoreHeader() {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-green group-hover:w-full transition-all" />
             </Link>
             <Link 
-              href="/auction" 
-              className="text-neutral-700 hover:text-brand-green font-medium transition relative group"
-            >
-              Live Auctions
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-green group-hover:w-full transition-all" />
-            </Link>
-            <Link 
               href="/about" 
               className="text-neutral-700 hover:text-brand-green font-medium transition relative group"
             >
@@ -82,9 +75,6 @@ export function StoreHeader() {
           <nav className="md:hidden pb-4 space-y-2">
             <Link href="/shop" className="block px-4 py-2 text-neutral-700 hover:bg-neutral-100 rounded">
               Shop
-            </Link>
-            <Link href="/auction" className="block px-4 py-2 text-neutral-700 hover:bg-neutral-100 rounded">
-              Live Auctions
             </Link>
             <Link href="/about" className="block px-4 py-2 text-neutral-700 hover:bg-neutral-100 rounded">
               About
