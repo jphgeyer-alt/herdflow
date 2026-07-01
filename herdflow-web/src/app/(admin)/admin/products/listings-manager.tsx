@@ -47,6 +47,14 @@ export function ListingsManager({ initialLivestock, initialProducts, categories,
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [productDraft, setProductDraft] = useState({
+    name: "",
+    priceCents: "",
+    stockOnHand: "",
+    region: "",
+    status: "ACTIVE",
+  });
   const [createForm, setCreateForm] = useState({
     name: "",
     description: "",
@@ -181,35 +189,63 @@ export function ListingsManager({ initialLivestock, initialProducts, categories,
   }
 
   async function editProduct(item: ProductItem) {
-    const nextName = window.prompt("Product name", item.name);
-    if (!nextName) {
+    setError(null);
+    setEditingProductId(item.id);
+    setProductDraft({
+      name: item.name,
+      priceCents: String(item.priceCents),
+      stockOnHand: String(item.stockOnHand),
+      region: item.region || "",
+      status: item.status,
+    });
+  }
+
+  async function saveProductEdit(item: ProductItem) {
+    const parsedPrice = Number.parseInt(productDraft.priceCents, 10);
+    const parsedStock = Number.parseInt(productDraft.stockOnHand, 10);
+
+    if (!productDraft.name.trim()) {
+      setError("Product name is required.");
       return;
     }
 
-    const nextPrice = window.prompt("Price in cents", String(item.priceCents));
-    if (!nextPrice) {
-      return;
-    }
-
-    const parsedPrice = Number.parseInt(nextPrice, 10);
     if (!Number.isInteger(parsedPrice) || parsedPrice < 0) {
       setError("Price must be a positive integer in cents.");
       return;
     }
 
+    if (!Number.isInteger(parsedStock) || parsedStock < 0) {
+      setError("Stock must be a positive integer.");
+      return;
+    }
+
     const ok = await runAction("product", item.id, "update", {
-      name: nextName,
+      name: productDraft.name.trim(),
       priceCents: parsedPrice,
-      region: item.region,
-      stockOnHand: item.stockOnHand,
-      status: item.status,
+      region: productDraft.region.trim() || null,
+      stockOnHand: parsedStock,
+      status: productDraft.status,
     });
 
     if (!ok) {
       return;
     }
 
-    setProducts((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, name: nextName, priceCents: parsedPrice } : entry)));
+    setProducts((prev) =>
+      prev.map((entry) =>
+        entry.id === item.id
+          ? {
+              ...entry,
+              name: productDraft.name.trim(),
+              priceCents: parsedPrice,
+              stockOnHand: parsedStock,
+              region: productDraft.region.trim() || null,
+              status: productDraft.status,
+            }
+          : entry,
+      ),
+    );
+    setEditingProductId(null);
   }
 
   async function createProduct() {
@@ -408,16 +444,67 @@ export function ListingsManager({ initialLivestock, initialProducts, categories,
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">{item.category.name}</p>
-                  <h3 className="text-lg font-semibold text-brand-navy">{item.name}</h3>
-                  <p className="text-sm text-[#38537a]">Seller: {item.seller?.farmName || "HerdFlow Supply"}</p>
-                  <p className="text-sm text-[#38537a]">{toCurrency(item.priceCents)} • Stock: {item.stockOnHand}</p>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">Status: {item.status}</p>
+                  {editingProductId === item.id ? (
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      <input
+                        className="rounded-md border border-[#cdd8e7] px-2 py-1 text-sm"
+                        value={productDraft.name}
+                        onChange={(event) => setProductDraft((prev) => ({ ...prev, name: event.target.value }))}
+                      />
+                      <input
+                        className="rounded-md border border-[#cdd8e7] px-2 py-1 text-sm"
+                        value={productDraft.priceCents}
+                        onChange={(event) => setProductDraft((prev) => ({ ...prev, priceCents: event.target.value }))}
+                        placeholder="Price in cents"
+                      />
+                      <input
+                        className="rounded-md border border-[#cdd8e7] px-2 py-1 text-sm"
+                        value={productDraft.stockOnHand}
+                        onChange={(event) => setProductDraft((prev) => ({ ...prev, stockOnHand: event.target.value }))}
+                        placeholder="Stock"
+                      />
+                      <input
+                        className="rounded-md border border-[#cdd8e7] px-2 py-1 text-sm"
+                        value={productDraft.region}
+                        onChange={(event) => setProductDraft((prev) => ({ ...prev, region: event.target.value }))}
+                        placeholder="Region"
+                      />
+                      <select
+                        className="rounded-md border border-[#cdd8e7] px-2 py-1 text-sm sm:col-span-2"
+                        value={productDraft.status}
+                        onChange={(event) => setProductDraft((prev) => ({ ...prev, status: event.target.value }))}
+                      >
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="DRAFT">DRAFT</option>
+                        <option value="OUT_OF_STOCK">OUT_OF_STOCK</option>
+                        <option value="ARCHIVED">ARCHIVED</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="text-lg font-semibold text-brand-navy">{item.name}</h3>
+                      <p className="text-sm text-[#38537a]">Seller: {item.seller?.farmName || "HerdFlow Supply"}</p>
+                      <p className="text-sm text-[#38537a]">{toCurrency(item.priceCents)} • Stock: {item.stockOnHand}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">Status: {item.status}</p>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <button className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm" onClick={() => editProduct(item)} type="button">
-                    Edit
-                  </button>
+                  {editingProductId === item.id ? (
+                    <>
+                      <button className="rounded-md bg-brand-navy px-3 py-1 text-sm text-white" onClick={() => saveProductEdit(item)} type="button">
+                        Save
+                      </button>
+                      <button className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm" onClick={() => setEditingProductId(null)} type="button">
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm" onClick={() => editProduct(item)} type="button">
+                      Edit
+                    </button>
+                  )}
                   <button className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm" onClick={() => approve("product", item.id)} type="button">
                     Approve
                   </button>
