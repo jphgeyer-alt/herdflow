@@ -54,12 +54,12 @@ export default function CheckoutPage() {
 
       const data = await res.json();
 
-      if (res.ok && data.orderId) {
+      if (res.ok && data.orderNumber) {
         // Clear cart
         clearCart();
 
-        // Redirect to payment success page (or PayFast in production)
-        router.push(`/orders/${data.orderId}?status=pending`);
+        // Redirect to order confirmation page
+        router.push(`/orders/${data.orderNumber}`);
       } else {
         setError(data.error || "Failed to create order");
       }
