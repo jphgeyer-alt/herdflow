@@ -28,6 +28,7 @@ type ListingCreateBody = {
     stockOnHand?: number;
     region?: string;
     categoryId?: string;
+    categoryName?: string;   // find-or-create by name
     sellerId?: string;
     photos?: string[];
     // Livestock-specific fields
@@ -35,12 +36,38 @@ type ListingCreateBody = {
     breed?: string;
     weightKg?: number;
     ageMonths?: number;
+    sellerName?: string;   // find-or-create seller by farm name
+    sellerPhone?: string;
   };
 };
 
 function ensureAdmin(request: NextRequest) {
   const session = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
   return isValidAdminSession(session);
+}
+
+function toSlug(value: string) {
+  return value.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
+}
+
+/** Find an existing category by name, or create it */
+async function findOrCreateCategory(name: string): Promise<string> {
+  const slug = toSlug(name);
+  const existing = await prisma.category.findFirst({ where: { OR: [{ slug }, { name: { equals: name, mode: "insensitive" } }] } });
+  if (existing) return existing.id;
+  const created = await prisma.category.create({ data: { name, slug: `${slug}-${Date.now().toString().slice(-4)}`, kind: "BOTH" } });
+  return created.id;
+}
+
+/** Find an existing seller by farmName, or create one with a system user */
+async function findOrCreateSeller(farmName: string, phone?: string, region?: string): Promise<string> {
+  const existing = await prisma.seller.findFirst({ where: { farmName: { equals: farmName, mode: "insensitive" } } });
+  if (existing) return existing.id;
+  const emailSlug = toSlug(farmName);
+  const email = `${emailSlug}-${Date.now().toString().slice(-6)}@herdflow-managed.local`;
+  const user = await prisma.user.create({ data: { email, fullName: farmName, phone: phone || null, role: "CUSTOMER", passwordHash: null } });
+  const seller = await prisma.seller.create({ data: { userId: user.id, farmName, location: region || "South Africa", region: region || "North West", contactPhone: phone || "N/A", nationalIdNumber: "ADMIN_CREATED", idDocumentUrl: "", status: "APPROVED" } });
+  return seller.id;
 }
 
 export async function GET(request: NextRequest) {
@@ -146,15 +173,6 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-function toSlug(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-}
-
 export async function POST(request: NextRequest) {
   if (!ensureAdmin(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -170,41 +188,41 @@ export async function POST(request: NextRequest) {
   if (body.kind === "livestock") {
     const title = (body.data?.title || "").trim();
     const description = (body.data?.description || "").trim();
-    const categoryId = (body.data?.categoryId || "").trim();
-    const sellerId = (body.data?.sellerId || "").trim();
     const region = (body.data?.region || "").trim();
     const breed = (body.data?.breed || "").trim();
     const priceCents = Number(body.data?.priceCents ?? 0);
     const weightKg = body.data?.weightKg ? Number(body.data.weightKg) : null;
     const ageMonths = body.data?.ageMonths ? Number(body.data.ageMonths) : null;
+    const sellerName = (body.data?.sellerName || "").trim();
+    const sellerPhone = (body.data?.sellerPhone || "").trim();
+    const categoryName = (body.data?.categoryName || "Cattle").trim();
 
     if (!title) return NextResponse.json({ error: "Title is required." }, { status: 400 });
     if (!description) return NextResponse.json({ error: "Description is required." }, { status: 400 });
-    if (!categoryId) return NextResponse.json({ error: "Category is required." }, { status: 400 });
-    if (!sellerId) return NextResponse.json({ error: "Seller is required." }, { status: 400 });
-    if (!region) return NextResponse.json({ error: "Region is required." }, { status: 400 });
     if (!breed) return NextResponse.json({ error: "Breed is required." }, { status: 400 });
+    if (!sellerName) return NextResponse.json({ error: "Seller name is required." }, { status: 400 });
+    if (!region) return NextResponse.json({ error: "Region is required." }, { status: 400 });
     if (!Number.isInteger(priceCents) || priceCents < 0) return NextResponse.json({ error: "Price must be a non-negative integer in cents." }, { status: 400 });
 
     try {
+      // Find-or-create category and seller automatically
+      const [categoryId, sellerId] = await Promise.all([
+        findOrCreateCategory(categoryName),
+        findOrCreateSeller(sellerName, sellerPhone || undefined, region),
+      ]);
+
       const baseSlug = toSlug(title);
       const slug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
 
       const listing = await prisma.listing.create({
-        data: {
-          title, slug, description, priceCents, region, breed,
-          weightKg, ageMonths, photos, status: "ACTIVE",
-          categoryId, sellerId,
-        },
-        include: {
-          category: { select: { name: true } },
-          seller: { select: { farmName: true } },
-        },
+        data: { title, slug, description, priceCents, region, breed, weightKg, ageMonths, photos, status: "ACTIVE", categoryId, sellerId },
+        include: { category: { select: { name: true } }, seller: { select: { farmName: true } } },
       });
 
       return NextResponse.json({ ok: true, listing });
-    } catch {
-      return NextResponse.json({ error: "Unable to create livestock listing." }, { status: 500 });
+    } catch (err) {
+      console.error("Livestock create error:", err);
+      return NextResponse.json({ error: "Unable to create livestock listing. Check database connection." }, { status: 500 });
     }
   }
 
@@ -215,12 +233,12 @@ export async function POST(request: NextRequest) {
 
   const name = (body.data?.name || "").trim();
   const description = (body.data?.description || "").trim();
-  const categoryId = (body.data?.categoryId || "").trim();
+  const categoryName = (body.data?.categoryName || "Other").trim();
   const priceCents = Number(body.data?.priceCents ?? 0);
   const stockOnHand = Number(body.data?.stockOnHand ?? 0);
 
-  if (!name || !description || !categoryId) {
-    return NextResponse.json({ error: "Name, description and category are required." }, { status: 400 });
+  if (!name || !description) {
+    return NextResponse.json({ error: "Name and description are required." }, { status: 400 });
   }
 
   if (!Number.isInteger(priceCents) || priceCents < 0) {
@@ -232,24 +250,20 @@ export async function POST(request: NextRequest) {
   }
 
   const sellerId = (body.data?.sellerId || "").trim() || null;
-  const productPhotos = photos; // already extracted above
+  const productPhotos = photos;
 
   try {
+    // Find-or-create category automatically
+    const categoryId = await findOrCreateCategory(categoryName);
+
     const baseSlug = toSlug(name);
     const slug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
 
     const product = await prisma.product.create({
       data: {
-        name,
-        slug,
-        description,
-        priceCents,
-        stockOnHand,
+        name, slug, description, priceCents, stockOnHand,
         region: (body.data?.region || "").trim() || null,
-        categoryId,
-        sellerId,
-        photos: productPhotos,
-        status: "ACTIVE",
+        categoryId, sellerId, photos: productPhotos, status: "ACTIVE",
       },
       include: {
         category: { select: { name: true } },
