@@ -1,92 +1,169 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { listingData } from "@/lib/marketplace-data";
+import { Truck, Phone, Mail, MapPin, Tag, Weight } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 import { HerdflowTrusted } from "@/components/ui/HerdflowTrusted";
+
+export const dynamic = "force-dynamic";
 
 type ListingDetailPageProps = {
   params: Promise<{ slug: string }>;
 };
 
+function toCurrency(cents: number) {
+  return new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
 export default async function ListingDetailPage({ params }: ListingDetailPageProps) {
   const { slug } = await params;
-  const listing = listingData.find((entry) => entry.slug === slug);
 
-  if (!listing) {
+  const listing = await prisma.listing.findUnique({
+    where: { slug },
+    include: {
+      seller: {
+        include: {
+          user: { select: { email: true } },
+        },
+      },
+      category: { select: { name: true } },
+    },
+  });
+
+  if (!listing || listing.status === "ARCHIVED") {
     notFound();
   }
 
-  const isLivestock = listing.kind === "Livestock";
+  const sellerEmail = listing.seller.user.email;
+  const sellerPhone = listing.seller.contactPhone;
+  const sellerName = listing.seller.farmName;
+  const sellerRegion = listing.seller.region;
+  const isTrusted = listing.seller.status === "APPROVED";
+
+  const mainPhoto =
+    listing.photos.length > 0 && (listing.photos[0].startsWith("http") || listing.photos[0].startsWith("/"))
+      ? listing.photos[0]
+      : "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=1200&h=900&fit=crop";
 
   return (
-    <main className="space-y-5 pb-10">
-      <nav className="text-sm text-[#38537a]">
-        <Link className="font-semibold text-brand-navy" href="/listings">
-          Back to Listings
-        </Link>
-      </nav>
+    <div className="min-h-screen bg-[#f5f4ef] py-8 px-4 md:px-8">
+      <div className="mx-auto max-w-5xl space-y-6">
+        {/* Breadcrumb */}
+        <nav className="text-sm text-[#5d7497]">
+          <Link href="/listings" className="font-semibold text-[#1B3A6B] hover:underline">
+            ← Back to Livestock Listings
+          </Link>
+        </nav>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <div className="space-y-3">
-          <div className="h-64 rounded-xl border border-[#d8e0ec] bg-[linear-gradient(180deg,#edf3fb,#e3ecf8)]" />
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {listing.photos.map((photo, index) => (
-              <div
-                key={`${photo}-${index}`}
-                className="h-16 rounded-md border border-[#d8e0ec] bg-[linear-gradient(180deg,#f8f4ea,#f0e5cd)]"
-                aria-label={`Listing photo ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-3 rounded-xl border border-[#d8e0ec] bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">
-            {listing.kind} • {listing.category} • {listing.region}
-          </p>
-          <h1 className="text-3xl font-semibold text-brand-navy">{listing.title}</h1>
-          <p className="text-xl font-semibold text-brand-gold">{listing.price}</p>
-          <p className="text-sm text-[#38537a]">{listing.description}</p>
-
-          {isLivestock && (
-            <div className="rounded-lg bg-[#eef3fb] p-3 text-sm text-[#244367]">
-              <p>
-                <span className="font-semibold">Breed:</span> {listing.breed}
-              </p>
-              <p>
-                <span className="font-semibold">Weight:</span> {listing.weight}
-              </p>
-            </div>
-          )}
-
-          <div className="rounded-lg border border-[#d8e0ec] p-3 text-sm text-[#244367]">
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-semibold text-brand-navy">Seller Information</p>
-              <HerdflowTrusted compact />
-            </div>
-            <p>{listing.seller}</p>
-            <p>{listing.sellerPhone}</p>
-            <p>{listing.sellerEmail}</p>
-          </div>
-
-          <div className="pt-1">
-            {isLivestock ? (
-              <a
-                className="inline-flex w-full items-center justify-center rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white sm:w-auto"
-                href={`mailto:${listing.sellerEmail}?subject=Enquiry%20about%20${encodeURIComponent(listing.title)}`}
-              >
-                Contact Seller
-              </a>
-            ) : (
-              <Link
-                className="inline-flex w-full items-center justify-center rounded-lg bg-brand-gold px-4 py-2 text-sm font-semibold text-[#1d2638] sm:w-auto"
-                href={`/cart?add=${encodeURIComponent(listing.slug)}`}
-              >
-                Add to Cart
-              </Link>
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Photos */}
+          <div className="space-y-3">
+            <div
+              className="h-80 rounded-2xl border border-[#d8e0ec] bg-cover bg-center shadow-lg"
+              style={{ backgroundImage: `url('${mainPhoto}')` }}
+            />
+            {listing.photos.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {listing.photos.slice(1, 5).map((photo, index) => {
+                  const src =
+                    photo.startsWith("http") || photo.startsWith("/")
+                      ? photo
+                      : `https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=400&h=300&fit=crop&sig=${index}`;
+                  return (
+                    <div
+                      key={index}
+                      className="h-20 rounded-lg border border-[#d8e0ec] bg-cover bg-center"
+                      style={{ backgroundImage: `url('${src}')` }}
+                    />
+                  );
+                })}
+              </div>
             )}
           </div>
+
+          {/* Details Card */}
+          <div className="space-y-4 rounded-2xl border border-[#d8e0ec] bg-white p-6 shadow-lg">
+            {/* Category & Region */}
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#5d7497]">
+              <span className="flex items-center gap-1">
+                <Tag size={12} /> {listing.category.name}
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <MapPin size={12} /> {listing.region}
+              </span>
+            </div>
+
+            <h1 className="text-3xl font-black text-[#1B3A6B]">{listing.title}</h1>
+
+            <p className="text-2xl font-bold text-[#A07C3A]">{toCurrency(listing.priceCents)}</p>
+
+            <p className="text-sm text-[#38537a] leading-relaxed">{listing.description}</p>
+
+            {/* Livestock Details */}
+            <div className="rounded-xl bg-[#eef3fb] p-4 text-sm text-[#244367] space-y-2">
+              {listing.breed && (
+                <p className="flex items-center gap-2">
+                  <Tag size={14} className="text-[#1B3A6B]" />
+                  <span className="font-semibold">Breed:</span> {listing.breed}
+                </p>
+              )}
+              {listing.weightKg && (
+                <p className="flex items-center gap-2">
+                  <Weight size={14} className="text-[#1B3A6B]" />
+                  <span className="font-semibold">Weight:</span> {listing.weightKg} kg
+                </p>
+              )}
+              {listing.ageMonths && (
+                <p>
+                  <span className="font-semibold">Age:</span>{" "}
+                  {listing.ageMonths >= 12
+                    ? `${Math.floor(listing.ageMonths / 12)} year${Math.floor(listing.ageMonths / 12) !== 1 ? "s" : ""}`
+                    : `${listing.ageMonths} month${listing.ageMonths !== 1 ? "s" : ""}`}
+                </p>
+              )}
+            </div>
+
+            {/* Seller Info */}
+            <div className="rounded-xl border border-[#d8e0ec] p-4 text-sm text-[#244367] space-y-2">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <p className="font-bold text-[#1B3A6B]">{sellerName}</p>
+                {isTrusted && <HerdflowTrusted compact />}
+              </div>
+              <p className="text-xs text-[#5d7497]">{sellerRegion}</p>
+              <p className="flex items-center gap-2">
+                <Phone size={13} className="text-[#1B3A6B]" />
+                {sellerPhone}
+              </p>
+              <p className="flex items-center gap-2">
+                <Mail size={13} className="text-[#1B3A6B]" />
+                {sellerEmail}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <a
+                href={`mailto:${sellerEmail}?subject=Enquiry%20about%20${encodeURIComponent(listing.title)}`}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-[#1B3A6B] hover:bg-[#16305a] px-5 py-3 text-sm font-bold text-white transition"
+              >
+                <Mail size={16} />
+                Contact Seller
+              </a>
+              <Link
+                href={`/contact?subject=transport&listing=${encodeURIComponent(listing.title)}`}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border-2 border-[#2E7D32] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white px-5 py-3 text-sm font-bold transition"
+              >
+                <Truck size={16} />
+                Arrange Transport
+              </Link>
+            </div>
+          </div>
         </div>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }

@@ -39,7 +39,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#f5f4ef] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl border border-[#e4ebf5] p-8">
-          <h1 className="text-3xl font-black text-[#1B3A6B] mb-2">Welcome Back</h1>
+          <h1 className="text-3xl font-black text-[#1B3A6B] mb-2">Welcome to HerdFlow</h1>
           <p className="text-sm text-[#5d7497] mb-8">Sign in to your HerdFlow account</p>
 
           {error && (

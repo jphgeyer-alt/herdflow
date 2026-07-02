@@ -60,31 +60,66 @@ export function StoreHeader() {
           </Link>
 
           {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6">
+            <Link 
+              href="/" 
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+            >
+              Home
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+            </Link>
+            <Link 
+              href="/about" 
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+            >
+              About Us
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+            </Link>
+            <Link 
+              href="/#features" 
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+            >
+              Features
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+            </Link>
             <Link 
               href="/shop" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
             >
-              Shop
+              Products
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
               href="/listings" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
             >
               Livestock
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
-              href="/about" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group"
+              href="/auction" 
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
             >
-              About
+              Auctions
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+            </Link>
+            <Link 
+              href="/register/logistics" 
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+            >
+              Transport
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+            </Link>
+            <Link 
+              href="/contact?subject=marketing" 
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+            >
+              Marketing & Ads
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
               href="/contact" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
             >
               Contact
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
@@ -115,10 +150,10 @@ export function StoreHeader() {
                   <div className="relative hidden md:block">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition text-white text-sm font-semibold"
+                      className="flex items-center justify-center w-9 h-9 rounded-full bg-[#2E7D32] hover:bg-[#1d5e20] text-white text-sm font-bold uppercase transition"
+                      title={user.fullName}
                     >
-                      <User size={16} />
-                      {user.fullName.split(' ')[0]}
+                      {user.fullName.charAt(0)}
                     </button>
 
                     {userMenuOpen && (
@@ -162,7 +197,7 @@ export function StoreHeader() {
                           </Link>
                         )}
                         <Link
-                          href="/settings"
+                          href="/account/settings"
                           className="flex items-center gap-3 px-4 py-2 text-sm text-[#244367] hover:bg-[#f5f8fd] transition"
                           onClick={() => setUserMenuOpen(false)}
                         >
@@ -203,14 +238,29 @@ export function StoreHeader() {
         {/* Mobile Menu */}
         {menuOpen && (
           <nav className="md:hidden pb-4 space-y-2">
+            <Link href="/" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+              Home
+            </Link>
+            <Link href="/about" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+              About Us
+            </Link>
+            <Link href="/#features" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+              Features
+            </Link>
             <Link href="/shop" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
-              Shop
+              Products
             </Link>
             <Link href="/listings" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
               Livestock
             </Link>
-            <Link href="/about" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
-              About
+            <Link href="/auction" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+              Auctions
+            </Link>
+            <Link href="/register/logistics" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+              Transport
+            </Link>
+            <Link href="/contact?subject=marketing" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+              Marketing & Ads
             </Link>
             <Link href="/contact" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
               Contact
@@ -220,12 +270,30 @@ export function StoreHeader() {
                 {user ? (
                   <>
                     <div className="border-t border-white/20 my-2" />
-                    <Link href={getDashboardLink()} className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+                    <Link href={getDashboardLink()} className="block px-4 py-2 text-white hover:bg-white/10 rounded" onClick={() => setMenuOpen(false)}>
                       My Dashboard
+                    </Link>
+                    {!user.sellerProfile && !user.logisticsProfile && (
+                      <Link href="/orders" className="block px-4 py-2 text-white hover:bg-white/10 rounded" onClick={() => setMenuOpen(false)}>
+                        My Orders
+                      </Link>
+                    )}
+                    {user.sellerProfile && (
+                      <Link href="/dashboard/seller" className="block px-4 py-2 text-white hover:bg-white/10 rounded" onClick={() => setMenuOpen(false)}>
+                        My Listings
+                      </Link>
+                    )}
+                    {user.logisticsProfile && (
+                      <Link href="/dashboard/logistics" className="block px-4 py-2 text-white hover:bg-white/10 rounded" onClick={() => setMenuOpen(false)}>
+                        My Fleet
+                      </Link>
+                    )}
+                    <Link href="/account/settings" className="block px-4 py-2 text-white hover:bg-white/10 rounded" onClick={() => setMenuOpen(false)}>
+                      Account Settings
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-white hover:bg-white/10 rounded"
+                      className="block w-full text-left px-4 py-2 text-red-300 hover:bg-white/10 rounded"
                     >
                       Logout
                     </button>

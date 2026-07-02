@@ -81,7 +81,7 @@ export default function Home() {
               <Link href="/about" className="text-white hover:text-white/80 transition">
                 About Us
               </Link>
-              <Link href="/shop" className="text-white hover:text-white/80 transition">
+              <Link href="#features" className="text-white hover:text-white/80 transition">
                 Features
               </Link>
               <Link href="/shop" className="text-white hover:text-white/80 transition">
@@ -90,10 +90,10 @@ export default function Home() {
               <Link href="/auction" className="text-white hover:text-white/80 transition">
                 Auctions
               </Link>
-              <Link href="/contact" className="text-white hover:text-white/80 transition">
+              <Link href="/register/logistics" className="text-white hover:text-white/80 transition">
                 Transport
               </Link>
-              <Link href="/contact" className="text-white hover:text-white/80 transition">
+              <Link href="/contact?subject=marketing" className="text-white hover:text-white/80 transition">
                 Marketing & Ads
               </Link>
               <Link href="/contact" className="text-white hover:text-white/80 transition">
@@ -225,7 +225,7 @@ export default function Home() {
       </section>
 
       {/* FEATURE CARDS SECTION */}
-      <section className="w-full overflow-hidden py-12 md:py-16 bg-white">
+      <section id="features" className="w-full overflow-hidden py-12 md:py-16 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
             {featureCards.map((card) => (

@@ -12,7 +12,7 @@ export function middleware(request: NextRequest) {
 
     const hasSession = request.cookies.has("hf_admin_session");
     if (!hasSession) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+      return NextResponse.redirect(new URL("/auth/login", request.url));
     }
   }
 
