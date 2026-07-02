@@ -108,22 +108,32 @@ function PhotoUploader({ photos, onChange }: { photos: string[]; onChange: (urls
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
-export function ListingsManager({ initialLivestock, initialProducts, categories, sellers }: ListingsManagerProps) {
+export function ListingsManager({ initialLivestock, initialProducts, categories: initialCategories, sellers: initialSellers }: ListingsManagerProps) {
   const [livestock, setLivestock] = useState(initialLivestock);
   const [products, setProducts] = useState(initialProducts);
+  const [categories, setCategories] = useState(initialCategories);
+  const [sellers, setSellers] = useState(initialSellers);
   const [activeTab, setActiveTab] = useState<"livestock" | "products">("livestock");
   const [search, setSearch] = useState("");
   const [globalError, setGlobalError] = useState("");
   const [globalSuccess, setGlobalSuccess] = useState("");
 
+  // Category seeding
+  const [seeding, setSeeding] = useState(false);
+
+  // Quick-add seller inline
+  const [showQuickSeller, setShowQuickSeller] = useState(false);
+  const [sellerDraft, setSellerDraft] = useState({ farmName: "", ownerName: "", contactPhone: "", region: REGIONS[0] });
+  const [sellerSaving, setSellerSaving] = useState(false);
+
   // Add Livestock form
   const [showAddLivestock, setShowAddLivestock] = useState(false);
-  const [lsForm, setLsForm] = useState({ title: "", description: "", priceRand: "", breed: "", weightKg: "", ageMonths: "", region: REGIONS[0], categoryId: categories[0]?.id || "", sellerId: sellers[0]?.id || "", photos: [] as string[] });
+  const [lsForm, setLsForm] = useState({ title: "", description: "", priceRand: "", breed: "", weightKg: "", ageMonths: "", region: REGIONS[0], categoryId: "", sellerId: "", photos: [] as string[] });
   const [lsSubmitting, setLsSubmitting] = useState(false);
 
   // Add Product form
   const [showAddProduct, setShowAddProduct] = useState(false);
-  const [prodForm, setProdForm] = useState({ name: "", description: "", priceRand: "", stockOnHand: "0", region: "", categoryId: categories[0]?.id || "", sellerId: "", photos: [] as string[] });
+  const [prodForm, setProdForm] = useState({ name: "", description: "", priceRand: "", stockOnHand: "0", region: "", categoryId: "", sellerId: "", photos: [] as string[] });
   const [prodSubmitting, setProdSubmitting] = useState(false);
 
   // Edit Livestock inline
@@ -135,6 +145,30 @@ export function ListingsManager({ initialLivestock, initialProducts, categories,
   const [editProdDraft, setEditProdDraft] = useState({ name: "", priceRand: "", stockOnHand: "", region: "", status: "ACTIVE", photos: [] as string[] });
 
   function showSuccess(msg: string) { setGlobalSuccess(msg); setTimeout(() => setGlobalSuccess(""), 4000); }
+
+  async function seedCategories() {
+    setSeeding(true); setGlobalError("");
+    const res = await fetch("/api/admin/seed", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    setSeeding(false);
+    if (!res.ok) return setGlobalError(data.error || "Failed to seed categories.");
+    setCategories(data.categories || []);
+    showSuccess(`${data.created} categories seeded successfully!`);
+  }
+
+  async function quickAddSeller() {
+    setGlobalError(""); setSellerSaving(true);
+    const res = await fetch("/api/admin/sellers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(sellerDraft) });
+    const data = await res.json().catch(() => ({}));
+    setSellerSaving(false);
+    if (!res.ok) return setGlobalError(data.error || "Failed to create seller.");
+    const newSeller = { id: data.seller.id, farmName: data.seller.farmName };
+    setSellers((p) => [...p, newSeller]);
+    setLsForm((p) => ({ ...p, sellerId: newSeller.id }));
+    setSellerDraft({ farmName: "", ownerName: "", contactPhone: "", region: REGIONS[0] });
+    setShowQuickSeller(false);
+    showSuccess(`Seller "${newSeller.farmName}" created!`);
+  }
 
   // Filter
   const filteredLivestock = livestock.filter((item) => {
@@ -195,7 +229,7 @@ export function ListingsManager({ initialLivestock, initialProducts, categories,
     const body = await res.json().catch(() => ({}));
     if (!res.ok) return setGlobalError(body.error || "Failed to create listing.");
     setLivestock((p) => [body.listing, ...p]);
-    setLsForm({ title: "", description: "", priceRand: "", breed: "", weightKg: "", ageMonths: "", region: REGIONS[0], categoryId: categories[0]?.id || "", sellerId: sellers[0]?.id || "", photos: [] });
+    setLsForm({ title: "", description: "", priceRand: "", breed: "", weightKg: "", ageMonths: "", region: REGIONS[0], categoryId: categories[0]?.id || "", sellerId: "", photos: [] });
     setShowAddLivestock(false);
     showSuccess("Livestock listing created!");
   }
@@ -259,6 +293,50 @@ export function ListingsManager({ initialLivestock, initialProducts, categories,
         </div>
       )}
 
+      {/* ── Setup Banners ──────────────────────────────────────────────── */}
+      {categories.length === 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="font-bold text-amber-800 text-sm">No categories found</p>
+            <p className="text-amber-700 text-xs mt-0.5">Your database has no product categories. Click the button to seed the default categories (Cattle, Sheep, Goats, Equipment, etc.)</p>
+          </div>
+          <button type="button" disabled={seeding} onClick={seedCategories}
+            className="flex-shrink-0 rounded-lg bg-amber-600 hover:bg-amber-700 px-4 py-2 text-sm font-bold text-white transition disabled:opacity-50">
+            {seeding ? "Seeding…" : "Seed Default Categories"}
+          </button>
+        </div>
+      )}
+
+      {sellers.length === 0 && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="font-bold text-blue-800 text-sm">No sellers found</p>
+            <p className="text-blue-700 text-xs mt-0.5">You need at least one seller to create livestock listings. Add a farmer/seller below or wait for sellers to register through the public site.</p>
+          </div>
+          <button type="button" onClick={() => setShowQuickSeller((v) => !v)}
+            className="flex-shrink-0 rounded-lg bg-[#1B3A6B] hover:bg-[#122844] px-4 py-2 text-sm font-bold text-white transition">
+            <Plus size={14} className="inline mr-1" />Add Seller
+          </button>
+        </div>
+      )}
+
+      {/* Quick-add seller inline panel */}
+      {showQuickSeller && (
+        <div className="rounded-2xl border border-[#d8e0ec] bg-white p-6 shadow-lg space-y-4">
+          <h3 className="font-bold text-[#1B3A6B]">Add Seller / Farmer</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div><label className="block text-xs font-semibold text-[#244367] mb-1">Farm / Business Name *</label><input className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="e.g. Botha Family Farm" value={sellerDraft.farmName} onChange={(e) => setSellerDraft((p) => ({ ...p, farmName: e.target.value }))} /></div>
+            <div><label className="block text-xs font-semibold text-[#244367] mb-1">Owner / Contact Name *</label><input className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="e.g. Pieter Botha" value={sellerDraft.ownerName} onChange={(e) => setSellerDraft((p) => ({ ...p, ownerName: e.target.value }))} /></div>
+            <div><label className="block text-xs font-semibold text-[#244367] mb-1">Contact Phone</label><input className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="+27 82 000 0000" value={sellerDraft.contactPhone} onChange={(e) => setSellerDraft((p) => ({ ...p, contactPhone: e.target.value }))} /></div>
+            <div><label className="block text-xs font-semibold text-[#244367] mb-1">Region *</label><select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={sellerDraft.region} onChange={(e) => setSellerDraft((p) => ({ ...p, region: e.target.value }))}>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
+          </div>
+          <div className="flex gap-3">
+            <button type="button" disabled={sellerSaving} onClick={quickAddSeller} className="rounded-lg bg-[#2E7D32] hover:bg-[#1d5e20] px-5 py-2 text-sm font-bold text-white transition disabled:opacity-50">{sellerSaving ? "Saving…" : "Create Seller"}</button>
+            <button type="button" onClick={() => setShowQuickSeller(false)} className="rounded-lg border border-[#cdd8e7] px-5 py-2 text-sm text-[#5d7497] hover:bg-[#f5f8fd] transition">Cancel</button>
+          </div>
+        </div>
+      )}
+
       {/* Tabs + search */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="inline-flex rounded-lg bg-[#ebf1f9] p-1">
@@ -271,7 +349,11 @@ export function ListingsManager({ initialLivestock, initialProducts, categories,
       {/* ── LIVESTOCK TAB ───────────────────────────────────────────────── */}
       {activeTab === "livestock" && (
         <div className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between gap-3">
+            <button type="button" onClick={() => setShowQuickSeller((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#1B3A6B] text-[#1B3A6B] hover:bg-[#f0f5ff] px-4 py-2 text-sm font-semibold transition">
+              <Plus size={14} /> Add Seller
+            </button>
             <button type="button" onClick={() => { setShowAddLivestock((v) => !v); setShowAddProduct(false); }}
               className="inline-flex items-center gap-2 rounded-lg bg-[#2E7D32] hover:bg-[#1d5e20] px-5 py-2.5 text-sm font-bold text-white shadow transition">
               <Plus size={16} /> Add New Livestock Listing
@@ -314,16 +396,24 @@ export function ListingsManager({ initialLivestock, initialProducts, categories,
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-[#244367] mb-1">Category *</label>
-                  <select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={lsForm.categoryId} onChange={(e) => setLsForm((p) => ({ ...p, categoryId: e.target.value }))}>
-                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  {categories.length === 0
+                    ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">No categories yet — click <strong>Seed Default Categories</strong> above first.</div>
+                    : <select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={lsForm.categoryId} onChange={(e) => setLsForm((p) => ({ ...p, categoryId: e.target.value }))}>
+                        <option value="">— Select Category —</option>
+                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-[#244367] mb-1">Seller *</label>
-                  <select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={lsForm.sellerId} onChange={(e) => setLsForm((p) => ({ ...p, sellerId: e.target.value }))}>
-                    <option value="">— Select Seller —</option>
-                    {sellers.map((s) => <option key={s.id} value={s.id}>{s.farmName}</option>)}
-                  </select>
+                  {sellers.length === 0
+                    ? <div className="space-y-2">
+                        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">No sellers yet.</div>
+                        <button type="button" onClick={() => setShowQuickSeller(true)} className="w-full rounded-lg border-2 border-dashed border-[#1B3A6B] text-[#1B3A6B] py-2 text-xs font-bold hover:bg-[#f0f5ff] transition"><Plus size={12} className="inline mr-1" />Add a Seller First</button>
+                      </div>
+                    : <select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={lsForm.sellerId} onChange={(e) => setLsForm((p) => ({ ...p, sellerId: e.target.value }))}>
+                        <option value="">— Select Seller —</option>
+                        {sellers.map((s) => <option key={s.id} value={s.id}>{s.farmName}</option>)}
+                      </select>}
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-[#244367] mb-2">Photos</label>
@@ -407,7 +497,15 @@ export function ListingsManager({ initialLivestock, initialProducts, categories,
                 <div><label className="block text-xs font-semibold text-[#244367] mb-1">Price (R) *</label><input type="number" min="0" step="0.01" className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="e.g. 299.99" value={prodForm.priceRand} onChange={(e) => setProdForm((p) => ({ ...p, priceRand: e.target.value }))} /></div>
                 <div><label className="block text-xs font-semibold text-[#244367] mb-1">Stock on Hand</label><input type="number" min="0" className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="0" value={prodForm.stockOnHand} onChange={(e) => setProdForm((p) => ({ ...p, stockOnHand: e.target.value }))} /></div>
                 <div><label className="block text-xs font-semibold text-[#244367] mb-1">Region (optional)</label><select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={prodForm.region} onChange={(e) => setProdForm((p) => ({ ...p, region: e.target.value }))}><option value="">— All Regions —</option>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
-                <div><label className="block text-xs font-semibold text-[#244367] mb-1">Category *</label><select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={prodForm.categoryId} onChange={(e) => setProdForm((p) => ({ ...p, categoryId: e.target.value }))}>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#244367] mb-1">Category *</label>
+                  {categories.length === 0
+                    ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">No categories yet — click <strong>Seed Default Categories</strong> at the top of this page first.</div>
+                    : <select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={prodForm.categoryId} onChange={(e) => setProdForm((p) => ({ ...p, categoryId: e.target.value }))}>
+                        <option value="">— Select Category —</option>
+                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>}
+                </div>
                 <div><label className="block text-xs font-semibold text-[#244367] mb-1">Seller (optional)</label><select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={prodForm.sellerId} onChange={(e) => setProdForm((p) => ({ ...p, sellerId: e.target.value }))}><option value="">— HerdFlow Direct —</option>{sellers.map((s) => <option key={s.id} value={s.id}>{s.farmName}</option>)}</select></div>
                 <div className="sm:col-span-2"><label className="block text-xs font-semibold text-[#244367] mb-2">Photos</label><PhotoUploader photos={prodForm.photos} onChange={(urls) => setProdForm((p) => ({ ...p, photos: urls }))} /></div>
               </div>
