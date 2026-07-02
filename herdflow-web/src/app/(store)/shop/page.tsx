@@ -27,36 +27,40 @@ export default async function ShopPage({
   const minPriceCents = parseRandToCents(params.minPrice);
   const maxPriceCents = parseRandToCents(params.maxPrice);
 
-  // Fetch products from database
-  const allProducts = await prisma.product.findMany({
-    where: {
-      status: 'ACTIVE',
-      ...(params.search && {
-        OR: [
-          { name: { contains: params.search, mode: 'insensitive' } },
-          { description: { contains: params.search, mode: 'insensitive' } },
-        ],
-      }),
-      ...(params.category && { categoryId: params.category }),
-      ...(minPriceCents !== undefined && { priceCents: { gte: minPriceCents } }),
-      ...(maxPriceCents !== undefined && {
-        priceCents: {
-          ...(minPriceCents !== undefined ? { gte: minPriceCents } : {}),
-          lte: maxPriceCents,
+  // Fetch products from database — graceful fallback on DB error
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let allProducts: any[] = [];
+  let categories: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
+  let dbError = false;
+
+  try {
+    [allProducts, categories] = await Promise.all([
+      prisma.product.findMany({
+        where: {
+          status: 'ACTIVE',
+          ...(params.search && {
+            OR: [
+              { name: { contains: params.search, mode: 'insensitive' } },
+              { description: { contains: params.search, mode: 'insensitive' } },
+            ],
+          }),
+          ...(params.category && { categoryId: params.category }),
+          ...(minPriceCents !== undefined && { priceCents: { gte: minPriceCents } }),
+          ...(maxPriceCents !== undefined && {
+            priceCents: {
+              ...(minPriceCents !== undefined ? { gte: minPriceCents } : {}),
+              lte: maxPriceCents,
+            },
+          }),
         },
+        include: { seller: { select: { farmName: true } } },
+        orderBy: { createdAt: 'desc' },
       }),
-    },
-    include: {
-      seller: {
-        select: {
-          farmName: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+      prisma.category.findMany({ orderBy: { name: 'asc' } }),
+    ]);
+  } catch {
+    dbError = true;
+  }
 
   // Transform to match ProductGrid interface
   const products = allProducts.map(p => ({
@@ -70,16 +74,17 @@ export default async function ShopPage({
     seller: p.seller ? { farmName: p.seller.farmName } : undefined,
   }));
 
-  // Fetch categories for filters
-  const categories = await prisma.category.findMany({
-    orderBy: { name: 'asc' },
-  });
-
   return (
     <div className="bg-[#f5f4ef] min-h-screen">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Hero Banner */}
       <StoreBanner />
+
+      {dbError && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-800">
+          <strong>Note:</strong> We&apos;re having trouble connecting to our product database right now. Please try again shortly or contact support.
+        </div>
+      )}
 
       {/* Filters and Search */}
       <div className="bg-white rounded-lg border border-neutral-200 p-6">

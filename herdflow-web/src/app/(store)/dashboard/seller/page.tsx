@@ -16,55 +16,49 @@ export default async function SellerDashboard() {
     redirect("/auth/login");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { sellerProfile: true },
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let user: any = null;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { sellerProfile: true },
+    });
+  } catch {
+    redirect("/register/seller");
+  }
 
   if (!user?.sellerProfile) {
     redirect("/register/seller");
   }
 
   // Fetch seller listings
-  const activeListings = await prisma.product.findMany({
-    where: { sellerId: user.sellerProfile.id, status: "ACTIVE" },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      priceCents: true,
-      photos: true,
-      stockOnHand: true,
-      status: true,
-    },
-  });
+  type ListingItem = { id: string; name: string; priceCents: number; photos: string[]; stockOnHand: number; status: string };
+  let activeListings: ListingItem[] = [];
+  let pendingListings: ListingItem[] = [];
+  let soldListings: ListingItem[] = [];
 
-  const pendingListings = await prisma.product.findMany({
-    where: { sellerId: user.sellerProfile.id, status: "DRAFT" },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      priceCents: true,
-      photos: true,
-      stockOnHand: true,
-      status: true,
-    },
-  });
-
-  const soldListings = await prisma.product.findMany({
-    where: { sellerId: user.sellerProfile.id, status: "ARCHIVED" },
-    orderBy: { createdAt: "desc" },
-    take: 10,
-    select: {
-      id: true,
-      name: true,
-      priceCents: true,
-      photos: true,
-      stockOnHand: true,
-      status: true,
-    },
-  });
+  try {
+    [activeListings, pendingListings, soldListings] = await Promise.all([
+      prisma.product.findMany({
+        where: { sellerId: user.sellerProfile.id, status: "ACTIVE" },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, name: true, priceCents: true, photos: true, stockOnHand: true, status: true },
+      }),
+      prisma.product.findMany({
+        where: { sellerId: user.sellerProfile.id, status: "DRAFT" },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, name: true, priceCents: true, photos: true, stockOnHand: true, status: true },
+      }),
+      prisma.product.findMany({
+        where: { sellerId: user.sellerProfile.id, status: "ARCHIVED" },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        select: { id: true, name: true, priceCents: true, photos: true, stockOnHand: true, status: true },
+      }),
+    ]);
+  } catch {
+    // DB error — show empty listings
+  }
 
   // Calculate stats (stubbed for now - OrderItem model not in schema yet)
   const totalSales = 0;

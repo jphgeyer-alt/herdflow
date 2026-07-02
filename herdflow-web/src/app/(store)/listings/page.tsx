@@ -21,52 +21,51 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
   const selectedCategory = params.category || "All Categories";
   const selectedRegion = params.region || "All Regions";
 
-  // Fetch categories from database
-  const categories = await prisma.category.findMany({
-    where: { kind: { in: ["LIVESTOCK", "BOTH"] } },
-    orderBy: { name: "asc" },
-  });
+  let categories: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let listings: any[] = [];
+  let dbError = false;
 
-  // Build Prisma where clause
-  const where: any = {
-    status: "ACTIVE",
-  };
-
-  if (selectedCategory && selectedCategory !== "All Categories") {
-    const category = categories.find((c) => c.name === selectedCategory);
-    if (category) {
-      where.categoryId = category.id;
-    }
-  }
-
-  if (selectedRegion && selectedRegion !== "All Regions") {
-    where.region = selectedRegion;
-  }
-
-  // Fetch listings
-  let listings = await prisma.listing.findMany({
-    where,
-    include: {
-      seller: { include: { user: true } },
-      category: true,
-    },
-    orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
-  });
-
-  // Client-side search filter (for title, breed, seller name)
-  if (q) {
-    listings = listings.filter((listing) => {
-      const searchableText = [
-        listing.title,
-        listing.breed,
-        listing.seller.farmName,
-        listing.seller.user.fullName,
-        listing.category.name,
-      ]
-        .join(" ")
-        .toLowerCase();
-      return searchableText.includes(q);
+  try {
+    categories = await prisma.category.findMany({
+      where: { kind: { in: ["LIVESTOCK", "BOTH"] } },
+      orderBy: { name: "asc" },
     });
+
+    const where: Record<string, unknown> = { status: "ACTIVE" };
+    if (selectedCategory && selectedCategory !== "All Categories") {
+      const category = categories.find((c) => c.name === selectedCategory);
+      if (category) where.categoryId = category.id;
+    }
+    if (selectedRegion && selectedRegion !== "All Regions") {
+      where.region = selectedRegion;
+    }
+
+    listings = await prisma.listing.findMany({
+      where,
+      include: {
+        seller: { include: { user: true } },
+        category: true,
+      },
+      orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+    });
+
+    if (q) {
+      listings = listings.filter((listing) => {
+        const searchableText = [
+          listing.title,
+          listing.breed,
+          listing.seller.farmName,
+          listing.seller.user.fullName,
+          listing.category.name,
+        ]
+          .join(" ")
+          .toLowerCase();
+        return searchableText.includes(q);
+      });
+    }
+  } catch {
+    dbError = true;
   }
 
   return (
@@ -81,6 +80,13 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
 
       {/* Main Content */}
       <div className="mx-auto max-w-7xl px-4 md:px-8 py-12 space-y-8">
+
+        {dbError && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-800">
+            <strong>Note:</strong> We&apos;re having trouble connecting to the listings database right now. Please try again shortly.
+          </div>
+        )}
+
         {/* Filters */}
         <section className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] p-6">
           <form className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" method="GET">

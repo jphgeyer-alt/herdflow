@@ -21,17 +21,24 @@ function toCurrency(cents: number) {
 export default async function ListingDetailPage({ params }: ListingDetailPageProps) {
   const { slug } = await params;
 
-  const listing = await prisma.listing.findUnique({
-    where: { slug },
-    include: {
-      seller: {
-        include: {
-          user: { select: { email: true } },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let listing: any = null;
+
+  try {
+    listing = await prisma.listing.findUnique({
+      where: { slug },
+      include: {
+        seller: {
+          include: {
+            user: { select: { email: true } },
+          },
         },
+        category: { select: { name: true } },
       },
-      category: { select: { name: true } },
-    },
-  });
+    });
+  } catch {
+    // DB error — show not found
+  }
 
   if (!listing || listing.status === "ARCHIVED") {
     notFound();
@@ -67,7 +74,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
             />
             {listing.photos.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
-                {listing.photos.slice(1, 5).map((photo, index) => {
+                {(listing.photos as string[]).slice(1, 5).map((photo: string, index: number) => {
                   const src =
                     photo.startsWith("http") || photo.startsWith("/")
                       ? photo

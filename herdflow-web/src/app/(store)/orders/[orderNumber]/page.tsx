@@ -46,29 +46,36 @@ function normalizePhoto(photo?: string) {
 export default async function OrderPage({ params }: OrderPageProps) {
   const { orderNumber } = await params;
 
-  const order = await prisma.order.findUnique({
-    where: { orderNumber },
-    include: {
-      user: {
-        select: {
-          fullName: true,
-          email: true,
-          phone: true,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let order: any = null;
+
+  try {
+    order = await prisma.order.findUnique({
+      where: { orderNumber },
+      include: {
+        user: {
+          select: {
+            fullName: true,
+            email: true,
+            phone: true,
+          },
         },
-      },
-      items: {
-        include: {
-          product: {
-            select: {
-              name: true,
-              slug: true,
-              photos: true,
+        items: {
+          include: {
+            product: {
+              select: {
+                name: true,
+                slug: true,
+                photos: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    });
+  } catch {
+    notFound();
+  }
 
   if (!order) {
     notFound();
@@ -126,7 +133,8 @@ export default async function OrderPage({ params }: OrderPageProps) {
           {order.items.length === 0 ? (
             <p className="text-sm text-[#5d7497]">No items were recorded for this order.</p>
           ) : (
-            order.items.map((item) => (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            order.items.map((item: any) => (
               <article key={item.id} className="grid gap-3 rounded-xl border border-[#e4ebf5] p-3 sm:grid-cols-[88px_1fr_auto] sm:items-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img

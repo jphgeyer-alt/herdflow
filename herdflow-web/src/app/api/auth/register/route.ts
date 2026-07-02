@@ -26,21 +26,24 @@ export async function POST(request: Request) {
   if (!["buyer", "seller", "logistics"].includes(accountType || ""))
     return NextResponse.json({ error: "Please select an account type" }, { status: 400 });
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing)
-    return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
-
   const passwordHash = await hashPassword(password);
 
-  const user = await prisma.user.create({
-    data: {
-      email,
-      fullName,
-      phone: phone || null,
-      passwordHash,
-      role: "CUSTOMER",
-    },
-  });
+  let user;
+  try {
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing)
+      return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+
+    user = await prisma.user.create({
+      data: { email, fullName, phone: phone || null, passwordHash, role: "CUSTOMER" },
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("Unique") || msg.includes("already exists")) {
+      return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+    }
+    return NextResponse.json({ error: "Service temporarily unavailable. Please try again later." }, { status: 503 });
+  }
 
   const sessionValue = createUserSessionValue(user.id);
 

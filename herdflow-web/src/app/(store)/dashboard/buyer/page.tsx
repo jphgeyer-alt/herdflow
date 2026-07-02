@@ -16,26 +16,29 @@ export default async function BuyerDashboard() {
     redirect("/auth/login");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, fullName: true, email: true },
-  });
+  let user: { id: string; fullName: string; email: string } | null = null;
+  let recommendedProducts: Array<{ id: string; name: string; priceCents: number; photos: string[] }> = [];
 
-  if (!user) {
-    redirect("/auth/login");
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, fullName: true, email: true },
+    });
+    if (!user) redirect("/auth/login");
+    recommendedProducts = await prisma.product.findMany({
+      where: { status: "ACTIVE" },
+      take: 4,
+      orderBy: { createdAt: "desc" },
+      select: { id: true, name: true, priceCents: true, photos: true },
+    });
+  } catch {
+    if (!user) redirect("/auth/login");
   }
 
-  // Fetch buyer orders (stubbed for now - Order model not yet in schema)
+  if (!user) redirect("/auth/login");
+
   const pendingOrders: Array<{ id: string; orderNumber: string; deliveryDate: string; status: string; totalCents: number }> = [];
   const recentOrders: Array<{ id: string; orderNumber: string; deliveryDate: string; status: string; totalCents: number }> = [];
-
-  // Fetch recommended products
-  const recommendedProducts = await prisma.product.findMany({
-    where: { status: "ACTIVE" },
-    take: 4,
-    orderBy: { createdAt: "desc" },
-    select: { id: true, name: true, priceCents: true, photos: true },
-  });
 
   return (
     <div className="min-h-screen bg-[#f5f4ef]">

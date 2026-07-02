@@ -65,18 +65,30 @@ async function getRelatedProducts(categoryId: string, currentProductId: string) 
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = await getProduct(slug);
+  
+  let product: Awaited<ReturnType<typeof getProduct>> = null;
+  let relatedProducts: Awaited<ReturnType<typeof getRelatedProducts>> = [];
+
+  try {
+    product = await getProduct(slug);
+  } catch {
+    notFound();
+  }
 
   if (!product || product.status === "ARCHIVED") {
     notFound();
+  }
+
+  try {
+    relatedProducts = await getRelatedProducts(product.categoryId, product.id);
+  } catch {
+    // ignore — related products are optional
   }
 
   const fallbackLabel = `${product.name} product image`;
   const images = (product.photos.length > 0 ? product.photos : [""]).map((photo) =>
     normalizePhoto(photo, fallbackLabel),
   );
-
-  const relatedProducts = await getRelatedProducts(product.categoryId, product.id);
 
   return (
     <main className="space-y-6 pb-10">

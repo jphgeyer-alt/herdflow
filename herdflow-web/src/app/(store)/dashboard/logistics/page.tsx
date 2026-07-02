@@ -16,10 +16,16 @@ export default async function LogisticsDashboard() {
     redirect("/auth/login");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { logisticsProfile: true },
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let user: any = null;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { logisticsProfile: true },
+    });
+  } catch {
+    redirect("/register/logistics");
+  }
 
   if (!user?.logisticsProfile) {
     redirect("/register/logistics");
