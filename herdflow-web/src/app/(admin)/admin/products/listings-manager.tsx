@@ -1,14 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
+import { Upload, X, Plus, Pencil, Trash2, Star, CheckCircle, Image as ImageIcon } from "lucide-react";
+
+// ── Types ────────────────────────────────────────────────────────────────────
 
 type LivestockItem = {
   id: string;
   title: string;
   priceCents: number;
   region: string;
+  breed: string;
+  weightKg: number | null;
+  ageMonths: number | null;
   status: string;
   isFeatured: boolean;
+  photos: string[];
   category: { name: string };
   seller: { farmName: string };
 };
@@ -21,6 +28,7 @@ type ProductItem = {
   stockOnHand: number;
   status: string;
   isFeatured: boolean;
+  photos: string[];
   category: { name: string };
   seller: { farmName: string } | null;
 };
@@ -32,496 +40,432 @@ type ListingsManagerProps = {
   sellers: Array<{ id: string; farmName: string }>;
 };
 
-function toCurrency(cents: number) {
-  return new Intl.NumberFormat("en-ZA", {
-    style: "currency",
-    currency: "ZAR",
-    maximumFractionDigits: 2,
-  }).format(cents / 100);
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function zar(cents: number) {
+  return new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(cents / 100);
 }
+
+const REGIONS = ["North West", "Free State", "Limpopo", "Gauteng", "Mpumalanga", "Northern Cape", "KwaZulu-Natal", "Western Cape", "Eastern Cape"];
+const STATUSES_LIVESTOCK = ["ACTIVE", "DRAFT", "SOLD", "ARCHIVED"];
+const STATUSES_PRODUCT = ["ACTIVE", "DRAFT", "OUT_OF_STOCK", "ARCHIVED"];
+
+// ── Photo Uploader ───────────────────────────────────────────────────────────
+
+function PhotoUploader({ photos, onChange }: { photos: string[]; onChange: (urls: string[]) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setUploadError("");
+    setUploading(true);
+    const newUrls: string[] = [];
+    for (const file of Array.from(files)) {
+      const fd = new FormData();
+      fd.append("file", file);
+      try {
+        const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+        const data = await res.json();
+        if (res.ok && data.url) newUrls.push(data.url);
+        else setUploadError(data.error || "Upload failed");
+      } catch { setUploadError("Network error during upload"); }
+    }
+    setUploading(false);
+    if (newUrls.length > 0) onChange([...photos, ...newUrls]);
+  }
+
+  function removePhoto(index: number) { onChange(photos.filter((_, i) => i !== index)); }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-3">
+        {photos.map((url, i) => (
+          <div key={url + i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-[#cdd8e7] group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+            <button type="button" onClick={() => removePhoto(i)}
+              className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+              <X size={12} />
+            </button>
+          </div>
+        ))}
+        <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading}
+          className="w-24 h-24 rounded-lg border-2 border-dashed border-[#cdd8e7] flex flex-col items-center justify-center text-[#5d7497] hover:border-[#1B3A6B] hover:text-[#1B3A6B] transition disabled:opacity-50">
+          {uploading
+            ? <div className="w-5 h-5 border-2 border-[#1B3A6B] border-t-transparent rounded-full animate-spin" />
+            : <><Upload size={20} /><span className="text-[10px] mt-1 font-semibold">Upload</span></>}
+        </button>
+      </div>
+      <input ref={inputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp" multiple className="hidden"
+        onChange={(e) => handleFiles(e.target.files)} />
+      {uploadError && <p className="text-xs text-red-600">{uploadError}</p>}
+      <p className="text-xs text-[#5d7497]">JPEG, PNG, WebP • Max 10 MB per file • Multiple photos allowed</p>
+    </div>
+  );
+}
+
+// ── Main Component ───────────────────────────────────────────────────────────
 
 export function ListingsManager({ initialLivestock, initialProducts, categories, sellers }: ListingsManagerProps) {
   const [livestock, setLivestock] = useState(initialLivestock);
   const [products, setProducts] = useState(initialProducts);
   const [activeTab, setActiveTab] = useState<"livestock" | "products">("livestock");
   const [search, setSearch] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editingProductId, setEditingProductId] = useState<string | null>(null);
-  const [productDraft, setProductDraft] = useState({
-    name: "",
-    priceCents: "",
-    stockOnHand: "",
-    region: "",
-    status: "ACTIVE",
+  const [globalError, setGlobalError] = useState("");
+  const [globalSuccess, setGlobalSuccess] = useState("");
+
+  // Add Livestock form
+  const [showAddLivestock, setShowAddLivestock] = useState(false);
+  const [lsForm, setLsForm] = useState({ title: "", description: "", priceRand: "", breed: "", weightKg: "", ageMonths: "", region: REGIONS[0], categoryId: categories[0]?.id || "", sellerId: sellers[0]?.id || "", photos: [] as string[] });
+  const [lsSubmitting, setLsSubmitting] = useState(false);
+
+  // Add Product form
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [prodForm, setProdForm] = useState({ name: "", description: "", priceRand: "", stockOnHand: "0", region: "", categoryId: categories[0]?.id || "", sellerId: "", photos: [] as string[] });
+  const [prodSubmitting, setProdSubmitting] = useState(false);
+
+  // Edit Livestock inline
+  const [editingLsId, setEditingLsId] = useState<string | null>(null);
+  const [editLsDraft, setEditLsDraft] = useState({ title: "", priceRand: "", breed: "", weightKg: "", ageMonths: "", region: "", status: "ACTIVE", photos: [] as string[] });
+
+  // Edit Product inline
+  const [editingProdId, setEditingProdId] = useState<string | null>(null);
+  const [editProdDraft, setEditProdDraft] = useState({ name: "", priceRand: "", stockOnHand: "", region: "", status: "ACTIVE", photos: [] as string[] });
+
+  function showSuccess(msg: string) { setGlobalSuccess(msg); setTimeout(() => setGlobalSuccess(""), 4000); }
+
+  // Filter
+  const filteredLivestock = livestock.filter((item) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return item.title.toLowerCase().includes(q) || item.breed.toLowerCase().includes(q) || item.category.name.toLowerCase().includes(q) || item.seller.farmName.toLowerCase().includes(q);
   });
-  const [createForm, setCreateForm] = useState({
-    name: "",
-    description: "",
-    priceCents: "",
-    stockOnHand: "0",
-    region: "",
-    categoryId: categories[0]?.id || "",
-    sellerId: "",
+  const filteredProducts = products.filter((item) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return item.name.toLowerCase().includes(q) || item.category.name.toLowerCase().includes(q) || (item.seller?.farmName || "").toLowerCase().includes(q);
   });
 
-  const filteredLivestock = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) {
-      return livestock;
-    }
-
-    return livestock.filter((item) => {
-      return (
-        item.title.toLowerCase().includes(q) ||
-        item.category.name.toLowerCase().includes(q) ||
-        item.seller.farmName.toLowerCase().includes(q)
-      );
-    });
-  }, [livestock, search]);
-
-  const filteredProducts = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) {
-      return products;
-    }
-
-    return products.filter((item) => {
-      return (
-        item.name.toLowerCase().includes(q) ||
-        item.category.name.toLowerCase().includes(q) ||
-        (item.seller?.farmName || "").toLowerCase().includes(q)
-      );
-    });
-  }, [products, search]);
-
-  async function runAction(
-    kind: "livestock" | "product",
-    id: string,
-    action: "approve" | "update" | "feature" | "delete",
-    data?: Record<string, unknown>,
-  ) {
-    setError(null);
-
-    const response = await fetch("/api/admin/listings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind, id, action, data }),
-    });
-
-    if (!response.ok) {
-      const payload = await response.json().catch(() => ({}));
-      setError(typeof payload.error === "string" ? payload.error : "Action failed.");
-      return false;
-    }
-
+  // Actions
+  async function runAction(kind: "livestock" | "product", id: string, action: string, data?: Record<string, unknown>) {
+    setGlobalError("");
+    const res = await fetch("/api/admin/listings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, id, action, data }) });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); setGlobalError(d.error || "Action failed"); return false; }
     return true;
+  }
+
+  async function deleteItem(kind: "livestock" | "product", id: string) {
+    if (!confirm(`Delete this ${kind === "livestock" ? "listing" : "product"}? This cannot be undone.`)) return;
+    const ok = await runAction(kind, id, "delete");
+    if (!ok) return;
+    if (kind === "livestock") setLivestock((p) => p.filter((x) => x.id !== id));
+    else setProducts((p) => p.filter((x) => x.id !== id));
+    showSuccess("Deleted successfully.");
+  }
+
+  async function toggleFeatured(kind: "livestock" | "product", id: string, val: boolean) {
+    const ok = await runAction(kind, id, "feature", { isFeatured: val });
+    if (!ok) return;
+    if (kind === "livestock") setLivestock((p) => p.map((x) => x.id === id ? { ...x, isFeatured: val } : x));
+    else setProducts((p) => p.map((x) => x.id === id ? { ...x, isFeatured: val } : x));
   }
 
   async function approve(kind: "livestock" | "product", id: string) {
     const ok = await runAction(kind, id, "approve");
-    if (!ok) {
-      return;
-    }
-
-    if (kind === "livestock") {
-      setLivestock((prev) => prev.map((item) => (item.id === id ? { ...item, status: "ACTIVE" } : item)));
-    } else {
-      setProducts((prev) => prev.map((item) => (item.id === id ? { ...item, status: "ACTIVE" } : item)));
-    }
+    if (!ok) return;
+    if (kind === "livestock") setLivestock((p) => p.map((x) => x.id === id ? { ...x, status: "ACTIVE" } : x));
+    else setProducts((p) => p.map((x) => x.id === id ? { ...x, status: "ACTIVE" } : x));
+    showSuccess("Approved.");
   }
 
-  async function toggleFeatured(kind: "livestock" | "product", id: string, nextValue: boolean) {
-    const ok = await runAction(kind, id, "feature", { isFeatured: nextValue });
-    if (!ok) {
-      return;
-    }
-
-    if (kind === "livestock") {
-      setLivestock((prev) => prev.map((item) => (item.id === id ? { ...item, isFeatured: nextValue } : item)));
-    } else {
-      setProducts((prev) => prev.map((item) => (item.id === id ? { ...item, isFeatured: nextValue } : item)));
-    }
+  // Create Livestock
+  async function submitAddLivestock() {
+    setGlobalError("");
+    const priceCents = Math.round(parseFloat(lsForm.priceRand || "0") * 100);
+    if (!lsForm.title.trim()) return setGlobalError("Title is required.");
+    if (!lsForm.description.trim()) return setGlobalError("Description is required.");
+    if (!lsForm.breed.trim()) return setGlobalError("Breed is required.");
+    if (!lsForm.sellerId) return setGlobalError("Please select a seller.");
+    if (isNaN(priceCents) || priceCents < 0) return setGlobalError("Enter a valid price.");
+    setLsSubmitting(true);
+    const res = await fetch("/api/admin/listings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "livestock", data: { title: lsForm.title.trim(), description: lsForm.description.trim(), priceCents, breed: lsForm.breed.trim(), weightKg: lsForm.weightKg ? Number(lsForm.weightKg) : null, ageMonths: lsForm.ageMonths ? Number(lsForm.ageMonths) : null, region: lsForm.region, categoryId: lsForm.categoryId, sellerId: lsForm.sellerId, photos: lsForm.photos } }) });
+    setLsSubmitting(false);
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return setGlobalError(body.error || "Failed to create listing.");
+    setLivestock((p) => [body.listing, ...p]);
+    setLsForm({ title: "", description: "", priceRand: "", breed: "", weightKg: "", ageMonths: "", region: REGIONS[0], categoryId: categories[0]?.id || "", sellerId: sellers[0]?.id || "", photos: [] });
+    setShowAddLivestock(false);
+    showSuccess("Livestock listing created!");
   }
 
-  async function remove(kind: "livestock" | "product", id: string) {
-    const ok = await runAction(kind, id, "delete");
-    if (!ok) {
-      return;
-    }
-
-    if (kind === "livestock") {
-      setLivestock((prev) => prev.filter((item) => item.id !== id));
-    } else {
-      setProducts((prev) => prev.filter((item) => item.id !== id));
-    }
+  // Create Product
+  async function submitAddProduct() {
+    setGlobalError("");
+    const priceCents = Math.round(parseFloat(prodForm.priceRand || "0") * 100);
+    if (!prodForm.name.trim()) return setGlobalError("Product name is required.");
+    if (!prodForm.description.trim()) return setGlobalError("Description is required.");
+    if (!prodForm.categoryId) return setGlobalError("Please select a category.");
+    if (isNaN(priceCents) || priceCents < 0) return setGlobalError("Enter a valid price.");
+    setProdSubmitting(true);
+    const res = await fetch("/api/admin/listings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "product", data: { name: prodForm.name.trim(), description: prodForm.description.trim(), priceCents, stockOnHand: Number(prodForm.stockOnHand) || 0, region: prodForm.region.trim() || null, categoryId: prodForm.categoryId, sellerId: prodForm.sellerId || null, photos: prodForm.photos } }) });
+    setProdSubmitting(false);
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return setGlobalError(body.error || "Failed to create product.");
+    setProducts((p) => [body.product, ...p]);
+    setProdForm({ name: "", description: "", priceRand: "", stockOnHand: "0", region: "", categoryId: categories[0]?.id || "", sellerId: "", photos: [] });
+    setShowAddProduct(false);
+    showSuccess("Product created!");
   }
 
-  async function editLivestock(item: LivestockItem) {
-    const nextTitle = window.prompt("Listing title", item.title);
-    if (!nextTitle) {
-      return;
-    }
-
-    const nextPrice = window.prompt("Price in cents", String(item.priceCents));
-    if (!nextPrice) {
-      return;
-    }
-
-    const parsedPrice = Number.parseInt(nextPrice, 10);
-    if (!Number.isInteger(parsedPrice) || parsedPrice < 0) {
-      setError("Price must be a positive integer in cents.");
-      return;
-    }
-
-    const ok = await runAction("livestock", item.id, "update", {
-      title: nextTitle,
-      priceCents: parsedPrice,
-      region: item.region,
-      status: item.status,
-    });
-
-    if (!ok) {
-      return;
-    }
-
-    setLivestock((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, title: nextTitle, priceCents: parsedPrice } : entry)));
+  // Save Edit Livestock
+  async function saveEditLivestock(item: LivestockItem) {
+    setGlobalError("");
+    const priceCents = Math.round(parseFloat(editLsDraft.priceRand || "0") * 100);
+    if (!editLsDraft.title.trim()) return setGlobalError("Title is required.");
+    if (isNaN(priceCents) || priceCents < 0) return setGlobalError("Invalid price.");
+    const ok = await runAction("livestock", item.id, "update", { title: editLsDraft.title.trim(), priceCents, region: editLsDraft.region, status: editLsDraft.status });
+    if (!ok) return;
+    setLivestock((p) => p.map((x) => x.id === item.id ? { ...x, title: editLsDraft.title.trim(), priceCents, region: editLsDraft.region, status: editLsDraft.status, breed: editLsDraft.breed, photos: editLsDraft.photos } : x));
+    setEditingLsId(null);
+    showSuccess("Listing updated.");
   }
 
-  async function editProduct(item: ProductItem) {
-    setError(null);
-    setEditingProductId(item.id);
-    setProductDraft({
-      name: item.name,
-      priceCents: String(item.priceCents),
-      stockOnHand: String(item.stockOnHand),
-      region: item.region || "",
-      status: item.status,
-    });
-  }
-
-  async function saveProductEdit(item: ProductItem) {
-    const parsedPrice = Number.parseInt(productDraft.priceCents, 10);
-    const parsedStock = Number.parseInt(productDraft.stockOnHand, 10);
-
-    if (!productDraft.name.trim()) {
-      setError("Product name is required.");
-      return;
-    }
-
-    if (!Number.isInteger(parsedPrice) || parsedPrice < 0) {
-      setError("Price must be a positive integer in cents.");
-      return;
-    }
-
-    if (!Number.isInteger(parsedStock) || parsedStock < 0) {
-      setError("Stock must be a positive integer.");
-      return;
-    }
-
-    const ok = await runAction("product", item.id, "update", {
-      name: productDraft.name.trim(),
-      priceCents: parsedPrice,
-      region: productDraft.region.trim() || null,
-      stockOnHand: parsedStock,
-      status: productDraft.status,
-    });
-
-    if (!ok) {
-      return;
-    }
-
-    setProducts((prev) =>
-      prev.map((entry) =>
-        entry.id === item.id
-          ? {
-              ...entry,
-              name: productDraft.name.trim(),
-              priceCents: parsedPrice,
-              stockOnHand: parsedStock,
-              region: productDraft.region.trim() || null,
-              status: productDraft.status,
-            }
-          : entry,
-      ),
-    );
-    setEditingProductId(null);
-  }
-
-  async function createProduct() {
-    setError(null);
-
-    const payload = {
-      kind: "product",
-      data: {
-        name: createForm.name.trim(),
-        description: createForm.description.trim(),
-        priceCents: Number.parseInt(createForm.priceCents, 10),
-        stockOnHand: Number.parseInt(createForm.stockOnHand, 10),
-        region: createForm.region.trim(),
-        categoryId: createForm.categoryId,
-        sellerId: createForm.sellerId,
-      },
-    };
-
-    const response = await fetch("/api/admin/listings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      setError(typeof body.error === "string" ? body.error : "Unable to create product.");
-      return;
-    }
-
-    const created = body.product as ProductItem;
-    if (created) {
-      setProducts((prev) => [created, ...prev]);
-    }
-
-    setCreateForm({
-      name: "",
-      description: "",
-      priceCents: "",
-      stockOnHand: "0",
-      region: "",
-      categoryId: categories[0]?.id || "",
-      sellerId: "",
-    });
-    setCreateOpen(false);
+  // Save Edit Product
+  async function saveEditProduct(item: ProductItem) {
+    setGlobalError("");
+    const priceCents = Math.round(parseFloat(editProdDraft.priceRand || "0") * 100);
+    if (!editProdDraft.name.trim()) return setGlobalError("Name is required.");
+    if (isNaN(priceCents) || priceCents < 0) return setGlobalError("Invalid price.");
+    const ok = await runAction("product", item.id, "update", { name: editProdDraft.name.trim(), priceCents, region: editProdDraft.region.trim() || null, stockOnHand: Number(editProdDraft.stockOnHand) || 0, status: editProdDraft.status });
+    if (!ok) return;
+    setProducts((p) => p.map((x) => x.id === item.id ? { ...x, name: editProdDraft.name.trim(), priceCents, region: editProdDraft.region || null, stockOnHand: Number(editProdDraft.stockOnHand) || 0, status: editProdDraft.status, photos: editProdDraft.photos } : x));
+    setEditingProdId(null);
+    showSuccess("Product updated.");
   }
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
+      {/* Messages */}
+      {globalError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 flex items-center justify-between">
+          {globalError}<button onClick={() => setGlobalError("")}><X size={16} /></button>
+        </div>
+      )}
+      {globalSuccess && (
+        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-center gap-2">
+          <CheckCircle size={16} />{globalSuccess}
+        </div>
+      )}
+
+      {/* Tabs + search */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="inline-flex rounded-lg bg-[#ebf1f9] p-1">
-          <button
-            className={`rounded-md px-3 py-1 text-sm font-semibold ${activeTab === "livestock" ? "bg-white text-brand-navy" : "text-[#5d7497]"}`}
-            onClick={() => setActiveTab("livestock")}
-            type="button"
-          >
-            Livestock Listings
-          </button>
-          <button
-            className={`rounded-md px-3 py-1 text-sm font-semibold ${activeTab === "products" ? "bg-white text-brand-navy" : "text-[#5d7497]"}`}
-            onClick={() => setActiveTab("products")}
-            type="button"
-          >
-            Products
-          </button>
+          <button className={`rounded-md px-4 py-2 text-sm font-semibold transition ${activeTab === "livestock" ? "bg-white text-[#1B3A6B] shadow-sm" : "text-[#5d7497]"}`} onClick={() => setActiveTab("livestock")} type="button">Livestock ({livestock.length})</button>
+          <button className={`rounded-md px-4 py-2 text-sm font-semibold transition ${activeTab === "products" ? "bg-white text-[#1B3A6B] shadow-sm" : "text-[#5d7497]"}`} onClick={() => setActiveTab("products")} type="button">Products ({products.length})</button>
         </div>
-
-        <input
-          className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm sm:w-72"
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search title, category, seller"
-          value={search}
-        />
+        <input className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm sm:w-72 focus:outline-none focus:border-[#1B3A6B]" placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
-      {activeTab === "products" && (
-        <div className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold text-brand-navy">Upload New Product</h3>
-            <button
-              className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm"
-              onClick={() => setCreateOpen((prev) => !prev)}
-              type="button"
-            >
-              {createOpen ? "Hide" : "Add Product"}
+      {/* ── LIVESTOCK TAB ───────────────────────────────────────────────── */}
+      {activeTab === "livestock" && (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => { setShowAddLivestock((v) => !v); setShowAddProduct(false); }}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#2E7D32] hover:bg-[#1d5e20] px-5 py-2.5 text-sm font-bold text-white shadow transition">
+              <Plus size={16} /> Add New Livestock Listing
             </button>
           </div>
 
-          {createOpen && (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <input
-                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
-                placeholder="Product name"
-                value={createForm.name}
-                onChange={(event) => setCreateForm((prev) => ({ ...prev, name: event.target.value }))}
-              />
-              <input
-                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
-                placeholder="Price in cents (e.g. 19900)"
-                value={createForm.priceCents}
-                onChange={(event) => setCreateForm((prev) => ({ ...prev, priceCents: event.target.value }))}
-              />
-              <input
-                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
-                placeholder="Stock on hand"
-                value={createForm.stockOnHand}
-                onChange={(event) => setCreateForm((prev) => ({ ...prev, stockOnHand: event.target.value }))}
-              />
-              <input
-                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
-                placeholder="Region (optional)"
-                value={createForm.region}
-                onChange={(event) => setCreateForm((prev) => ({ ...prev, region: event.target.value }))}
-              />
-              <select
-                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
-                value={createForm.categoryId}
-                onChange={(event) => setCreateForm((prev) => ({ ...prev, categoryId: event.target.value }))}
-              >
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
-                ))}
-              </select>
-              <select
-                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm"
-                value={createForm.sellerId}
-                onChange={(event) => setCreateForm((prev) => ({ ...prev, sellerId: event.target.value }))}
-              >
-                <option value="">HerdFlow Supply (no seller)</option>
-                {sellers.map((seller) => (
-                  <option key={seller.id} value={seller.id}>{seller.farmName}</option>
-                ))}
-              </select>
-              <textarea
-                className="rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm sm:col-span-2"
-                placeholder="Product description"
-                rows={3}
-                value={createForm.description}
-                onChange={(event) => setCreateForm((prev) => ({ ...prev, description: event.target.value }))}
-              />
-              <div className="sm:col-span-2">
-                <button className="rounded-md bg-brand-navy px-4 py-2 text-sm font-semibold text-white" onClick={createProduct} type="button">
-                  Save Product
-                </button>
+          {showAddLivestock && (
+            <div className="rounded-2xl border border-[#d8e0ec] bg-white p-6 shadow-lg space-y-5">
+              <h3 className="text-lg font-bold text-[#1B3A6B]">New Livestock Listing</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-[#244367] mb-1">Title *</label>
+                  <input className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="e.g. 10 Angus Breeding Cows" value={lsForm.title} onChange={(e) => setLsForm((p) => ({ ...p, title: e.target.value }))} />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-[#244367] mb-1">Description *</label>
+                  <textarea rows={3} className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B] resize-none" placeholder="Health status, feeding, vaccinations…" value={lsForm.description} onChange={(e) => setLsForm((p) => ({ ...p, description: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#244367] mb-1">Price (R) *</label>
+                  <input type="number" min="0" step="0.01" className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="e.g. 15000" value={lsForm.priceRand} onChange={(e) => setLsForm((p) => ({ ...p, priceRand: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#244367] mb-1">Breed *</label>
+                  <input className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="e.g. Angus, Hereford, Brahman" value={lsForm.breed} onChange={(e) => setLsForm((p) => ({ ...p, breed: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#244367] mb-1">Weight (kg)</label>
+                  <input type="number" min="0" className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="e.g. 450" value={lsForm.weightKg} onChange={(e) => setLsForm((p) => ({ ...p, weightKg: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#244367] mb-1">Age (months)</label>
+                  <input type="number" min="0" className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="e.g. 36" value={lsForm.ageMonths} onChange={(e) => setLsForm((p) => ({ ...p, ageMonths: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#244367] mb-1">Region *</label>
+                  <select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={lsForm.region} onChange={(e) => setLsForm((p) => ({ ...p, region: e.target.value }))}>
+                    {REGIONS.map((r) => <option key={r}>{r}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#244367] mb-1">Category *</label>
+                  <select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={lsForm.categoryId} onChange={(e) => setLsForm((p) => ({ ...p, categoryId: e.target.value }))}>
+                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#244367] mb-1">Seller *</label>
+                  <select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={lsForm.sellerId} onChange={(e) => setLsForm((p) => ({ ...p, sellerId: e.target.value }))}>
+                    <option value="">— Select Seller —</option>
+                    {sellers.map((s) => <option key={s.id} value={s.id}>{s.farmName}</option>)}
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-[#244367] mb-2">Photos</label>
+                  <PhotoUploader photos={lsForm.photos} onChange={(urls) => setLsForm((p) => ({ ...p, photos: urls }))} />
+                </div>
               </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" disabled={lsSubmitting} onClick={submitAddLivestock} className="flex-1 rounded-lg bg-[#2E7D32] hover:bg-[#1d5e20] px-5 py-3 text-sm font-bold text-white transition disabled:opacity-50">{lsSubmitting ? "Creating…" : "Create Livestock Listing"}</button>
+                <button type="button" onClick={() => setShowAddLivestock(false)} className="rounded-lg border border-[#cdd8e7] px-5 py-3 text-sm font-semibold text-[#5d7497] hover:bg-[#f5f8fd] transition">Cancel</button>
+              </div>
+            </div>
+          )}
+
+          {filteredLivestock.length === 0 ? (
+            <div className="rounded-2xl border border-[#e4ebf5] bg-white p-12 text-center">
+              <ImageIcon size={48} className="mx-auto text-[#cdd8e7] mb-3" />
+              <p className="text-[#5d7497]">No livestock listings yet. Click &ldquo;Add New Livestock Listing&rdquo; to create one.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredLivestock.map((item) => (
+                <div key={item.id} className="rounded-2xl border border-[#e4ebf5] bg-white p-5 shadow-sm">
+                  {editingLsId === item.id ? (
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-[#1B3A6B]">Editing: {item.title}</h4>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="sm:col-span-2"><label className="block text-xs font-semibold text-[#244367] mb-1">Title</label><input className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={editLsDraft.title} onChange={(e) => setEditLsDraft((p) => ({ ...p, title: e.target.value }))} /></div>
+                        <div><label className="block text-xs font-semibold text-[#244367] mb-1">Price (R)</label><input type="number" min="0" step="0.01" className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={editLsDraft.priceRand} onChange={(e) => setEditLsDraft((p) => ({ ...p, priceRand: e.target.value }))} /></div>
+                        <div><label className="block text-xs font-semibold text-[#244367] mb-1">Breed</label><input className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={editLsDraft.breed} onChange={(e) => setEditLsDraft((p) => ({ ...p, breed: e.target.value }))} /></div>
+                        <div><label className="block text-xs font-semibold text-[#244367] mb-1">Region</label><select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={editLsDraft.region} onChange={(e) => setEditLsDraft((p) => ({ ...p, region: e.target.value }))}>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
+                        <div><label className="block text-xs font-semibold text-[#244367] mb-1">Status</label><select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={editLsDraft.status} onChange={(e) => setEditLsDraft((p) => ({ ...p, status: e.target.value }))}>{STATUSES_LIVESTOCK.map((s) => <option key={s}>{s}</option>)}</select></div>
+                        <div className="sm:col-span-2"><label className="block text-xs font-semibold text-[#244367] mb-2">Photos</label><PhotoUploader photos={editLsDraft.photos} onChange={(urls) => setEditLsDraft((p) => ({ ...p, photos: urls }))} /></div>
+                      </div>
+                      <div className="flex gap-3"><button type="button" onClick={() => saveEditLivestock(item)} className="rounded-lg bg-[#1B3A6B] hover:bg-[#122844] px-5 py-2 text-sm font-bold text-white transition">Save Changes</button><button type="button" onClick={() => setEditingLsId(null)} className="rounded-lg border border-[#cdd8e7] px-5 py-2 text-sm text-[#5d7497] hover:bg-[#f5f8fd] transition">Cancel</button></div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      {item.photos[0]
+                        ? <img src={item.photos[0]} alt={item.title} className="w-20 h-16 rounded-lg object-cover border border-[#e4ebf5] flex-shrink-0" />
+                        : <div className="w-20 h-16 rounded-lg bg-[#f0f5ff] border border-[#e4ebf5] flex items-center justify-center flex-shrink-0"><ImageIcon size={20} className="text-[#cdd8e7]" /></div>}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-[#1B3A6B] truncate">{item.title}</p>
+                        <p className="text-xs text-[#5d7497]">{item.category.name} • {item.region} • {item.seller.farmName}</p>
+                        <p className="text-xs text-[#5d7497]">Breed: {item.breed}{item.weightKg ? ` • ${item.weightKg}kg` : ""}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <p className="font-bold text-[#2E7D32]">{zar(item.priceCents)}</p>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${item.status === "ACTIVE" ? "bg-green-100 text-green-800" : item.status === "SOLD" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-600"}`}>{item.status}</span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {item.status !== "ACTIVE" && <button type="button" onClick={() => approve("livestock", item.id)} title="Approve" className="p-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition"><CheckCircle size={16} /></button>}
+                        <button type="button" onClick={() => toggleFeatured("livestock", item.id, !item.isFeatured)} className={`p-2 rounded-lg transition ${item.isFeatured ? "bg-amber-100 text-amber-700" : "bg-gray-50 text-gray-400"}`}><Star size={16} fill={item.isFeatured ? "currentColor" : "none"} /></button>
+                        <button type="button" onClick={() => { setEditingLsId(item.id); setEditLsDraft({ title: item.title, priceRand: String(item.priceCents / 100), breed: item.breed, weightKg: item.weightKg ? String(item.weightKg) : "", ageMonths: item.ageMonths ? String(item.ageMonths) : "", region: item.region, status: item.status, photos: [...item.photos] }); }} className="p-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition"><Pencil size={16} /></button>
+                        <button type="button" onClick={() => deleteItem("livestock", item.id)} className="p-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition"><Trash2 size={16} /></button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
       )}
 
-      {error && (
-        <p aria-live="polite" className="text-sm font-semibold text-[#8b1f1f]" role="status">
-          {error}
-        </p>
-      )}
+      {/* ── PRODUCTS TAB ────────────────────────────────────────────────── */}
+      {activeTab === "products" && (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => { setShowAddProduct((v) => !v); setShowAddLivestock(false); }}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#1B3A6B] hover:bg-[#122844] px-5 py-2.5 text-sm font-bold text-white shadow transition">
+              <Plus size={16} /> Add New Product
+            </button>
+          </div>
 
-      {activeTab === "livestock" ? (
-        <div className="space-y-3">
-          {filteredLivestock.map((item) => (
-            <article key={item.id} className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">{item.category.name}</p>
-                  <h3 className="text-lg font-semibold text-brand-navy">{item.title}</h3>
-                  <p className="text-sm text-[#38537a]">Seller: {item.seller.farmName}</p>
-                  <p className="text-sm text-[#38537a]">{toCurrency(item.priceCents)} • {item.region}</p>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">Status: {item.status}</p>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <button className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm" onClick={() => editLivestock(item)} type="button">
-                    Edit
-                  </button>
-                  <button className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm" onClick={() => approve("livestock", item.id)} type="button">
-                    Approve
-                  </button>
-                  <button
-                    className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm"
-                    onClick={() => toggleFeatured("livestock", item.id, !item.isFeatured)}
-                    type="button"
-                  >
-                    {item.isFeatured ? "Unfeature" : "Feature"}
-                  </button>
-                  <button className="rounded-md border border-[#e4cbc8] px-3 py-1 text-sm text-[#8b1f1f]" onClick={() => remove("livestock", item.id)} type="button">
-                    Delete
-                  </button>
-                </div>
+          {showAddProduct && (
+            <div className="rounded-2xl border border-[#d8e0ec] bg-white p-6 shadow-lg space-y-5">
+              <h3 className="text-lg font-bold text-[#1B3A6B]">New Shop Product</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2"><label className="block text-xs font-semibold text-[#244367] mb-1">Product Name *</label><input className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="e.g. Protein Livestock Feed 50kg" value={prodForm.name} onChange={(e) => setProdForm((p) => ({ ...p, name: e.target.value }))} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-semibold text-[#244367] mb-1">Description *</label><textarea rows={3} className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B] resize-none" placeholder="Describe the product" value={prodForm.description} onChange={(e) => setProdForm((p) => ({ ...p, description: e.target.value }))} /></div>
+                <div><label className="block text-xs font-semibold text-[#244367] mb-1">Price (R) *</label><input type="number" min="0" step="0.01" className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="e.g. 299.99" value={prodForm.priceRand} onChange={(e) => setProdForm((p) => ({ ...p, priceRand: e.target.value }))} /></div>
+                <div><label className="block text-xs font-semibold text-[#244367] mb-1">Stock on Hand</label><input type="number" min="0" className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" placeholder="0" value={prodForm.stockOnHand} onChange={(e) => setProdForm((p) => ({ ...p, stockOnHand: e.target.value }))} /></div>
+                <div><label className="block text-xs font-semibold text-[#244367] mb-1">Region (optional)</label><select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={prodForm.region} onChange={(e) => setProdForm((p) => ({ ...p, region: e.target.value }))}><option value="">— All Regions —</option>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
+                <div><label className="block text-xs font-semibold text-[#244367] mb-1">Category *</label><select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={prodForm.categoryId} onChange={(e) => setProdForm((p) => ({ ...p, categoryId: e.target.value }))}>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+                <div><label className="block text-xs font-semibold text-[#244367] mb-1">Seller (optional)</label><select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={prodForm.sellerId} onChange={(e) => setProdForm((p) => ({ ...p, sellerId: e.target.value }))}><option value="">— HerdFlow Direct —</option>{sellers.map((s) => <option key={s.id} value={s.id}>{s.farmName}</option>)}</select></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-semibold text-[#244367] mb-2">Photos</label><PhotoUploader photos={prodForm.photos} onChange={(urls) => setProdForm((p) => ({ ...p, photos: urls }))} /></div>
               </div>
-            </article>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredProducts.map((item) => (
-            <article key={item.id} className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">{item.category.name}</p>
-                  {editingProductId === item.id ? (
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                      <input
-                        className="rounded-md border border-[#cdd8e7] px-2 py-1 text-sm"
-                        value={productDraft.name}
-                        onChange={(event) => setProductDraft((prev) => ({ ...prev, name: event.target.value }))}
-                      />
-                      <input
-                        className="rounded-md border border-[#cdd8e7] px-2 py-1 text-sm"
-                        value={productDraft.priceCents}
-                        onChange={(event) => setProductDraft((prev) => ({ ...prev, priceCents: event.target.value }))}
-                        placeholder="Price in cents"
-                      />
-                      <input
-                        className="rounded-md border border-[#cdd8e7] px-2 py-1 text-sm"
-                        value={productDraft.stockOnHand}
-                        onChange={(event) => setProductDraft((prev) => ({ ...prev, stockOnHand: event.target.value }))}
-                        placeholder="Stock"
-                      />
-                      <input
-                        className="rounded-md border border-[#cdd8e7] px-2 py-1 text-sm"
-                        value={productDraft.region}
-                        onChange={(event) => setProductDraft((prev) => ({ ...prev, region: event.target.value }))}
-                        placeholder="Region"
-                      />
-                      <select
-                        className="rounded-md border border-[#cdd8e7] px-2 py-1 text-sm sm:col-span-2"
-                        value={productDraft.status}
-                        onChange={(event) => setProductDraft((prev) => ({ ...prev, status: event.target.value }))}
-                      >
-                        <option value="ACTIVE">ACTIVE</option>
-                        <option value="DRAFT">DRAFT</option>
-                        <option value="OUT_OF_STOCK">OUT_OF_STOCK</option>
-                        <option value="ARCHIVED">ARCHIVED</option>
-                      </select>
+              <div className="flex gap-3 pt-2">
+                <button type="button" disabled={prodSubmitting} onClick={submitAddProduct} className="flex-1 rounded-lg bg-[#1B3A6B] hover:bg-[#122844] px-5 py-3 text-sm font-bold text-white transition disabled:opacity-50">{prodSubmitting ? "Creating…" : "Create Product"}</button>
+                <button type="button" onClick={() => setShowAddProduct(false)} className="rounded-lg border border-[#cdd8e7] px-5 py-3 text-sm font-semibold text-[#5d7497] hover:bg-[#f5f8fd] transition">Cancel</button>
+              </div>
+            </div>
+          )}
+
+          {filteredProducts.length === 0 ? (
+            <div className="rounded-2xl border border-[#e4ebf5] bg-white p-12 text-center">
+              <ImageIcon size={48} className="mx-auto text-[#cdd8e7] mb-3" />
+              <p className="text-[#5d7497]">No products yet. Click &ldquo;Add New Product&rdquo; to create one.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredProducts.map((item) => (
+                <div key={item.id} className="rounded-2xl border border-[#e4ebf5] bg-white p-5 shadow-sm">
+                  {editingProdId === item.id ? (
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-[#1B3A6B]">Editing: {item.name}</h4>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="sm:col-span-2"><label className="block text-xs font-semibold text-[#244367] mb-1">Name</label><input className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={editProdDraft.name} onChange={(e) => setEditProdDraft((p) => ({ ...p, name: e.target.value }))} /></div>
+                        <div><label className="block text-xs font-semibold text-[#244367] mb-1">Price (R)</label><input type="number" min="0" step="0.01" className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={editProdDraft.priceRand} onChange={(e) => setEditProdDraft((p) => ({ ...p, priceRand: e.target.value }))} /></div>
+                        <div><label className="block text-xs font-semibold text-[#244367] mb-1">Stock</label><input type="number" min="0" className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={editProdDraft.stockOnHand} onChange={(e) => setEditProdDraft((p) => ({ ...p, stockOnHand: e.target.value }))} /></div>
+                        <div><label className="block text-xs font-semibold text-[#244367] mb-1">Region</label><select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={editProdDraft.region} onChange={(e) => setEditProdDraft((p) => ({ ...p, region: e.target.value }))}><option value="">— All Regions —</option>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
+                        <div><label className="block text-xs font-semibold text-[#244367] mb-1">Status</label><select className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:border-[#1B3A6B]" value={editProdDraft.status} onChange={(e) => setEditProdDraft((p) => ({ ...p, status: e.target.value }))}>{STATUSES_PRODUCT.map((s) => <option key={s}>{s}</option>)}</select></div>
+                        <div className="sm:col-span-2"><label className="block text-xs font-semibold text-[#244367] mb-2">Photos</label><PhotoUploader photos={editProdDraft.photos} onChange={(urls) => setEditProdDraft((p) => ({ ...p, photos: urls }))} /></div>
+                      </div>
+                      <div className="flex gap-3"><button type="button" onClick={() => saveEditProduct(item)} className="rounded-lg bg-[#1B3A6B] hover:bg-[#122844] px-5 py-2 text-sm font-bold text-white transition">Save Changes</button><button type="button" onClick={() => setEditingProdId(null)} className="rounded-lg border border-[#cdd8e7] px-5 py-2 text-sm text-[#5d7497] hover:bg-[#f5f8fd] transition">Cancel</button></div>
                     </div>
                   ) : (
-                    <>
-                      <h3 className="text-lg font-semibold text-brand-navy">{item.name}</h3>
-                      <p className="text-sm text-[#38537a]">Seller: {item.seller?.farmName || "HerdFlow Supply"}</p>
-                      <p className="text-sm text-[#38537a]">{toCurrency(item.priceCents)} • Stock: {item.stockOnHand}</p>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">Status: {item.status}</p>
-                    </>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      {item.photos[0]
+                        ? <img src={item.photos[0]} alt={item.name} className="w-20 h-16 rounded-lg object-cover border border-[#e4ebf5] flex-shrink-0" />
+                        : <div className="w-20 h-16 rounded-lg bg-[#f0f5ff] border border-[#e4ebf5] flex items-center justify-center flex-shrink-0"><ImageIcon size={20} className="text-[#cdd8e7]" /></div>}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-[#1B3A6B] truncate">{item.name}</p>
+                        <p className="text-xs text-[#5d7497]">{item.category.name}{item.seller ? ` • ${item.seller.farmName}` : ""}</p>
+                        <p className="text-xs text-[#5d7497]">Stock: {item.stockOnHand}{item.region ? ` • ${item.region}` : ""}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <p className="font-bold text-[#2E7D32]">{zar(item.priceCents)}</p>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${item.status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}>{item.status}</span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {item.status !== "ACTIVE" && <button type="button" onClick={() => approve("product", item.id)} title="Approve" className="p-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition"><CheckCircle size={16} /></button>}
+                        <button type="button" onClick={() => toggleFeatured("product", item.id, !item.isFeatured)} className={`p-2 rounded-lg transition ${item.isFeatured ? "bg-amber-100 text-amber-700" : "bg-gray-50 text-gray-400"}`}><Star size={16} fill={item.isFeatured ? "currentColor" : "none"} /></button>
+                        <button type="button" onClick={() => { setEditingProdId(item.id); setEditProdDraft({ name: item.name, priceRand: String(item.priceCents / 100), stockOnHand: String(item.stockOnHand), region: item.region || "", status: item.status, photos: [...item.photos] }); }} className="p-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition"><Pencil size={16} /></button>
+                        <button type="button" onClick={() => deleteItem("product", item.id)} className="p-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition"><Trash2 size={16} /></button>
+                      </div>
+                    </div>
                   )}
                 </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {editingProductId === item.id ? (
-                    <>
-                      <button className="rounded-md bg-brand-navy px-3 py-1 text-sm text-white" onClick={() => saveProductEdit(item)} type="button">
-                        Save
-                      </button>
-                      <button className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm" onClick={() => setEditingProductId(null)} type="button">
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <button className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm" onClick={() => editProduct(item)} type="button">
-                      Edit
-                    </button>
-                  )}
-                  <button className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm" onClick={() => approve("product", item.id)} type="button">
-                    Approve
-                  </button>
-                  <button
-                    className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm"
-                    onClick={() => toggleFeatured("product", item.id, !item.isFeatured)}
-                    type="button"
-                  >
-                    {item.isFeatured ? "Unfeature" : "Feature"}
-                  </button>
-                  <button className="rounded-md border border-[#e4cbc8] px-3 py-1 text-sm text-[#8b1f1f]" onClick={() => remove("product", item.id)} type="button">
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </article>
-          ))}
+              ))}
+            </div>
+          )}
         </div>
       )}
     </section>

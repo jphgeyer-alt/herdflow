@@ -19,8 +19,9 @@ type ListingActionBody = {
 };
 
 type ListingCreateBody = {
-  kind?: "product";
+  kind?: "product" | "livestock";
   data?: {
+    // Product fields
     name?: string;
     description?: string;
     priceCents?: number;
@@ -29,6 +30,11 @@ type ListingCreateBody = {
     categoryId?: string;
     sellerId?: string;
     photos?: string[];
+    // Livestock-specific fields
+    title?: string;
+    breed?: string;
+    weightKg?: number;
+    ageMonths?: number;
   };
 };
 
@@ -156,8 +162,55 @@ export async function POST(request: NextRequest) {
 
   const body = (await request.json().catch(() => ({}))) as ListingCreateBody;
 
+  const photos = Array.isArray(body.data?.photos)
+    ? (body.data?.photos as string[]).filter((p) => typeof p === "string" && p.trim().length > 0).map((p) => p.trim())
+    : [];
+
+  // ── Create Livestock Listing ─────────────────────────────────────────
+  if (body.kind === "livestock") {
+    const title = (body.data?.title || "").trim();
+    const description = (body.data?.description || "").trim();
+    const categoryId = (body.data?.categoryId || "").trim();
+    const sellerId = (body.data?.sellerId || "").trim();
+    const region = (body.data?.region || "").trim();
+    const breed = (body.data?.breed || "").trim();
+    const priceCents = Number(body.data?.priceCents ?? 0);
+    const weightKg = body.data?.weightKg ? Number(body.data.weightKg) : null;
+    const ageMonths = body.data?.ageMonths ? Number(body.data.ageMonths) : null;
+
+    if (!title) return NextResponse.json({ error: "Title is required." }, { status: 400 });
+    if (!description) return NextResponse.json({ error: "Description is required." }, { status: 400 });
+    if (!categoryId) return NextResponse.json({ error: "Category is required." }, { status: 400 });
+    if (!sellerId) return NextResponse.json({ error: "Seller is required." }, { status: 400 });
+    if (!region) return NextResponse.json({ error: "Region is required." }, { status: 400 });
+    if (!breed) return NextResponse.json({ error: "Breed is required." }, { status: 400 });
+    if (!Number.isInteger(priceCents) || priceCents < 0) return NextResponse.json({ error: "Price must be a non-negative integer in cents." }, { status: 400 });
+
+    try {
+      const baseSlug = toSlug(title);
+      const slug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
+
+      const listing = await prisma.listing.create({
+        data: {
+          title, slug, description, priceCents, region, breed,
+          weightKg, ageMonths, photos, status: "ACTIVE",
+          categoryId, sellerId,
+        },
+        include: {
+          category: { select: { name: true } },
+          seller: { select: { farmName: true } },
+        },
+      });
+
+      return NextResponse.json({ ok: true, listing });
+    } catch {
+      return NextResponse.json({ error: "Unable to create livestock listing." }, { status: 500 });
+    }
+  }
+
+  // ── Create Shop Product ──────────────────────────────────────────────
   if (body.kind !== "product") {
-    return NextResponse.json({ error: "Only product uploads are supported here." }, { status: 400 });
+    return NextResponse.json({ error: "kind must be 'product' or 'livestock'." }, { status: 400 });
   }
 
   const name = (body.data?.name || "").trim();
@@ -179,9 +232,7 @@ export async function POST(request: NextRequest) {
   }
 
   const sellerId = (body.data?.sellerId || "").trim() || null;
-  const photos = Array.isArray(body.data?.photos)
-    ? body.data?.photos.filter((item) => typeof item === "string" && item.trim().length > 0).map((item) => item.trim())
-    : [];
+  const productPhotos = photos; // already extracted above
 
   try {
     const baseSlug = toSlug(name);
@@ -197,7 +248,7 @@ export async function POST(request: NextRequest) {
         region: (body.data?.region || "").trim() || null,
         categoryId,
         sellerId,
-        photos,
+        photos: productPhotos,
         status: "ACTIVE",
       },
       include: {
