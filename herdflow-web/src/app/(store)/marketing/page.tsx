@@ -7,7 +7,6 @@ async function getActiveSponsors() {
   try {
     return await prisma.sponsor.findMany({
       where: { status: "ACTIVE" },
-      select: { id: true, companyName: true, logoUrl: true, website: true },
       orderBy: { approvedAt: "desc" },
     });
   } catch {

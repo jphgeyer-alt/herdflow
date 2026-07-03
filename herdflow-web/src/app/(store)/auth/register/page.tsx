@@ -3,6 +3,8 @@
 import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { PasswordStrength } from "@/components/ui/PasswordStrength";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -92,27 +94,29 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[#244367] mb-2">Password</label>
-              <input
-                type="password"
+              <PasswordInput
+                id="password"
+                label="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                className="w-full px-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
                 placeholder="At least 8 characters"
+                required
+                autoComplete="new-password"
+                minLength={8}
               />
+              <PasswordStrength password={password} />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[#244367] mb-2">Confirm Password</label>
-              <input
-                type="password"
+              <PasswordInput
+                id="confirmPassword"
+                label="Confirm Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
                 placeholder="Re-enter your password"
+                required
+                autoComplete="new-password"
+                error={confirmPassword.length > 0 && password !== confirmPassword ? "Passwords do not match" : undefined}
               />
             </div>
 
