@@ -11,6 +11,9 @@ type LotSnapshot = {
   breed: string | null;
   weightKg: number | null;
   region: string | null;
+  species: string | null;
+  quantity: number;
+  images: string[];
   startingPriceCents: number;
   reservePriceCents: number | null;
   currentBidCents: number;

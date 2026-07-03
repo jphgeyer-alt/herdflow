@@ -33,6 +33,8 @@ type Session = {
   scheduledAt: string;
   lotCount: number;
   topBidCents: number;
+  bannerImage: string | null;
+  thumbnail: string | null;
 };
 
 async function getSessions(): Promise<Session[]> {
@@ -54,6 +56,8 @@ async function getSessions(): Promise<Session[]> {
       scheduledAt: s.scheduledAt.toISOString(),
       lotCount: s.lots.length,
       topBidCents: s.lots.reduce((max, l) => Math.max(max, l.currentBidCents ?? 0), 0),
+      bannerImage: s.bannerImage ?? null,
+      thumbnail: s.thumbnail ?? null,
     }));
   } catch {
     return [];
@@ -130,15 +134,29 @@ export default async function AuctionPage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {sessions.map((s) => (
                 <article key={s.id} className="flex flex-col rounded-xl border border-[#d8e0ec] bg-white shadow-sm hover:shadow-md transition overflow-hidden">
-                  <div className="h-24 bg-gradient-to-r from-[#1B3A6B] to-[#254f8e] flex items-center justify-center">
-                    <span className="text-3xl font-black text-[#d9c08f]/30 uppercase">{s.title.charAt(0)}</span>
+                  {/* Banner image */}
+                  <div className="relative h-32 bg-gradient-to-r from-[#1B3A6B] to-[#254f8e] overflow-hidden">
+                    {(s.bannerImage || s.thumbnail) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={(s.bannerImage || s.thumbnail)!}
+                        alt={s.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-4xl font-black text-[#d9c08f]/20 uppercase">{s.title.charAt(0)}</span>
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2">
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLASS[s.status]}`}>
+                        {STATUS_LABEL[s.status]}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex-1 p-5 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <h2 className="font-bold text-[#1B3A6B]">{s.title}</h2>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLASS[s.status]}`}>
-                        {STATUS_LABEL[s.status]}
-                      </span>
                     </div>
                     <p className="text-xs text-[#5d7497]">{fmtDate(s.scheduledAt)}</p>
                     <p className="text-sm text-[#38537a]">

@@ -375,11 +375,17 @@ export function AuctionsManager({ initialSessions }: Props) {
                   >
                     Bidders
                   </Link>
+                  <Link
+                    href={`/admin/auctions/${s.id}/lots`}
+                    className="rounded-lg bg-[#1B3A6B] hover:bg-[#122844] text-white px-3 py-1.5 text-xs font-bold"
+                  >
+                    📦 Manage Lots
+                  </Link>
                   <button
                     onClick={() => setExpandedId((prev) => (prev === s.id ? null : s.id))}
                     className="rounded-lg border border-[#cdd8e7] px-3 py-1.5 text-xs font-semibold text-[#244367]"
                   >
-                    {expandedId === s.id ? "Hide Lots" : "Manage Lots"}
+                    {expandedId === s.id ? "Hide Lots" : "Quick Lots"}
                   </button>
                   {s.status !== "LIVE" && (
                     <button

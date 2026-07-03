@@ -192,6 +192,8 @@ model AuctionSession {
   videoUrl      String?
   streamKey     String?
   photos        String[]
+  bannerImage   String?
+  thumbnail     String?
   maxBidders    Int?
 
   lots          AuctionLot[]
@@ -208,9 +210,16 @@ model AuctionLot {
   lotNumber           Int
   title               String
   description         String
+  species             String?
   breed               String?
+  quantity            Int              @default(1)
+  gender              String?
   weightKg            Int?
   region              String?
+  location            String?
+  healthStatus        String?
+  images              String[]
+  documents           String[]
   startingPriceCents  Int
   reservePriceCents   Int?
   currentBidCents     Int              @default(0)

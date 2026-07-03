@@ -73,6 +73,10 @@ export async function POST(request: Request) {
         description: isString(b.description) ? (b.description as string).trim() : "",
         scheduledAt,
         status: "UPCOMING",
+        bannerImage: isString(b.bannerImage) ? (b.bannerImage as string) : undefined,
+        thumbnail: isString(b.thumbnail) ? (b.thumbnail as string) : undefined,
+        videoUrl: isString(b.videoUrl) ? (b.videoUrl as string) : undefined,
+        videoType: isString(b.videoType) ? (b.videoType as string) : undefined,
       },
     });
     return NextResponse.json({ session }, { status: 201 });
@@ -96,6 +100,28 @@ export async function PATCH(request: Request) {
   if (!body || typeof body !== "object") return NextResponse.json({ error: "Invalid body" }, { status: 400 });
 
   const b = body as Record<string, unknown>;
+
+  // Update session fields (title, description, images, video, etc.)
+  if (isString(b.id) && b.action === "update") {
+    try {
+      const session = await prisma.auctionSession.update({
+        where: { id: b.id as string },
+        data: {
+          ...(isString(b.title) && { title: (b.title as string).trim() }),
+          ...(b.description !== undefined && { description: String(b.description).trim() }),
+          ...(b.bannerImage !== undefined && { bannerImage: b.bannerImage ? String(b.bannerImage) : null }),
+          ...(b.thumbnail !== undefined && { thumbnail: b.thumbnail ? String(b.thumbnail) : null }),
+          ...(b.videoUrl !== undefined && { videoUrl: b.videoUrl ? String(b.videoUrl) : null }),
+          ...(b.videoType !== undefined && { videoType: b.videoType ? String(b.videoType) : null }),
+          ...(b.scheduledAt !== undefined && { scheduledAt: new Date(b.scheduledAt as string) }),
+        },
+      });
+      return NextResponse.json({ session });
+    } catch (err) {
+      console.error("[admin/auctions PATCH update]", err);
+      return NextResponse.json({ error: "Failed to update auction" }, { status: 500 });
+    }
+  }
 
   // Update session status
   if (isString(b.sessionId) && isString(b.status)) {
