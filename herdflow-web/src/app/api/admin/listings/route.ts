@@ -116,6 +116,7 @@ export async function PATCH(request: NextRequest) {
   try {
     if (kind === "livestock") {
       if (action === "delete") {
+        // Livestock listings have no FK dependents that would block deletion
         await prisma.listing.delete({ where: { id } });
       }
 
@@ -142,7 +143,12 @@ export async function PATCH(request: NextRequest) {
 
     if (kind === "product") {
       if (action === "delete") {
-        await prisma.product.delete({ where: { id } });
+        // OrderItem has a hard FK to Product with no onDelete cascade.
+        // Delete related OrderItems first inside a transaction, then the product.
+        await prisma.$transaction([
+          prisma.orderItem.deleteMany({ where: { productId: id } }),
+          prisma.product.delete({ where: { id } }),
+        ]);
       }
 
       if (action === "approve") {
@@ -168,8 +174,13 @@ export async function PATCH(request: NextRequest) {
     }
 
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: "Unable to complete listing action." }, { status: 500 });
+  } catch (err) {
+    console.error("Listing action error [kind=%s action=%s id=%s]:", kind, action, id, err);
+    const detail = err instanceof Error ? err.message : String(err);
+    return NextResponse.json(
+      { error: `Failed to ${action} ${kind}: ${detail}` },
+      { status: 500 }
+    );
   }
 }
 

@@ -157,6 +157,10 @@ export function ListingsManager({ initialLivestock, initialProducts, categories:
   const [globalError, setGlobalError] = useState("");
   const [globalSuccess, setGlobalSuccess] = useState("");
 
+  // Confirmation modal state
+  const [pendingDelete, setPendingDelete] = useState<{ kind: "livestock" | "product"; id: string; name: string } | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   // Category seeding
   const [seeding, setSeeding] = useState(false);
 
@@ -235,17 +239,35 @@ export function ListingsManager({ initialLivestock, initialProducts, categories:
   async function runAction(kind: "livestock" | "product", id: string, action: string, data?: Record<string, unknown>) {
     setGlobalError("");
     const res = await fetch("/api/admin/listings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, id, action, data }) });
-    if (!res.ok) { const d = await res.json().catch(() => ({})); setGlobalError(d.error || "Action failed"); return false; }
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) { setGlobalError(d.error || "Action failed"); return false; }
     return true;
   }
 
-  async function deleteItem(kind: "livestock" | "product", id: string) {
-    if (!confirm(`Delete this ${kind === "livestock" ? "listing" : "product"}? This cannot be undone.`)) return;
-    const ok = await runAction(kind, id, "delete");
-    if (!ok) return;
+  function requestDelete(kind: "livestock" | "product", id: string, name: string) {
+    setPendingDelete({ kind, id, name });
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    const { kind, id } = pendingDelete;
+    setPendingDelete(null);
+    setDeletingId(id);
+    setGlobalError("");
+    const res = await fetch("/api/admin/listings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind, id, action: "delete" }),
+    });
+    const d = await res.json().catch(() => ({}));
+    setDeletingId(null);
+    if (!res.ok) {
+      setGlobalError(d.error || "Delete failed. Please try again.");
+      return;
+    }
     if (kind === "livestock") setLivestock((p) => p.filter((x) => x.id !== id));
     else setProducts((p) => p.filter((x) => x.id !== id));
-    showSuccess("Deleted successfully.");
+    showSuccess(`${kind === "livestock" ? "Listing" : "Product"} deleted successfully.`);
   }
 
   async function toggleFeatured(kind: "livestock" | "product", id: string, val: boolean) {
@@ -362,6 +384,48 @@ export function ListingsManager({ initialLivestock, initialProducts, categories:
 
   return (
     <section className="space-y-6">
+
+      {/* ── Delete Confirmation Modal ──────────────────────────────────── */}
+      {pendingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#e4ebf5] p-6 max-w-sm w-full mx-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <Trash2 size={18} className="text-red-700" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#1B3A6B] text-base">Delete {pendingDelete.kind === "livestock" ? "Livestock Listing" : "Product"}?</h3>
+                <p className="text-sm text-[#5d7497] mt-1">
+                  Are you sure you want to delete <strong>&ldquo;{pendingDelete.name}&rdquo;</strong>?
+                  This action cannot be undone.
+                </p>
+                {pendingDelete.kind === "product" && (
+                  <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-2">
+                    Any order history referencing this product will have its line items removed.
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5 justify-end">
+              <button
+                type="button"
+                onClick={() => setPendingDelete(null)}
+                className="px-5 py-2 rounded-lg border border-[#cdd8e7] text-sm font-semibold text-[#5d7497] hover:bg-[#f5f8fd] transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       {globalError && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 flex items-center justify-between">
@@ -547,7 +611,9 @@ export function ListingsManager({ initialLivestock, initialProducts, categories:
                         {item.status !== "ACTIVE" && <button type="button" onClick={() => approve("livestock", item.id)} title="Approve" className="p-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition"><CheckCircle size={16} /></button>}
                         <button type="button" onClick={() => toggleFeatured("livestock", item.id, !item.isFeatured)} className={`p-2 rounded-lg transition ${item.isFeatured ? "bg-amber-100 text-amber-700" : "bg-gray-50 text-gray-400"}`}><Star size={16} fill={item.isFeatured ? "currentColor" : "none"} /></button>
                         <button type="button" onClick={() => { setEditingLsId(item.id); setEditLsDraft({ title: item.title, priceRand: String(item.priceCents / 100), breed: item.breed, weightKg: item.weightKg ? String(item.weightKg) : "", ageMonths: item.ageMonths ? String(item.ageMonths) : "", region: item.region, status: item.status, photos: [...item.photos] }); }} className="p-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition"><Pencil size={16} /></button>
-                        <button type="button" onClick={() => deleteItem("livestock", item.id)} className="p-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition"><Trash2 size={16} /></button>
+                        <button type="button" onClick={() => requestDelete("livestock", item.id, item.title)} disabled={deletingId === item.id} className="p-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition disabled:opacity-50">
+                          {deletingId === item.id ? <div className="w-4 h-4 border-2 border-red-700 border-t-transparent rounded-full animate-spin" /> : <Trash2 size={16} />}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -634,7 +700,9 @@ export function ListingsManager({ initialLivestock, initialProducts, categories:
                         {item.status !== "ACTIVE" && <button type="button" onClick={() => approve("product", item.id)} title="Approve" className="p-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition"><CheckCircle size={16} /></button>}
                         <button type="button" onClick={() => toggleFeatured("product", item.id, !item.isFeatured)} className={`p-2 rounded-lg transition ${item.isFeatured ? "bg-amber-100 text-amber-700" : "bg-gray-50 text-gray-400"}`}><Star size={16} fill={item.isFeatured ? "currentColor" : "none"} /></button>
                         <button type="button" onClick={() => { setEditingProdId(item.id); setEditProdDraft({ name: item.name, priceRand: String(item.priceCents / 100), stockOnHand: String(item.stockOnHand), region: item.region || "", status: item.status, photos: [...item.photos] }); }} className="p-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition"><Pencil size={16} /></button>
-                        <button type="button" onClick={() => deleteItem("product", item.id)} className="p-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition"><Trash2 size={16} /></button>
+                        <button type="button" onClick={() => requestDelete("product", item.id, item.name)} disabled={deletingId === item.id} className="p-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition disabled:opacity-50">
+                          {deletingId === item.id ? <div className="w-4 h-4 border-2 border-red-700 border-t-transparent rounded-full animate-spin" /> : <Trash2 size={16} />}
+                        </button>
                       </div>
                     </div>
                   )}
