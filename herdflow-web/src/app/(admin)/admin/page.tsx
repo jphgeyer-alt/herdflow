@@ -210,7 +210,8 @@ export default async function AdminPage() {
         <h2 className="mb-3 text-lg font-semibold text-brand-navy">Admin Sections</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "Listings", href: "/admin/products", desc: "Approve, edit, and feature products & livestock" },
+            { label: "Listings", href: "/admin/listings", desc: "Premium livestock listings management — category and seller grouping" },
+            { label: "Products", href: "/admin/products", desc: "Approve, edit, and feature products & livestock" },
             { label: "Orders", href: "/admin/orders", desc: "View and update store order statuses" },
             { label: "Sellers", href: "/admin/sellers", desc: "Approve or reject seller registrations" },
             { label: "Logistics", href: "/admin/logistics", desc: "Manage logistics partner approvals" },
