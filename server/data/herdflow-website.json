@@ -1,0 +1,293 @@
+{
+  "cattle": [
+    {
+      "id": 1,
+      "tag": "A001",
+      "breed": "Angus",
+      "colorId": "#2563eb",
+      "gender": "Female",
+      "birthDate": "2023-03-15",
+      "status": "Active",
+      "weight": 450,
+      "campId": 1,
+      "note": "Healthy cow, good milk production",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    },
+    {
+      "id": 2,
+      "tag": "B002",
+      "breed": "Hereford",
+      "colorId": "#16a34a",
+      "gender": "Male",
+      "birthDate": "2022-08-20",
+      "status": "Active",
+      "weight": 600,
+      "campId": 1,
+      "note": "Strong bull for breeding",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    },
+    {
+      "id": 3,
+      "tag": "C003",
+      "breed": "Angus",
+      "colorId": "#c2410c",
+      "gender": "Female",
+      "birthDate": "2024-01-10",
+      "status": "Active",
+      "weight": 280,
+      "campId": 2,
+      "note": "Young calf, watch growth",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    }
+  ],
+  "camps": [
+    {
+      "id": 1,
+      "name": "North Pasture",
+      "colorId": "#2563eb",
+      "description": "Main grazing area with water access",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    },
+    {
+      "id": 2,
+      "name": "South Barn",
+      "colorId": "#16a34a",
+      "description": "Sheltered area for young calves",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    }
+  ],
+  "vaccines": [
+    {
+      "id": 1,
+      "cattleId": 1,
+      "vaccineName": "BVD",
+      "scheduledDate": "2026-05-01",
+      "givenDate": null,
+      "note": "Annual booster due",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    },
+    {
+      "id": 2,
+      "cattleId": 2,
+      "vaccineName": "IBR",
+      "scheduledDate": "2026-04-15",
+      "givenDate": "2026-04-10",
+      "note": "Completed successfully",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    },
+    {
+      "id": 3,
+      "cattleId": 3,
+      "vaccineName": "Clostridial",
+      "scheduledDate": "2026-06-01",
+      "givenDate": null,
+      "note": "First vaccination for calf",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    }
+  ],
+  "counts": [
+    {
+      "id": 1,
+      "campId": 1,
+      "countDate": "2026-04-01",
+      "bulls": 5,
+      "cows": 12,
+      "calves": 8,
+      "note": "Spring count - good numbers",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    },
+    {
+      "id": 2,
+      "campId": 2,
+      "countDate": "2026-04-01",
+      "bulls": 0,
+      "cows": 3,
+      "calves": 6,
+      "note": "Barn area - calves doing well",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    }
+  ],
+  "marketplace": [
+    {
+      "id": 1,
+      "name": "Mineral Feed Mix",
+      "price": "$24",
+      "unit": "per bag",
+      "description": "Balanced feed support for grazing cattle and camp use.",
+      "stock": 40,
+      "isPublished": true,
+      "publishedAt": "2026-06-29T07:39:25.336Z",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    },
+    {
+      "id": 2,
+      "name": "Veterinary Syringe Pack",
+      "price": "$18",
+      "unit": "per pack",
+      "description": "Reusable syringes and dosing supplies for medicine work.",
+      "stock": 25,
+      "isPublished": true,
+      "publishedAt": "2026-06-29T07:39:25.336Z",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    },
+    {
+      "id": 3,
+      "name": "Ear Tag Kit",
+      "price": "$35",
+      "unit": "per kit",
+      "description": "Numbered tags, applicator, and replacement fasteners.",
+      "stock": 30,
+      "isPublished": true,
+      "publishedAt": "2026-06-29T07:39:25.336Z",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    },
+    {
+      "id": 4,
+      "name": "Water Trough Cleaner",
+      "price": "$12",
+      "unit": "per bottle",
+      "description": "Helps keep camp water systems clean and safe.",
+      "stock": 18,
+      "isPublished": true,
+      "publishedAt": "2026-06-29T07:39:25.336Z",
+      "createdAt": "2026-06-29T07:39:25.336Z"
+    }
+  ],
+  "registrations": [],
+  "customerSignups": [],
+  "orders": [],
+  "analyticsEvents": [
+    {
+      "id": 9,
+      "event": "checkout_click",
+      "at": "2026-06-29T07:41:25.213Z",
+      "path": "/marketplace",
+      "session": "hf-1782718776997-7umdrg",
+      "experiment": "default",
+      "variant": "control",
+      "source": "header_link",
+      "cartItems": 0,
+      "cartValue": 0
+    },
+    {
+      "id": 8,
+      "event": "product_view",
+      "at": "2026-06-29T07:41:23.044Z",
+      "path": "/marketplace",
+      "session": "hf-1782718776997-7umdrg",
+      "experiment": "default",
+      "variant": "control",
+      "itemId": 1,
+      "itemName": "Mineral Feed Mix",
+      "category": "Feed",
+      "unitPrice": 24,
+      "currency": "USD",
+      "listPosition": 4
+    },
+    {
+      "id": 7,
+      "event": "product_view",
+      "at": "2026-06-29T07:41:23.043Z",
+      "path": "/marketplace",
+      "session": "hf-1782718776997-7umdrg",
+      "experiment": "default",
+      "variant": "control",
+      "itemId": 2,
+      "itemName": "Veterinary Syringe Pack",
+      "category": "Health",
+      "unitPrice": 18,
+      "currency": "USD",
+      "listPosition": 3
+    },
+    {
+      "id": 6,
+      "event": "product_view",
+      "at": "2026-06-29T07:41:23.042Z",
+      "path": "/marketplace",
+      "session": "hf-1782718776997-7umdrg",
+      "experiment": "default",
+      "variant": "control",
+      "itemId": 3,
+      "itemName": "Ear Tag Kit",
+      "category": "Equipment",
+      "unitPrice": 35,
+      "currency": "USD",
+      "listPosition": 2
+    },
+    {
+      "id": 5,
+      "event": "product_view",
+      "at": "2026-06-29T07:41:23.040Z",
+      "path": "/marketplace",
+      "session": "hf-1782718776997-7umdrg",
+      "experiment": "default",
+      "variant": "control",
+      "itemId": 4,
+      "itemName": "Water Trough Cleaner",
+      "category": "Hygiene",
+      "unitPrice": 12,
+      "currency": "USD",
+      "listPosition": 1
+    },
+    {
+      "id": 4,
+      "event": "product_view",
+      "at": "2026-06-29T07:40:34.618Z",
+      "path": "/marketplace",
+      "session": "hf-1782718776997-7umdrg",
+      "experiment": "default",
+      "variant": "control",
+      "itemId": 1,
+      "itemName": "Mineral Feed Mix",
+      "category": "Feed",
+      "unitPrice": 24,
+      "currency": "USD",
+      "listPosition": 4
+    },
+    {
+      "id": 3,
+      "event": "product_view",
+      "at": "2026-06-29T07:40:34.617Z",
+      "path": "/marketplace",
+      "session": "hf-1782718776997-7umdrg",
+      "experiment": "default",
+      "variant": "control",
+      "itemId": 2,
+      "itemName": "Veterinary Syringe Pack",
+      "category": "Health",
+      "unitPrice": 18,
+      "currency": "USD",
+      "listPosition": 3
+    },
+    {
+      "id": 2,
+      "event": "product_view",
+      "at": "2026-06-29T07:40:34.616Z",
+      "path": "/marketplace",
+      "session": "hf-1782718776997-7umdrg",
+      "experiment": "default",
+      "variant": "control",
+      "itemId": 3,
+      "itemName": "Ear Tag Kit",
+      "category": "Equipment",
+      "unitPrice": 35,
+      "currency": "USD",
+      "listPosition": 2
+    },
+    {
+      "id": 1,
+      "event": "product_view",
+      "at": "2026-06-29T07:40:34.615Z",
+      "path": "/marketplace",
+      "session": "hf-1782718776997-7umdrg",
+      "experiment": "default",
+      "variant": "control",
+      "itemId": 4,
+      "itemName": "Water Trough Cleaner",
+      "category": "Hygiene",
+      "unitPrice": 12,
+      "currency": "USD",
+      "listPosition": 1
+    }
+  ]
+}

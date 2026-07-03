@@ -45,6 +45,7 @@ Complete step-by-step guide:
 | Document | Purpose | Read Time | For Whom |
 |----------|---------|-----------|----------|
 | [APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md) | Complete build guide | 10 min | Anyone building APK |
+| [PLAYSTORE_RELEASE_GUIDE.md](PLAYSTORE_RELEASE_GUIDE.md) | Production Play Store release checklist and submission flow | 8-12 min | Release owners |
 | [expo/EXPO_README.md](expo/EXPO_README.md) | Expo configuration | 15 min | Developers |
 
 ### Troubleshooting
@@ -52,6 +53,27 @@ Complete step-by-step guide:
 |----------|---------|-----------|----------|
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | FAQ & solutions | 5-10 min | When things break |
 | [SETUP_VERIFICATION.md](SETUP_VERIFICATION.md) | What's installed | 5 min | Verifying setup |
+
+### Admin & Backend
+| Document | Purpose | Read Time | For Whom |
+|----------|---------|-----------|----------|
+| [ADMIN_BACKEND_GUIDE.md](ADMIN_BACKEND_GUIDE.md) | Admin workflows, endpoint map, backup operations | 8-12 min | Admins and operators |
+| [ADMIN_QUICK_ACTIONS.md](ADMIN_QUICK_ACTIONS.md) | 1-page daily admin checklist and quick commands | 3-5 min | Daily operators |
+| [KILO_ANTHROPIC_SETUP.md](KILO_ANTHROPIC_SETUP.md) | Configure Kilo Code to use Anthropic Claude for phase planning | 3-5 min | Product and engineering leads |
+| [KILO_CLINE_ECOMMERCE_PLAYBOOK.md](KILO_CLINE_ECOMMERCE_PLAYBOOK.md) | Exact Kilo Code + Cline workflow to optimize HerdFlow ecommerce | 8-12 min | Product and engineering leads |
+| [KILO_CLINE_MASTER_RUN_ORDER.md](KILO_CLINE_MASTER_RUN_ORDER.md) | Single-file phase-by-phase run order for teams | 5-8 min | Product and engineering leads |
+| [KILO_PHASE1_PROMPT.md](KILO_PHASE1_PROMPT.md) | Ready-to-paste Kilo prompt for Phase 1 planning | 3-5 min | Product and engineering leads |
+| [CLINE_PHASE1_PROMPT.md](CLINE_PHASE1_PROMPT.md) | Ready-to-paste Cline prompt for Phase 1 implementation | 3-5 min | Product and engineering leads |
+| [PHASE1_BASELINE_CHECKLIST.md](PHASE1_BASELINE_CHECKLIST.md) | Baseline metrics and validation checklist for Phase 1 | 5-8 min | Product and engineering leads |
+| [KILO_PHASE2_PROMPT.md](KILO_PHASE2_PROMPT.md) | Ready-to-paste Kilo prompt for Phase 2 planning | 3-5 min | Product and engineering leads |
+| [CLINE_PHASE2_PROMPT.md](CLINE_PHASE2_PROMPT.md) | Ready-to-paste Cline prompt for Phase 2 implementation | 3-5 min | Product and engineering leads |
+| [PHASE2_CONVERSION_CHECKLIST.md](PHASE2_CONVERSION_CHECKLIST.md) | Conversion UX baseline and validation checklist for Phase 2 | 5-8 min | Product and engineering leads |
+| [KILO_PHASE3_PROMPT.md](KILO_PHASE3_PROMPT.md) | Ready-to-paste Kilo prompt for Phase 3 planning | 3-5 min | Product and engineering leads |
+| [CLINE_PHASE3_PROMPT.md](CLINE_PHASE3_PROMPT.md) | Ready-to-paste Cline prompt for Phase 3 implementation | 3-5 min | Product and engineering leads |
+| [PHASE3_SEO_CHECKLIST.md](PHASE3_SEO_CHECKLIST.md) | SEO baseline and validation checklist for Phase 3 | 5-8 min | Product and engineering leads |
+| [KILO_PHASE4_PROMPT.md](KILO_PHASE4_PROMPT.md) | Ready-to-paste Kilo prompt for Phase 4 planning | 3-5 min | Product and engineering leads |
+| [CLINE_PHASE4_PROMPT.md](CLINE_PHASE4_PROMPT.md) | Ready-to-paste Cline prompt for Phase 4 implementation | 3-5 min | Product and engineering leads |
+| [PHASE4_ANALYTICS_MONITORING_CHECKLIST.md](PHASE4_ANALYTICS_MONITORING_CHECKLIST.md) | Analytics and monitoring baseline and validation checklist for Phase 4 | 5-8 min | Product and engineering leads |
 
 ## 🗂️ Files & Folders Overview
 

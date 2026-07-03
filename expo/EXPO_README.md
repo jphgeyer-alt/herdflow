@@ -284,11 +284,16 @@ const API_BASE_URL = process.env.API_URL || 'http://10.0.2.2:4174';
 ## Advanced
 
 ### Environment Variables
-Create `.env.production` in `expo/` folder:
+Create `.env` (or `.env.production`) in `expo/` folder:
 ```
-API_URL=https://your-api.com
-CUSTOM_SETTING=value
+EXPO_PUBLIC_SITE_URL=https://your-website-domain.com
+EXPO_PUBLIC_MARKETPLACE_URL=https://your-website-domain.com/marketplace
 ```
+
+Notes:
+- `EXPO_PUBLIC_MARKETPLACE_URL` takes highest priority for the marketplace button in the mobile app.
+- If `EXPO_PUBLIC_MARKETPLACE_URL` is not set, the app uses `EXPO_PUBLIC_SITE_URL + /marketplace`.
+- If neither is set, it falls back to the default production domain.
 
 Reference in `expo/app.json`:
 ```json

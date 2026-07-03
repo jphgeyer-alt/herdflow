@@ -2,7 +2,7 @@
   "name": "herdflow-expo",
   "private": true,
   "scripts": {
-    "start": "expo start --dev-client",
+    "start": "expo start --port 8082",
     "android": "expo run:android",
     "web": "expo start --web",
     "generate:assets": "expo prebuild",
@@ -10,6 +10,8 @@
     "eas:install": "npm install -g eas-cli",
     "eas:build:preview": "eas build --platform android --profile preview",
     "eas:build:production": "eas build --platform android --profile production",
+    "eas:build:playstore": "eas build --platform android --profile production",
+    "eas:submit:playstore": "eas submit --platform android --profile production",
     "eas:status": "eas build:list --limit 10",
     "ios": "expo run:ios"
   },
@@ -21,7 +23,10 @@
     "react-native": "0.71.14",
     "expo-splash-screen": "~0.18.2",
     "@react-native-async-storage/async-storage": "1.17.11",
-    "@react-native-community/datetimepicker": "^7.0.0"
+    "@react-native-community/datetimepicker": "6.7.3",
+    "expo-notifications": "~0.18.1",
+    "react-native-web": "~0.18.10",
+    "@expo/webpack-config": "^18.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.22.0",

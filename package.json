@@ -4,16 +4,26 @@
   "type": "module",
   "version": "0.1.0",
   "description": "Professional cattle record keeping application with cattle profiles, health, breeding and tracking.",
+  "main": "desktop/main.cjs",
   "engines": {
     "node": "20.x"
   },
   "scripts": {
-    "start": "tsx server/index.ts",
-    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "start": "set \"WEBSITE_API_PORT=4174\" && tsx server/index-website.ts",
+    "start:app-backend": "set \"APP_API_PORT=4175\" && tsx server/index-app.ts",
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server:website\" \"npm run dev:server:app\"",
+    "desktop:open": "wait-on http://127.0.0.1:4173/marketplace && electron desktop/main.cjs",
+    "desktop:dev": "concurrently \"npm run dev:server:website\" \"npm run dev:client\" \"npm run desktop:open\"",
     "dev:client": "vite --config vite.config.ts",
-    "dev:server": "tsx watch --clear-screen=false server/index.ts",
+    "dev:server": "npm run dev:server:website",
+    "dev:server:website": "set \"WEBSITE_API_PORT=4174\" && tsx watch --clear-screen=false server/index-website.ts",
+    "dev:server:app": "set \"APP_API_PORT=4175\" && tsx watch --clear-screen=false server/index-app.ts",
+    "dev:preflight": "powershell -ExecutionPolicy Bypass -File scripts/dev-preflight.ps1",
+    "dev:clean-start": "npm run dev:preflight && npm run dev",
+    "expo:clean-start": "npm run dev:preflight && npm run expo:start",
     "build": "npm run build:client",
     "build:client": "vite build --config vite.config.ts",
+    "build:desktop": "npm run build:client && electron-builder",
     "preview": "vite preview --config vite.config.ts",
     "expo:install": "cd expo && npm install",
     "expo:start": "cd expo && npm run start",
@@ -23,6 +33,11 @@
     "eas:login": "eas login",
     "eas:build:preview": "cd expo && eas build --platform android --profile preview",
     "eas:build:production": "cd expo && eas build --platform android --profile production",
+    "eas:build:playstore": "cd expo && eas build --platform android --profile production",
+    "eas:submit:playstore": "cd expo && eas submit --platform android --profile production",
+    "phase1:audit": "powershell -ExecutionPolicy Bypass -File scripts/phase1-audit.ps1",
+    "phase1:sync": "powershell -ExecutionPolicy Bypass -File scripts/phase1-sync-report.ps1",
+    "phase1:audit:sync": "npm run phase1:audit && npm run phase1:sync",
     "apk:download": "echo 'Visit https://expo.io/builds to download your APK'",
     "eas-build-pre-install": "npm config set legacy-peer-deps true"
   },
@@ -43,9 +58,35 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^8.2.2",
+    "electron": "^37.2.5",
+    "electron-builder": "^26.0.12",
+    "wait-on": "^8.0.3",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5.5.4",
     "vite": "^8.0.9"
+  }
+  ,
+  "build": {
+    "appId": "com.herdflow.desktop",
+    "productName": "HerdFlow",
+    "directories": {
+      "output": "desktop-dist"
+    },
+    "files": [
+      "desktop/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

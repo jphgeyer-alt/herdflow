@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -34,32 +35,33 @@ type Session = {
   topBidCents: number;
 };
 
-function getSessions(): Session[] {
-  // Compile-safe fallback data until auction Prisma models are added.
-  return [
-    {
-      id: "live-1",
-      title: "Prime Cattle Evening Sale",
-      slug: "prime-cattle-evening-sale",
-      status: "LIVE",
-      scheduledAt: new Date().toISOString(),
-      lotCount: 18,
-      topBidCents: 245000,
-    },
-    {
-      id: "upcoming-1",
-      title: "Breeding Stock Showcase",
-      slug: "breeding-stock-showcase",
-      status: "UPCOMING",
-      scheduledAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-      lotCount: 24,
-      topBidCents: 0,
-    },
-  ];
+async function getSessions(): Promise<Session[]> {
+  try {
+    const rows = await prisma.auctionSession.findMany({
+      where: { status: { in: ["UPCOMING", "LIVE"] } },
+      orderBy: { scheduledAt: "asc" },
+      include: {
+        lots: {
+          select: { currentBidCents: true },
+        },
+      },
+    });
+    return rows.map((s) => ({
+      id: s.id,
+      title: s.title,
+      slug: s.slug,
+      status: s.status as Session["status"],
+      scheduledAt: s.scheduledAt.toISOString(),
+      lotCount: s.lots.length,
+      topBidCents: s.lots.reduce((max, l) => Math.max(max, l.currentBidCents ?? 0), 0),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function AuctionPage() {
-  const sessions = getSessions();
+  const sessions = await getSessions();
 
   return (
     <main className="space-y-6 pb-10">

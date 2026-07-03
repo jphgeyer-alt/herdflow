@@ -1,5 +1,5 @@
-const CACHE_NAME = 'herdflow-cache-v1';
-const ASSETS_TO_CACHE = ['/', '/index.html', '/src/styles.css'];
+const CACHE_NAME = 'herdflow-cache-v3';
+const ASSETS_TO_CACHE = ['/', '/index.html', '/manifest.webmanifest', '/pwa-icon.svg', '/pwa-maskable.svg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

@@ -2,7 +2,7 @@
   "expo": {
     "name": "HerdFlow",
     "slug": "herdflow",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "sdkVersion": "48.0.0",
     "platforms": [
       "android",
@@ -12,9 +12,9 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#f8fafc"
+      "backgroundColor": "#0f172a"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -24,7 +24,7 @@
     ],
     "android": {
       "package": "com.herdflow.mobile",
-      "versionCode": 2,
+      "versionCode": 3,
       "icon": "./assets/logo.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
@@ -32,12 +32,13 @@
       },
       "permissions": [
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
+        "ACCESS_NETWORK_STATE",
+        "POST_NOTIFICATIONS"
       ]
     },
     "ios": {
       "bundleIdentifier": "com.herdflow.mobile",
-      "buildNumber": "1.0.1",
+      "buildNumber": "1.0.2",
       "icon": "./assets/logo.png"
     },
     "web": {

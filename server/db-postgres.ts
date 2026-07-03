@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { CattleRecord, Camp, VaccineRecord, CountLog } from './types.ts';
+import { CattleRecord, Camp, VaccineRecord, CountLog } from './types';
 import dotenv from 'dotenv';
 
 dotenv.config();

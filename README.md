@@ -30,6 +30,25 @@ npm install
 npm run dev
 ```
 
+### Stable Local Startup Order
+
+Use these commands to avoid stale port/process conflicts during daily development:
+
+```bash
+# 1) Stop stale node listeners on dev ports
+npm run dev:preflight
+
+# 2) Start web + both backends together
+npm run dev
+```
+
+Or use one-shot startup commands:
+
+```bash
+npm run dev:clean-start   # preflight + npm run dev
+npm run expo:clean-start  # preflight + Expo Metro
+```
+
 The app will be available at:
 - Frontend: http://localhost:4173
 - Backend API: http://localhost:4174
@@ -125,6 +144,20 @@ HerdFlow/
 - **Styling**: CSS with modern responsive design
 - **Storage**: JSON file (server) + localStorage (client)
 
+### Development Run Order
+
+1. Web + split backends: run `npm run dev:clean-start`
+2. Expo mobile: run `npm run expo:clean-start` in a separate terminal
+3. Optional single services:
+	- `npm run dev:client`
+	- `npm run dev:server:website`
+	- `npm run dev:server:app`
+
+### Kilo Code + Cline Delivery Workflow
+
+Use [KILO_CLINE_EXECUTION_PLAYBOOK.md](KILO_CLINE_EXECUTION_PLAYBOOK.md) to run Kilo Code and Cline in coordinated phases with validation gates and handoff discipline.
+Set up Anthropic Claude provider first using [KILO_ANTHROPIC_SETUP.md](KILO_ANTHROPIC_SETUP.md).
+
 ## Expo Mobile Packaging
 
 A native Expo app is included in the `expo/` folder. It uses React Native components to display the HerdFlow experience and talks to the backend API directly.
@@ -171,6 +204,10 @@ You can build a native Android APK using Expo Application Services (EAS) and dow
 - Build options (preview vs production)
 - Downloading and installing on Android devices
 - Troubleshooting common issues
+
+## Publishing To Play Store
+
+Use [PLAYSTORE_RELEASE_GUIDE.md](PLAYSTORE_RELEASE_GUIDE.md) for the full production release process, including AAB build, Play Console submission, and staged rollout checks.
 
 ### Expo Setup Guide
 

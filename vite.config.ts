@@ -15,11 +15,18 @@ export default defineConfig({
       }
     }
   },
-  define: {
-    'process.env': {}
-  },
   build: {
     outDir: '../dist',
-    emptyOutDir: true
+    emptyOutDir: true,
+    cssCodeSplit: true,
+    reportCompressedSize: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) return 'vendor';
+          return undefined;
+        }
+      }
+    }
   }
 });

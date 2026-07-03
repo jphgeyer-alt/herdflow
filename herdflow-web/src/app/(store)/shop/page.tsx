@@ -53,7 +53,7 @@ export default async function ShopPage({
             },
           }),
         },
-        include: { seller: { select: { farmName: true } } },
+        include: { seller: { select: { farmName: true } }, category: { select: { name: true } } },
         orderBy: { createdAt: 'desc' },
       }),
       prisma.category.findMany({ orderBy: { name: 'asc' } }),
@@ -70,6 +70,8 @@ export default async function ShopPage({
     priceCents: p.priceCents,
     description: p.description,
     categoryId: p.categoryId,
+    photos: Array.isArray(p.photos) ? (p.photos as string[]) : [],
+    category: p.category ? { name: p.category.name } : undefined,
     status: p.status,
     seller: p.seller ? { farmName: p.seller.farmName } : undefined,
   }));

@@ -18,7 +18,7 @@ function toCurrency(cents: number) {
 function normalizePhoto(photo: string, fallbackLabel: string) {
   if (!photo) {
     return {
-      src: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=1200&h=900&fit=crop",
+      src: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1200&h=900&fit=crop",
       alt: fallbackLabel,
     };
   }
@@ -28,7 +28,7 @@ function normalizePhoto(photo: string, fallbackLabel: string) {
   }
 
   return {
-    src: `https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=1200&h=900&fit=crop&sig=${encodeURIComponent(photo)}`,
+    src: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1200&h=900&fit=crop",
     alt: fallbackLabel,
   };
 }

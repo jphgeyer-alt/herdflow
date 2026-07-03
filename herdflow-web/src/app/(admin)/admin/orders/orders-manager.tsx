@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 
 type OrderItem = {
   id: string;
@@ -172,9 +172,8 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
               const isSaving = savingId === order.id;
 
               return (
-                <>
+                <Fragment key={order.id}>
                   <tr
-                    key={order.id}
                     className="hover:bg-gray-50 cursor-pointer"
                     onClick={() => setExpandedId((prev) => (prev === order.id ? null : order.id))}
                   >
@@ -211,7 +210,7 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
                     </td>
                   </tr>
                   {expandedId === order.id && (
-                    <tr key={`${order.id}-detail`} className="bg-gray-50">
+                    <tr className="bg-gray-50">
                       <td colSpan={7} className="px-4 py-4">
                         <div className="space-y-2">
                           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -237,7 +236,7 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               );
             })}
           </tbody>
