@@ -3,7 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { SponsorBanner } from "@/components/ui/SponsorBanner";
+
+// Server data is fetched client-side in the banner
+function SponsorBannerSection() {
+  return <SponsorBanner />;
+}
 
 const featureCards = [
   {
@@ -34,7 +40,7 @@ const featureCards = [
     title: "MARKETING & ADVERTISING",
     description: "Advertise your business, products or livestock",
     image: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=80",
-    href: "/contact",
+    href: "/marketing",
   },
 ];
 
@@ -93,7 +99,7 @@ export default function Home() {
               <Link href="/register/logistics" className="text-white hover:text-white/80 transition">
                 Transport
               </Link>
-              <Link href="/contact?subject=marketing" className="text-white hover:text-white/80 transition">
+              <Link href="/marketing" className="text-white hover:text-white/80 transition">
                 Marketing & Ads
               </Link>
               <Link href="/contact" className="text-white hover:text-white/80 transition">
@@ -297,6 +303,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Sponsor Banner */}
+      <SponsorBannerSection />
     </div>
   );
 }

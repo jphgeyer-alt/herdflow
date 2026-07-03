@@ -1,4 +1,5 @@
 import { StoreBanner } from '@/components/store-banner';
+import { SponsorBanner } from '@/components/ui/SponsorBanner';
 import { ProductGrid } from '@/components/product-grid';
 import { prisma } from '@/lib/prisma';
 
@@ -81,6 +82,9 @@ export default async function ShopPage({
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Hero Banner */}
       <StoreBanner />
+
+      {/* Sponsor Strip */}
+      <SponsorBanner />
 
       {dbError && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-800">

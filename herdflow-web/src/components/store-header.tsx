@@ -111,7 +111,7 @@ export function StoreHeader() {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
-              href="/contact?subject=marketing" 
+              href="/marketing" 
               className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
             >
               Marketing & Ads
@@ -259,7 +259,7 @@ export function StoreHeader() {
             <Link href="/register/logistics" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
               Transport
             </Link>
-            <Link href="/contact?subject=marketing" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+            <Link href="/marketing" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
               Marketing & Ads
             </Link>
             <Link href="/contact" className="block px-4 py-2 text-white hover:bg-white/10 rounded">

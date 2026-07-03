@@ -276,3 +276,26 @@ enum AuctionLotStatus {
   PASSED
   CANCELLED
 }
+
+model Sponsor {
+  id              String    @id @default(cuid())
+  companyName     String
+  contactPerson   String
+  email           String    @unique
+  phone           String
+  website         String?
+  businessType    String
+  package         String
+  targetProvinces String[]
+  marketingGoal   String
+  logoUrl         String?
+  bannerUrls      String[]
+  brief           String?
+  status          String    @default("PENDING")
+  monthlyFee      Decimal?
+  notes           String?
+  approvedBy      String?
+  approvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}

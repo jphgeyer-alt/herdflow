@@ -219,6 +219,7 @@ export default async function AdminPage() {
             { label: "Live Auctions", href: "/admin/auctions", desc: "Create auction sessions and manage lots" },
             { label: "Site Content", href: "/admin/content", desc: "Edit homepage banner and categories" },
             { label: "Payment Settings", href: "/admin/settings/payments", desc: "Configure PayFast credentials" },
+            { label: "Marketing & Sponsors", href: "/admin/marketing", desc: "Review sponsorship applications and manage active sponsors" },
           ].map((item) => (
             <Link
               key={item.href}
