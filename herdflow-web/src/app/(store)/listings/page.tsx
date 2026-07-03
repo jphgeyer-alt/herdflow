@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { HerdflowTrusted } from "@/components/ui/HerdflowTrusted";
+import { SafeImg } from "@/components/safe-img";
 
 export const dynamic = "force-dynamic";
 
@@ -174,10 +175,8 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
           <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {listings.map((listing) => (
               <article key={listing.id} className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] overflow-hidden hover:shadow-xl transition group">
-                {listing.photos.length > 0 &&
-                 (listing.photos[0].startsWith("data:image/") || listing.photos[0].startsWith("http") || listing.photos[0].startsWith("/")) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                {listing.photos.length > 0 ? (
+                  <SafeImg
                     src={listing.photos[0]}
                     alt={listing.title}
                     className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"

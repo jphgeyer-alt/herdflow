@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { SafeImg } from "@/components/safe-img";
 
 type ProductImage = {
   src: string;
@@ -40,8 +41,7 @@ export function ProductDetailClient({
       <div className="space-y-3">
         <div className="overflow-hidden rounded-2xl border border-[#d8e0ec] bg-white shadow-sm">
           {selectedImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <SafeImg
               alt={selectedImage.alt}
               className="h-[380px] w-full object-cover"
               src={selectedImage.src}
@@ -64,8 +64,7 @@ export function ProductDetailClient({
               }`}
               aria-label={`View image ${index + 1}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt={image.alt} className="h-20 w-full object-cover" src={image.src} />
+              <SafeImg alt={image.alt} className="h-20 w-full object-cover" src={image.src} />
             </button>
           ))}
         </div>
