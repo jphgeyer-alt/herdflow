@@ -99,7 +99,7 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
                 &copy; 2026 HerdFlow. All rights reserved. | Proudly South African 🇿🇦
               </p>
               <div className="flex gap-4 mt-4 md:mt-0">
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition">Facebook</a>
+                <a href="https://www.facebook.com/share/1Cx6hGHX3D/" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-[#1877F2] transition">Facebook</a>
                 <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition">Twitter</a>
                 <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition">Instagram</a>
               </div>
