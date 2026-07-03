@@ -110,7 +110,7 @@ export default function ContactPage() {
                 <div>
                   <p className="font-semibold text-[#244367] text-sm">Follow HerdFlow on Facebook</p>
                   <a
-                    href="https://www.facebook.com/share/1Cx6hGHX3D/"
+                    href="https://www.facebook.com/share/1cUWCfQwut/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[#1877F2] text-sm hover:underline font-medium"

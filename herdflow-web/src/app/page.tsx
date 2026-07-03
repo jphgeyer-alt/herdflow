@@ -310,7 +310,7 @@ export default function Home() {
       {/* Facebook Banner */}
       <div className="w-full bg-[#1B3A6B] py-5 text-center">
         <a
-          href="https://www.facebook.com/share/1Cx6hGHX3D/"
+          href="https://www.facebook.com/share/1cUWCfQwut/"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-3 text-white hover:text-[#90c2ff] transition-colors duration-200 text-sm font-medium"

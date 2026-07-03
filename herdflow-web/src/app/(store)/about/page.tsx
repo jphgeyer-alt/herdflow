@@ -211,7 +211,7 @@ export default function AboutPage() {
           <p className="text-[#5d7497] mb-2 text-lg">Stay connected with HerdFlow</p>
           <p className="text-[#9aabb9] text-sm mb-6">Follow us for the latest listings, auction dates and farming news</p>
           <a
-            href="https://www.facebook.com/share/1Cx6hGHX3D/"
+            href="https://www.facebook.com/share/1cUWCfQwut/"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-3 px-8 py-4 bg-[#1877F2] text-white rounded-lg font-semibold text-lg hover:bg-[#1565D8] transition-colors duration-200 shadow-lg hover:shadow-xl"
