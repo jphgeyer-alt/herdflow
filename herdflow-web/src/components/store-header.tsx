@@ -49,77 +49,82 @@ export function StoreHeader() {
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <div className="w-8 h-8 bg-gradient-to-br from-white to-green-200 rounded-lg flex items-center justify-center text-[#1B3A6B] text-xs font-bold">
-              HF
-            </div>
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="HerdFlow"
+              width={32}
+              height={32}
+              className="object-contain w-8 h-8"
+            />
             <div className="flex flex-col leading-tight">
-              <span className="text-white font-bold">HerdFlow</span>
-              <span className="text-xs text-[#A07C3A] font-semibold">Agricultural Marketplace</span>
+              <span className="text-white font-bold text-base">HerdFlow</span>
+              <span className="text-[10px] text-[#A07C3A] font-semibold hidden sm:block">Agricultural Marketplace</span>
             </div>
           </Link>
 
           {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-4 xl:gap-5 flex-nowrap overflow-x-auto scrollbar-none">
             <Link 
               href="/" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
             >
               Home
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
               href="/about" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
             >
               About Us
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
               href="/#features" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
             >
               Features
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
               href="/shop" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
             >
               Products
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
               href="/listings" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
             >
               Livestock
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
               href="/auction" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
             >
               Auctions
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
               href="/register/logistics" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
             >
               Transport
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
               href="/marketing" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
             >
               Marketing & Ads
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
             <Link 
               href="/contact" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm"
+              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
             >
               Contact
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />

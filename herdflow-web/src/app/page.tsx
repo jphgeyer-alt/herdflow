@@ -62,56 +62,59 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0">
               <Image
                 src="/logo.png"
                 alt="HerdFlow logo"
-                width={40}
-                height={40}
+                width={36}
+                height={36}
                 className="object-contain"
                 priority
               />
               <div className="leading-tight">
-                <div className="text-2xl font-black text-white tracking-tight">HerdFlow</div>
-                <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-gold">
+                <div className="text-xl font-black text-white tracking-tight">HerdFlow</div>
+                <div className="text-[9px] font-bold uppercase tracking-[0.12em] text-gold hidden xl:block">
                   Smarter Herds. Stronger Futures.
                 </div>
               </div>
             </Link>
 
             {/* Desktop Nav Links */}
-            <div className="hidden lg:flex items-center gap-8 text-sm font-semibold uppercase tracking-wide">
-              <Link href="/" className="text-white border-b-2 border-green pb-1">
+            <div className="hidden lg:flex items-center gap-4 xl:gap-5 text-xs font-semibold uppercase tracking-normal flex-nowrap">
+              <Link href="/" className="text-white border-b-2 border-green pb-0.5 whitespace-nowrap">
                 Home
               </Link>
-              <Link href="/about" className="text-white hover:text-white/80 transition">
+              <Link href="/about" className="text-white hover:text-white/80 transition whitespace-nowrap">
                 About Us
               </Link>
-              <Link href="#features" className="text-white hover:text-white/80 transition">
+              <Link href="#features" className="text-white hover:text-white/80 transition whitespace-nowrap">
                 Features
               </Link>
-              <Link href="/shop" className="text-white hover:text-white/80 transition">
+              <Link href="/shop" className="text-white hover:text-white/80 transition whitespace-nowrap">
                 Products
               </Link>
-              <Link href="/auction" className="text-white hover:text-white/80 transition">
+              <Link href="/listings" className="text-white hover:text-white/80 transition whitespace-nowrap">
+                Livestock
+              </Link>
+              <Link href="/auction" className="text-white hover:text-white/80 transition whitespace-nowrap">
                 Auctions
               </Link>
-              <Link href="/register/logistics" className="text-white hover:text-white/80 transition">
+              <Link href="/register/logistics" className="text-white hover:text-white/80 transition whitespace-nowrap">
                 Transport
               </Link>
-              <Link href="/marketing" className="text-white hover:text-white/80 transition">
-                Marketing & Ads
+              <Link href="/marketing" className="text-white hover:text-white/80 transition whitespace-nowrap">
+                Marketing
               </Link>
-              <Link href="/contact" className="text-white hover:text-white/80 transition">
+              <Link href="/contact" className="text-white hover:text-white/80 transition whitespace-nowrap">
                 Contact
               </Link>
             </div>
 
             {/* Login Button */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 shrink-0">
               <Link
                 href="/auth/login"
-                className="hidden lg:inline-flex rounded-lg px-6 py-2.5 text-sm font-bold uppercase text-white shadow-lg hover:opacity-90 transition"
+                className="hidden lg:inline-flex rounded-lg px-4 py-2 text-xs font-bold uppercase text-white shadow-lg hover:opacity-90 transition whitespace-nowrap"
                 style={{ backgroundColor: '#2E7D32' }}
               >
                 Login / Sign Up
@@ -130,29 +133,26 @@ export default function Home() {
 
           {/* Mobile Menu */}
           {menuOpen && (
-            <div className="lg:hidden pb-4 space-y-2">
-              <Link href="/" className="block px-4 py-2 text-white font-semibold">
-                Home
-              </Link>
-              <Link href="/about" className="block px-4 py-2 text-white hover:text-white/80">
-                About Us
-              </Link>
-              <Link href="/shop" className="block px-4 py-2 text-white hover:text-white/80">
-                Products
-              </Link>
-              <Link href="/auction" className="block px-4 py-2 text-white hover:text-white/80">
-                Auctions
-              </Link>
-              <Link href="/contact" className="block px-4 py-2 text-white hover:text-white/80">
-                Contact
-              </Link>
-              <Link
-                href="/auth/login"
-                className="block mx-4 mt-4 rounded-lg px-6 py-2.5 text-center text-sm font-bold uppercase text-white"
-                style={{ backgroundColor: '#2E7D32' }}
-              >
-                Login / Sign Up
-              </Link>
+            <div className="lg:hidden pb-4 space-y-1 border-t border-white/20 pt-2">
+              <Link href="/" className="block px-4 py-2.5 text-white font-semibold text-sm hover:bg-white/10 rounded-lg" onClick={() => setMenuOpen(false)}>Home</Link>
+              <Link href="/about" className="block px-4 py-2.5 text-white text-sm hover:bg-white/10 rounded-lg" onClick={() => setMenuOpen(false)}>About Us</Link>
+              <Link href="#features" className="block px-4 py-2.5 text-white text-sm hover:bg-white/10 rounded-lg" onClick={() => setMenuOpen(false)}>Features</Link>
+              <Link href="/shop" className="block px-4 py-2.5 text-white text-sm hover:bg-white/10 rounded-lg" onClick={() => setMenuOpen(false)}>Products</Link>
+              <Link href="/listings" className="block px-4 py-2.5 text-white text-sm hover:bg-white/10 rounded-lg" onClick={() => setMenuOpen(false)}>Livestock</Link>
+              <Link href="/auction" className="block px-4 py-2.5 text-white text-sm hover:bg-white/10 rounded-lg" onClick={() => setMenuOpen(false)}>Auctions</Link>
+              <Link href="/register/logistics" className="block px-4 py-2.5 text-white text-sm hover:bg-white/10 rounded-lg" onClick={() => setMenuOpen(false)}>Transport</Link>
+              <Link href="/marketing" className="block px-4 py-2.5 text-white text-sm hover:bg-white/10 rounded-lg" onClick={() => setMenuOpen(false)}>Marketing & Ads</Link>
+              <Link href="/contact" className="block px-4 py-2.5 text-white text-sm hover:bg-white/10 rounded-lg" onClick={() => setMenuOpen(false)}>Contact</Link>
+              <div className="px-4 pt-2">
+                <Link
+                  href="/auth/login"
+                  className="block rounded-lg px-6 py-2.5 text-center text-sm font-bold uppercase text-white"
+                  style={{ backgroundColor: '#2E7D32' }}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Login / Sign Up
+                </Link>
+              </div>
             </div>
           )}
         </div>
