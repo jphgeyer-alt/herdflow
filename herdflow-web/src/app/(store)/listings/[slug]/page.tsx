@@ -50,10 +50,19 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   const sellerRegion = listing.seller.region;
   const isTrusted = listing.seller.status === "APPROVED";
 
-  const mainPhoto =
-    listing.photos.length > 0 && (listing.photos[0].startsWith("http") || listing.photos[0].startsWith("/"))
-      ? listing.photos[0]
-      : "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=1200&h=900&fit=crop";
+  const FALLBACK_PHOTO = "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1200&h=900&fit=crop";
+
+  function isValidPhoto(url: string) {
+    return url && (
+      url.startsWith("data:image/") ||
+      url.startsWith("http://") ||
+      url.startsWith("https://") ||
+      url.startsWith("/")
+    );
+  }
+
+  const photos: string[] = Array.isArray(listing.photos) ? listing.photos : [];
+  const mainPhoto = photos.length > 0 && isValidPhoto(photos[0]) ? photos[0] : FALLBACK_PHOTO;
 
   return (
     <div className="min-h-screen bg-[#f5f4ef] py-8 px-4 md:px-8">
@@ -72,13 +81,10 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
               className="h-80 rounded-2xl border border-[#d8e0ec] bg-cover bg-center shadow-lg"
               style={{ backgroundImage: `url('${mainPhoto}')` }}
             />
-            {listing.photos.length > 1 && (
+            {photos.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
-                {(listing.photos as string[]).slice(1, 5).map((photo: string, index: number) => {
-                  const src =
-                    photo.startsWith("http") || photo.startsWith("/")
-                      ? photo
-                      : `https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=400&h=300&fit=crop&sig=${index}`;
+                {photos.slice(1, 5).map((photo: string, index: number) => {
+                  const src = isValidPhoto(photo) ? photo : FALLBACK_PHOTO;
                   return (
                     <div
                       key={index}
