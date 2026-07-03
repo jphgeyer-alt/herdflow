@@ -23,7 +23,13 @@ function normalizePhoto(photo: string, fallbackLabel: string) {
     };
   }
 
-  if (photo.startsWith("http://") || photo.startsWith("https://") || photo.startsWith("/")) {
+  // Accept data URLs (base64), https/http URLs, and root-relative paths
+  if (
+    photo.startsWith("data:image/") ||
+    photo.startsWith("http://") ||
+    photo.startsWith("https://") ||
+    photo.startsWith("/")
+  ) {
     return { src: photo, alt: fallbackLabel };
   }
 

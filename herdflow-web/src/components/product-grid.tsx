@@ -62,7 +62,8 @@ export function ProductGrid({ products }: ProductGridProps) {
           <Link href={`/products/${product.slug}`}>
             {/* Product Image */}
             <div className="h-48 bg-gradient-to-br from-neutral-100 to-neutral-200 overflow-hidden group-hover:from-neutral-200 group-hover:to-neutral-300 transition">
-              {product.photos && product.photos.length > 0 ? (
+              {product.photos && product.photos.length > 0 &&
+               (product.photos[0].startsWith("data:image/") || product.photos[0].startsWith("http") || product.photos[0].startsWith("/")) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={product.photos[0]}

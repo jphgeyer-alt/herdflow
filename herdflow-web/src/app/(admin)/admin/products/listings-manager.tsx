@@ -57,6 +57,33 @@ const STATIC_CATEGORIES = [
 const STATUSES_PRODUCT = ["ACTIVE", "DRAFT", "OUT_OF_STOCK", "ARCHIVED"];
 
 // ── Photo Uploader ───────────────────────────────────────────────────────────
+// Images are compressed client-side (canvas, max 900px, JPEG 82%) and stored
+// as base64 data URLs directly in the database — no server filesystem needed.
+
+const MAX_SIDE = 900;
+const JPEG_QUALITY = 0.82;
+
+function compressToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const scale = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight, 1));
+      const w = Math.round(img.naturalWidth * scale);
+      const h = Math.round(img.naturalHeight * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas not available"));
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", JPEG_QUALITY));
+    };
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Failed to load image")); };
+    img.src = objectUrl;
+  });
+}
 
 function PhotoUploader({ photos, onChange }: { photos: string[]; onChange: (urls: string[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,14 +96,20 @@ function PhotoUploader({ photos, onChange }: { photos: string[]; onChange: (urls
     setUploading(true);
     const newUrls: string[] = [];
     for (const file of Array.from(files)) {
-      const fd = new FormData();
-      fd.append("file", file);
+      if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
+        setUploadError("Only JPEG, PNG and WebP are allowed");
+        continue;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setUploadError("Max file size is 10 MB");
+        continue;
+      }
       try {
-        const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-        const data = await res.json();
-        if (res.ok && data.url) newUrls.push(data.url);
-        else setUploadError(data.error || "Upload failed");
-      } catch { setUploadError("Network error during upload"); }
+        const dataUrl = await compressToDataUrl(file);
+        newUrls.push(dataUrl);
+      } catch {
+        setUploadError("Failed to process image. Please try again.");
+      }
     }
     setUploading(false);
     if (newUrls.length > 0) onChange([...photos, ...newUrls]);
@@ -88,7 +121,7 @@ function PhotoUploader({ photos, onChange }: { photos: string[]; onChange: (urls
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
         {photos.map((url, i) => (
-          <div key={url + i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-[#cdd8e7] group">
+          <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-[#cdd8e7] group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
             <button type="button" onClick={() => removePhoto(i)}
@@ -107,7 +140,7 @@ function PhotoUploader({ photos, onChange }: { photos: string[]; onChange: (urls
       <input ref={inputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp" multiple className="hidden"
         onChange={(e) => handleFiles(e.target.files)} />
       {uploadError && <p className="text-xs text-red-600">{uploadError}</p>}
-      <p className="text-xs text-[#5d7497]">JPEG, PNG, WebP • Max 10 MB per file • Multiple photos allowed</p>
+      <p className="text-xs text-[#5d7497]">JPEG, PNG, WebP • Max 10 MB • Auto-compressed &amp; stored permanently</p>
     </div>
   );
 }
