@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -353,13 +354,27 @@ export function AuctionsManager({ initialSessions }: Props) {
                     </button>
                   )}
                   {s.status === "LIVE" && (
-                    <button
-                      onClick={() => updateStatus(s.id, "CLOSED")}
-                      className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-neutral-700"
-                    >
-                      Close Auction
-                    </button>
+                    <>
+                      <Link
+                        href={`/admin/auctions/${s.id}/control`}
+                        className="rounded-lg bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 text-xs font-bold"
+                      >
+                        🎙 Control Room
+                      </Link>
+                      <button
+                        onClick={() => updateStatus(s.id, "CLOSED")}
+                        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-neutral-700"
+                      >
+                        Close Auction
+                      </button>
+                    </>
                   )}
+                  <Link
+                    href={`/admin/auctions/${s.id}/registrations`}
+                    className="rounded-lg border border-[#1B3A6B]/30 bg-[#f5f8fd] px-3 py-1.5 text-xs font-semibold text-[#1B3A6B]"
+                  >
+                    Bidders
+                  </Link>
                   <button
                     onClick={() => setExpandedId((prev) => (prev === s.id ? null : s.id))}
                     className="rounded-lg border border-[#cdd8e7] px-3 py-1.5 text-xs font-semibold text-[#244367]"

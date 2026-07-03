@@ -178,17 +178,24 @@ model SiteConfig {
 }
 
 model AuctionSession {
-  id          String               @id @default(cuid())
-  slug        String               @unique
-  title       String
-  description String
-  scheduledAt DateTime
-  closedAt    DateTime?
-  status      AuctionSessionStatus @default(UPCOMING)
-  createdBy   String               @default("admin")
-  createdAt   DateTime             @default(now())
+  id            String               @id @default(cuid())
+  slug          String               @unique
+  title         String
+  description   String
+  scheduledAt   DateTime
+  closedAt      DateTime?
+  status        AuctionSessionStatus @default(UPCOMING)
+  createdBy     String               @default("admin")
+  createdAt     DateTime             @default(now())
+  videoType     String?
+  videoUrl      String?
+  streamKey     String?
+  photos        String[]
+  maxBidders    Int?
 
-  lots        AuctionLot[]
+  lots          AuctionLot[]
+  registrations AuctionRegistration[]
+  results       AuctionResult[]
 
   @@index([status, scheduledAt])
 }
@@ -228,6 +235,55 @@ model AuctionBid {
   lot          AuctionLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
 
   @@index([lotId, createdAt])
+}
+
+model AuctionRegistration {
+  id              String    @id @default(cuid())
+  sessionId       String
+  fullName        String
+  email           String
+  phone           String
+  idNumber        String
+  physicalAddress String
+  city            String
+  province        String
+  postalCode      String
+  bankName        String?
+  accountNumber   String?
+  biddingNumber   String    @unique
+  status          String    @default("PENDING")
+  depositPaid     Boolean   @default(false)
+  termsAccepted   Boolean   @default(false)
+  adminNotes      String?
+  approvedBy      String?
+  approvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  session         AuctionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, status])
+  @@index([biddingNumber])
+}
+
+model AuctionResult {
+  id             String    @id @default(cuid())
+  sessionId      String
+  lotId          String
+  lotNumber      Int
+  lotTitle       String
+  winnerEmail    String?
+  biddingNumber  String?
+  winningBid     Int?
+  reserveMet     Boolean   @default(false)
+  totalBids      Int       @default(0)
+  startPrice     Int
+  lotStatus      String
+  soldAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  session        AuctionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
 }
 
 enum UserRole {
