@@ -58,6 +58,7 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
                 <li><a href="/terms" className="hover:text-white transition">Terms of Service</a></li>
                 <li><a href="/contact" className="hover:text-white transition">Support</a></li>
                 <li><a href="/auth/register" className="hover:text-white transition">Create Account</a></li>
+                <li><a href="/download" className="hover:text-white transition font-semibold text-[#A07C3A]">📱 Download App</a></li>
               </ul>
             </div>
           </div>

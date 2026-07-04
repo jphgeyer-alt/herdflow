@@ -129,6 +129,12 @@ export function StoreHeader() {
               Contact
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
             </Link>
+            <Link
+              href="/download"
+              className="ml-1 rounded-lg bg-[#A07C3A] hover:bg-[#8a6830] text-white text-xs font-bold px-3 py-1.5 transition-colors whitespace-nowrap"
+            >
+              📱 Download App
+            </Link>
           </nav>
 
           {/* Action Buttons */}
@@ -269,6 +275,9 @@ export function StoreHeader() {
             </Link>
             <Link href="/contact" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
               Contact
+            </Link>
+            <Link href="/download" className="block mx-4 py-2 text-center rounded-lg bg-[#A07C3A] text-white font-bold text-sm" onClick={() => setMenuOpen(false)}>
+              📱 Download App
             </Link>
             {!loading && (
               <>
