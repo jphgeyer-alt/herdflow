@@ -221,6 +221,7 @@ export default async function AdminPage() {
             { label: "Site Content", href: "/admin/content", desc: "Edit homepage banner and categories" },
             { label: "Payment Settings", href: "/admin/settings/payments", desc: "Configure PayFast credentials" },
             { label: "Marketing & Sponsors", href: "/admin/marketing", desc: "Review sponsorship applications and manage active sponsors" },
+            { label: "📱 Mobile App Content", href: "/admin/app-content", desc: "Push announcements, banners, tips and notifications to farmer phones" },
           ].map((item) => (
             <Link
               key={item.href}

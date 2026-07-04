@@ -313,6 +313,7 @@ model PasswordResetToken {
 enum UserRole {
   CUSTOMER
   ADMIN
+  FARMER
 }
 
 enum VerificationStatus {
@@ -387,4 +388,180 @@ model Sponsor {
   approvedAt      DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+// ─── Mobile App Models ───────────────────────────────────────────────────────
+
+model FarmerProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  farmName  String   @default("")
+  province  String   @default("")
+  species   String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AppContent {
+  id              String    @id @default(cuid())
+  type            String
+  title           String
+  message         String?
+  content         String?
+  category        String?
+  priority        String    @default("NORMAL")
+  imageUrl        String?
+  linkUrl         String?
+  sponsorName     String?
+  targetProvinces String[]
+  targetSpecies   String[]
+  status          String    @default("ACTIVE")
+  sendPush        Boolean   @default(false)
+  startDate       DateTime?
+  endDate         DateTime?
+  scheduledDate   DateTime?
+  isDeleted       Boolean   @default(false)
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model ContentView {
+  id        String   @id @default(cuid())
+  contentId String
+  farmerId  String
+  viewedAt  DateTime @default(now())
+
+  @@index([contentId])
+  @@index([farmerId])
+}
+
+model ContentDismissal {
+  id          String   @id @default(cuid())
+  contentId   String
+  farmerId    String
+  dismissedAt DateTime @default(now())
+
+  @@unique([contentId, farmerId])
+  @@index([farmerId])
+}
+
+model AppSettings {
+  id                 String   @id @default(cuid())
+  maintenanceMode    Boolean  @default(false)
+  maintenanceMessage String?
+  minimumAppVersion  String   @default("1.0.0")
+  supportWhatsApp    String?
+  supportEmail       String?
+  maxAnnouncements   Int      @default(1)
+  maxBanners         Int      @default(2)
+  sessionTimeout     Int      @default(15)
+  updatedAt          DateTime @updatedAt
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  platform  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model FarmerAnimal {
+  id                 String    @id @default(cuid())
+  farmerId           String
+  tagNumber          String?
+  name               String?
+  species            String
+  breed              String?
+  gender             String?
+  dateOfBirth        DateTime?
+  weight             Decimal?
+  bodyConditionScore Int?
+  colour             String?
+  microchipId        String?
+  source             String?
+  purchasePrice      Decimal?
+  dateAcquired       DateTime?
+  camp               String?
+  notes              String?
+  status             String    @default("ACTIVE")
+  isDeleted          Boolean   @default(false)
+  photos             String[]
+  healthStatus       String    @default("HEALTHY")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([farmerId, isDeleted])
+  @@index([farmerId, species])
+}
+
+model FarmerHealthRecord {
+  id           String   @id @default(cuid())
+  animalId     String
+  farmerId     String
+  eventType    String
+  description  String?
+  diagnosis    String?
+  treatment    String?
+  vetName      String?
+  severity     String?
+  cost         Decimal?
+  followUpDate DateTime?
+  documents    String[]
+  eventDate    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([animalId])
+  @@index([farmerId])
+}
+
+model FarmerWeightRecord {
+  id                 String   @id @default(cuid())
+  animalId           String
+  farmerId           String
+  weight             Decimal
+  bodyConditionScore Int?
+  notes              String?
+  recordedDate       DateTime
+  createdAt          DateTime @default(now())
+
+  @@index([animalId])
+}
+
+model FarmerVaccination {
+  id             String    @id @default(cuid())
+  animalId       String
+  farmerId       String
+  vaccineName    String
+  batchNumber    String?
+  administeredBy String?
+  vetName        String?
+  cost           Decimal?
+  vaccinatedDate DateTime?
+  nextDueDate    DateTime?
+  status         String    @default("SCHEDULED")
+  notes          String?
+  createdAt      DateTime  @default(now())
+
+  @@index([animalId])
+  @@index([farmerId])
+  @@index([nextDueDate])
+}
+
+model PushNotificationLog {
+  id             String   @id @default(cuid())
+  title          String
+  message        String
+  target         String
+  targetValue    String?
+  sentCount      Int      @default(0)
+  sentBy         String
+  scheduleTime   DateTime?
+  sentAt         DateTime?
+  createdAt      DateTime @default(now())
 }

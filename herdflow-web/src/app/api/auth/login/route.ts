@@ -44,7 +44,18 @@ export async function POST(request: Request) {
     // Use default buyer dashboard on DB error
   }
 
-  const res = NextResponse.json({ ok: true, redirect });
+  // Return token for mobile app clients alongside the cookie for web clients
+  const mobileUser = {
+    id: user.id,
+    name: user.fullName,
+    email: user.email,
+    phone: user.phone ?? null,
+    role: user.role,
+    isAdmin: user.role === "ADMIN",
+    createdAt: user.createdAt,
+  };
+
+  const res = NextResponse.json({ ok: true, redirect, token: sessionValue, user: mobileUser });
   res.cookies.set(USER_SESSION_COOKIE, sessionValue, SESSION_COOKIE_OPTIONS);
   return res;
 }

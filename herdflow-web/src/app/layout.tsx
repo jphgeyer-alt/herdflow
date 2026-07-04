@@ -1,3 +1,7 @@
+// WEBSITE CODE — herdflow.co.za
+// Do not add mobile app code here
+// For website changes start prompt with: WEBSITE —
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
