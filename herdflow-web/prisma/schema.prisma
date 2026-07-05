@@ -565,3 +565,11 @@ model PushNotificationLog {
   sentAt         DateTime?
   createdAt      DateTime @default(now())
 }
+
+model MarketPriceCache {
+  id        String   @id @default(cuid())
+  cacheKey  String   @unique
+  priceData String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
