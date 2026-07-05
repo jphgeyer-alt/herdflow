@@ -9,10 +9,11 @@ export const metadata: Metadata = {
 };
 
 // Update EAS_APK_URL once eas build --platform android --profile preview completes
-// Build ID: f09c8110-b476-45db-bc19-3d966899ba92 (v1.4.0 QA — finished 2026-07-05)
-// Previous build (v1.4.0): dU6aazjPz9WcpFfUYHis58aEWbaMVU8tQlHkPx2jfjc.apk
-const EAS_BUILDS_PAGE = "https://expo.dev/accounts/hannesgeyer101/projects/herdflow/builds/f09c8110-b476-45db-bc19-3d966899ba92";
-const EAS_APK_DIRECT  = "https://expo.dev/artifacts/eas/NfdxmQ3J6YVQrYgWOr6l_C43vQ6zbyiws6E_jNznqgw.apk";
+// Build ID: 6386df59-bc17-4022-9098-7a0ef24c1df2 (v1.4.1 QA — finished 2026-07-05)
+// Previous build (v1.4.0 QA): NfdxmQ3J6YVQrYgWOr6l_C43vQ6zbyiws6E_jNznqgw.apk
+const EAS_BUILDS_PAGE = "https://expo.dev/accounts/hannesgeyer101/projects/herdflow/builds/6386df59-bc17-4022-9098-7a0ef24c1df2";
+const EAS_APK_DIRECT  = "https://expo.dev/artifacts/eas/bD9jWtkpX6zOfvi22wzio0t-t3XnrsabWvUVWLxlHKY.apk";
+const APP_VERSION     = "v1.4.1";
 const APP_VERSION     = "v1.4.0";
 const EXPO_GO_URL = "exp://u.expo.dev/9adc77e5-3ea3-4131-a3a6-b4c4091e3e4b?channel-name=production";
 
