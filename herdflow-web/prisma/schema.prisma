@@ -398,14 +398,49 @@ model FarmerProfile {
   farmName     String   @default("")
   province     String   @default("")
   species      String[]
-  farmCode     String?  @unique  // 6-char unique code, generated for FARMER accounts
-  mobileRole   String   @default("FARMER")  // FARMER | FARM_MANAGER | FARM_WORKER
-  ownerUserId  String?  // For workers/managers — points to the FARMER's userId
+  farmCode     String?  @unique
+  mobileRole   String   @default("FARMER")
+  ownerUserId  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([farmCode])
   @@index([ownerUserId])
+}
+
+model FarmInvite {
+  id            String   @id @default(cuid())
+  farmOwnerId   String
+  farmName      String
+  farmOwnerName String
+  inviteCode    String   @unique
+  role          String   // FARM_MANAGER | FARM_WORKER
+  status        String   @default("PENDING")  // PENDING | ACCEPTED | REVOKED | EXPIRED
+  expiresAt     DateTime
+  acceptedBy    String?
+  acceptedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([farmOwnerId])
+  @@index([status])
+}
+
+model FarmerActivityLog {
+  id           String   @id @default(cuid())
+  userId       String
+  userName     String
+  userRole     String
+  farmId       String
+  activityType String
+  description  String
+  entityId     String?
+  entityType   String?
+  entityName   String?
+  metadata     String?  // JSON string
+  createdAt    DateTime @default(now())
+
+  @@index([farmId, createdAt])
+  @@index([userId])
 }
 
 model AppContent {

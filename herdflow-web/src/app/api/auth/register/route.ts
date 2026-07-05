@@ -54,27 +54,44 @@ export async function POST(request: Request) {
       const isManager = mobileRole === "manager";
       const isFarmer  = !isWorker && !isManager;
 
-      // Workers and managers must supply a farm code to link to an owner
+      // Workers and managers must supply a farm code OR invite code to link to an owner
       if (!isFarmer) {
-        const farmCode = (b.farmCode as string | undefined)?.trim().toUpperCase();
-        if (!farmCode) {
+        const suppliedCode = (b.farmCode as string | undefined)?.trim().toUpperCase()
+                          ?? (b.inviteCode as string | undefined)?.trim().toUpperCase();
+        if (!suppliedCode) {
           return NextResponse.json({
-            error: "A farm code is required to register as a Farm Worker or Farm Manager. Ask your farm owner for their HerdFlow farm code.",
+            error: "A farm invite code is required. Ask your farm owner to generate one from their HerdFlow Profile screen.",
             code: "FARM_CODE_REQUIRED",
           }, { status: 400 });
         }
 
-        // Validate the farm code exists
-        const ownerProfile = await prisma.farmerProfile.findUnique({ where: { farmCode } });
+        const resolvedMobileRole = isManager ? "FARM_MANAGER" : "FARM_WORKER";
+        let ownerProfile: { userId: string; farmName: string; province: string; species: string[] } | null = null;
+        let inviteId: string | null = null;
+
+        // Try XXXX-XXXX invite code format first
+        if (suppliedCode.includes("-") && suppliedCode.length === 9) {
+          const invite = await prisma.farmInvite.findUnique({ where: { inviteCode: suppliedCode } });
+          if (!invite || invite.status !== "PENDING") {
+            return NextResponse.json({ error: "Invite code not found or already used.", code: "FARM_CODE_INVALID" }, { status: 400 });
+          }
+          if (new Date(invite.expiresAt) < new Date()) {
+            return NextResponse.json({ error: "This invite code has expired. Ask your farm owner for a new one.", code: "INVITE_EXPIRED" }, { status: 410 });
+          }
+          ownerProfile = await prisma.farmerProfile.findUnique({ where: { userId: invite.farmOwnerId } });
+          inviteId = invite.id;
+        } else {
+          // Try HF-XXXXXX farm code format
+          ownerProfile = await prisma.farmerProfile.findUnique({ where: { farmCode: suppliedCode } });
+        }
+
         if (!ownerProfile) {
           return NextResponse.json({
-            error: `Farm code "${farmCode}" not found. Please check the code with your farm owner and try again.`,
+            error: `Code "${suppliedCode}" not found. Please check with your farm owner and try again.`,
             code: "FARM_CODE_INVALID",
           }, { status: 400 });
         }
 
-        // Create the worker/manager user and profile
-        const resolvedMobileRole = isManager ? "FARM_MANAGER" : "FARM_WORKER";
         const result = await prisma.$transaction(async (tx) => {
           const created = await tx.user.create({
             data: { email, fullName, phone: phone || null, passwordHash, role: "FARMER" },
@@ -82,16 +99,24 @@ export async function POST(request: Request) {
           const profile = await tx.farmerProfile.create({
             data: {
               userId:      created.id,
-              farmName:    ownerProfile.farmName,
-              province:    ownerProfile.province,
-              species:     ownerProfile.species,
+              farmName:    ownerProfile!.farmName,
+              province:    ownerProfile!.province,
+              species:     ownerProfile!.species,
               mobileRole:  resolvedMobileRole,
-              ownerUserId: ownerProfile.userId,
+              ownerUserId: ownerProfile!.userId,
             },
           });
           return { created, profile };
         });
         user = result.created;
+
+        // Mark invite as accepted if we used an invite code
+        if (inviteId) {
+          await prisma.farmInvite.update({
+            where: { id: inviteId },
+            data: { status: "ACCEPTED", acceptedBy: user.id, acceptedAt: new Date() },
+          }).catch(() => {});
+        }
 
         const sessionValue = createUserSessionValue(user.id);
         return NextResponse.json({
@@ -103,9 +128,9 @@ export async function POST(request: Request) {
             phone:        user.phone ?? null,
             role:         resolvedMobileRole,
             isAdmin:      false,
-            farmName:     ownerProfile.farmName,
-            province:     ownerProfile.province,
-            farmCode:     null, // workers don't own a code
+            farmName:     ownerProfile!.farmName,
+            province:     ownerProfile!.province,
+            farmCode:     null,
             ownerUserId:  ownerProfile.userId,
             createdAt:    user.createdAt,
           },
