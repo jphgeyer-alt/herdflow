@@ -34,32 +34,42 @@ export async function POST(request: Request) {
   let user;
   try {
     const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing)
-      return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+    if (existing) {
+      // If this is a mobile registration attempt and user exists with FARMER role,
+      // give a specific "sign in" hint rather than just "already exists"
+      return NextResponse.json({
+        error: "An account with this email already exists. Please sign in instead.",
+        code: "EMAIL_EXISTS",
+      }, { status: 409 });
+    }
 
-    user = await prisma.user.create({
-      data: {
-        email,
-        fullName,
-        phone: phone || null,
-        passwordHash,
-        role: isMobileRegistration ? "FARMER" : "CUSTOMER",
-      },
-    });
-
-    // For mobile registrations, create FarmerProfile with farm details
     if (isMobileRegistration) {
+      // Atomic transaction: User + FarmerProfile created together or not at all
       const farmName = (b.farmName as string | undefined)?.trim() ?? "";
       const province = (b.province as string | undefined)?.trim() ?? "";
-      const species = Array.isArray(b.species) ? (b.species as string[]) : [];
-      await prisma.farmerProfile.create({
-        data: { userId: user.id, farmName, province, species },
+      const species  = Array.isArray(b.species) ? (b.species as string[]) : [];
+      const result = await prisma.$transaction(async (tx) => {
+        const created = await tx.user.create({
+          data: { email, fullName, phone: phone || null, passwordHash, role: "FARMER" },
+        });
+        const profile = await tx.farmerProfile.create({
+          data: { userId: created.id, farmName, province, species },
+        });
+        return { created, profile };
+      });
+      user = result.created;
+    } else {
+      user = await prisma.user.create({
+        data: { email, fullName, phone: phone || null, passwordHash, role: "CUSTOMER" },
       });
     }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "";
     if (msg.includes("Unique") || msg.includes("already exists")) {
-      return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+      return NextResponse.json({
+        error: "An account with this email already exists. Please sign in instead.",
+        code: "EMAIL_EXISTS",
+      }, { status: 409 });
     }
     return NextResponse.json({ error: "Service temporarily unavailable. Please try again later." }, { status: 503 });
   }
@@ -68,7 +78,7 @@ export async function POST(request: Request) {
 
   // Mobile registration: return token + user object
   if (isMobileRegistration) {
-    const farmerProfile = await prisma.farmerProfile.findUnique({ where: { userId: user.id } });
+    const farmerProfile = await prisma.farmerProfile.findUnique({ where: { userId: user.id } }).catch(() => null);
     return NextResponse.json({
       token: sessionValue,
       user: {
