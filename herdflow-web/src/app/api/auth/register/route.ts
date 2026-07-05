@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, createUserSessionValue, SESSION_COOKIE_OPTIONS, USER_SESSION_COOKIE } from "@/lib/user-auth";
 
+/** Generate a unique 8-char alphanumeric farm code e.g. "HF-A3B9C2" */
+function generateFarmCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars
+  let code = "HF-";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -15,7 +23,7 @@ export async function POST(request: Request) {
   const email = (b.email as string | undefined)?.trim().toLowerCase();
   const phone = (b.phone as string | undefined)?.trim();
   const password = b.password as string | undefined;
-  const accountType = b.accountType as string | undefined; // "buyer" | "seller" | "logistics"
+  const accountType = b.accountType as string | undefined;
   // Mobile app sends role: "farmer" | "worker" | "manager"
   const mobileRole = (b.role as string | undefined)?.toLowerCase();
   const isMobileRegistration = !!mobileRole && !accountType;
@@ -35,8 +43,6 @@ export async function POST(request: Request) {
   try {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      // If this is a mobile registration attempt and user exists with FARMER role,
-      // give a specific "sign in" hint rather than just "already exists"
       return NextResponse.json({
         error: "An account with this email already exists. Please sign in instead.",
         code: "EMAIL_EXISTS",
@@ -44,25 +50,117 @@ export async function POST(request: Request) {
     }
 
     if (isMobileRegistration) {
-      // Atomic transaction: User + FarmerProfile created together or not at all
+      const isWorker  = mobileRole === "worker";
+      const isManager = mobileRole === "manager";
+      const isFarmer  = !isWorker && !isManager;
+
+      // Workers and managers must supply a farm code to link to an owner
+      if (!isFarmer) {
+        const farmCode = (b.farmCode as string | undefined)?.trim().toUpperCase();
+        if (!farmCode) {
+          return NextResponse.json({
+            error: "A farm code is required to register as a Farm Worker or Farm Manager. Ask your farm owner for their HerdFlow farm code.",
+            code: "FARM_CODE_REQUIRED",
+          }, { status: 400 });
+        }
+
+        // Validate the farm code exists
+        const ownerProfile = await prisma.farmerProfile.findUnique({ where: { farmCode } });
+        if (!ownerProfile) {
+          return NextResponse.json({
+            error: `Farm code "${farmCode}" not found. Please check the code with your farm owner and try again.`,
+            code: "FARM_CODE_INVALID",
+          }, { status: 400 });
+        }
+
+        // Create the worker/manager user and profile
+        const resolvedMobileRole = isManager ? "FARM_MANAGER" : "FARM_WORKER";
+        const result = await prisma.$transaction(async (tx) => {
+          const created = await tx.user.create({
+            data: { email, fullName, phone: phone || null, passwordHash, role: "FARMER" },
+          });
+          const profile = await tx.farmerProfile.create({
+            data: {
+              userId:      created.id,
+              farmName:    ownerProfile.farmName,
+              province:    ownerProfile.province,
+              species:     ownerProfile.species,
+              mobileRole:  resolvedMobileRole,
+              ownerUserId: ownerProfile.userId,
+            },
+          });
+          return { created, profile };
+        });
+        user = result.created;
+
+        const sessionValue = createUserSessionValue(user.id);
+        return NextResponse.json({
+          token: sessionValue,
+          user: {
+            id:           user.id,
+            name:         user.fullName,
+            email:        user.email,
+            phone:        user.phone ?? null,
+            role:         resolvedMobileRole,
+            isAdmin:      false,
+            farmName:     ownerProfile.farmName,
+            province:     ownerProfile.province,
+            farmCode:     null, // workers don't own a code
+            ownerUserId:  ownerProfile.userId,
+            createdAt:    user.createdAt,
+          },
+        });
+      }
+
+      // Farmer registration — create farm and generate unique farm code
       const farmName = (b.farmName as string | undefined)?.trim() ?? "";
       const province = (b.province as string | undefined)?.trim() ?? "";
       const species  = Array.isArray(b.species) ? (b.species as string[]) : [];
+
+      // Generate a unique farm code (retry up to 10 times on collision)
+      let farmCode: string | null = null;
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const candidate = generateFarmCode();
+        const exists = await prisma.farmerProfile.findUnique({ where: { farmCode: candidate } });
+        if (!exists) { farmCode = candidate; break; }
+      }
+      if (!farmCode) {
+        return NextResponse.json({ error: "Could not generate farm code. Please try again." }, { status: 500 });
+      }
+
       const result = await prisma.$transaction(async (tx) => {
         const created = await tx.user.create({
           data: { email, fullName, phone: phone || null, passwordHash, role: "FARMER" },
         });
         const profile = await tx.farmerProfile.create({
-          data: { userId: created.id, farmName, province, species },
+          data: { userId: created.id, farmName, province, species, farmCode, mobileRole: "FARMER" },
         });
         return { created, profile };
       });
       user = result.created;
-    } else {
-      user = await prisma.user.create({
-        data: { email, fullName, phone: phone || null, passwordHash, role: "CUSTOMER" },
+      const sessionValue = createUserSessionValue(user.id);
+      return NextResponse.json({
+        token: sessionValue,
+        user: {
+          id:          user.id,
+          name:        user.fullName,
+          email:       user.email,
+          phone:       user.phone ?? null,
+          role:        "FARMER",
+          isAdmin:     false,
+          farmName,
+          province,
+          farmCode,
+          ownerUserId: null,
+          createdAt:   user.createdAt,
+        },
       });
     }
+
+    // ── Web registration (buyer / seller / logistics) ──────────────────────
+    user = await prisma.user.create({
+      data: { email, fullName, phone: phone || null, passwordHash, role: "CUSTOMER" },
+    });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "";
     if (msg.includes("Unique") || msg.includes("already exists")) {
@@ -76,26 +174,6 @@ export async function POST(request: Request) {
 
   const sessionValue = createUserSessionValue(user.id);
 
-  // Mobile registration: return token + user object
-  if (isMobileRegistration) {
-    const farmerProfile = await prisma.farmerProfile.findUnique({ where: { userId: user.id } }).catch(() => null);
-    return NextResponse.json({
-      token: sessionValue,
-      user: {
-        id: user.id,
-        name: user.fullName,
-        email: user.email,
-        phone: user.phone ?? null,
-        role: user.role,
-        isAdmin: false,
-        farmName: farmerProfile?.farmName ?? "",
-        province: farmerProfile?.province ?? "",
-        createdAt: user.createdAt,
-      },
-    });
-  }
-
-  // Web registration: set cookie and redirect
   let redirect = "/dashboard/buyer";
   if (accountType === "seller") redirect = "/register/seller";
   if (accountType === "logistics") redirect = "/register/logistics";
@@ -104,3 +182,4 @@ export async function POST(request: Request) {
   res.cookies.set(USER_SESSION_COOKIE, sessionValue, SESSION_COOKIE_OPTIONS);
   return res;
 }
+

@@ -44,15 +44,27 @@ export async function POST(request: Request) {
     // Use default buyer dashboard on DB error
   }
 
+  // Look up FarmerProfile for mobile app users
+  let farmerProfile: { farmName: string; province: string; mobileRole: string; farmCode: string | null; ownerUserId: string | null } | null = null;
+  try {
+    farmerProfile = await prisma.farmerProfile.findUnique({ where: { userId: user.id } });
+  } catch { /* not a farmer account */ }
+
+  const mobileRole = farmerProfile?.mobileRole ?? (user.role === "ADMIN" ? "ADMIN" : "FARMER");
+
   // Return token for mobile app clients alongside the cookie for web clients
   const mobileUser = {
-    id: user.id,
-    name: user.fullName,
-    email: user.email,
-    phone: user.phone ?? null,
-    role: user.role,
-    isAdmin: user.role === "ADMIN",
-    createdAt: user.createdAt,
+    id:          user.id,
+    name:        user.fullName,
+    email:       user.email,
+    phone:       user.phone ?? null,
+    role:        mobileRole,
+    isAdmin:     user.role === "ADMIN",
+    farmName:    farmerProfile?.farmName ?? "",
+    province:    farmerProfile?.province ?? "",
+    farmCode:    farmerProfile?.farmCode ?? null,
+    ownerUserId: farmerProfile?.ownerUserId ?? null,
+    createdAt:   user.createdAt,
   };
 
   const res = NextResponse.json({ ok: true, redirect, token: sessionValue, user: mobileUser });

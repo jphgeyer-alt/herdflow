@@ -393,13 +393,19 @@ model Sponsor {
 // ─── Mobile App Models ───────────────────────────────────────────────────────
 
 model FarmerProfile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  farmName  String   @default("")
-  province  String   @default("")
-  species   String[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  farmName     String   @default("")
+  province     String   @default("")
+  species      String[]
+  farmCode     String?  @unique  // 6-char unique code, generated for FARMER accounts
+  mobileRole   String   @default("FARMER")  // FARMER | FARM_MANAGER | FARM_WORKER
+  ownerUserId  String?  // For workers/managers — points to the FARMER's userId
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([farmCode])
+  @@index([ownerUserId])
 }
 
 model AppContent {
