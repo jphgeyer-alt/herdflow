@@ -555,10 +555,29 @@ model FarmerHealthRecord {
   followUpDate DateTime?
   documents    String[]
   eventDate    DateTime
+  status       String   @default("pending")
   createdAt    DateTime @default(now())
 
   @@index([animalId])
   @@index([farmerId])
+}
+
+model FarmerTransaction {
+  id            String   @id @default(cuid())
+  farmerId      String
+  type          String
+  category      String
+  amount        Decimal
+  vatAmount     Decimal  @default(0)
+  description   String?
+  animalId      String?
+  supplier      String?
+  invoiceNumber String?
+  date          DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([farmerId])
+  @@index([farmerId, date])
 }
 
 model FarmerWeightRecord {
