@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm view *)",
+      "Bash(tee /tmp/tsc_out.txt)",
+      "Bash(echo \"=== TSC EXIT: $? ===\")",
+      "Read(//tmp/**)",
+      "Bash(npx eslint *)",
+      "Bash(npx jest *)",
+      "Bash(xargs -I{} sh -c 'echo \"=== {} ===\"; grep -n \"setInterval\\\\|setTimeout\\\\|addEventListener\\\\|subscribe\" \"{}\"')",
+      "Bash(grep -v \"SecureStore\\\\|AsyncStorage\\\\|//\\\\|test\\\\|type\\\\|interface\\\\|Token\\\\|tokenKey\\\\|placeholder\\\\|Password\\\\|KEY\\\\b\")",
+      "Bash(grep -rnE \"\\(password|secret|apiKey|api_key|token\\)\\\\s*[:=]\\\\s*['\\\\\"][^'\\\\\"]{4,}['\\\\\"]\" src/ --include=\"*.ts\" --include=\"*.tsx\")",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit *)",
+      "Bash(eas build:view 489989d3-cbd8-4f1f-b379-44eabbd57a5a)",
+      "Bash(node -e ' *)",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(grep -v \"//\\\\|test\\\\|spec\")"
+    ]
+  }
+}

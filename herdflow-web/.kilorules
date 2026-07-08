@@ -1,0 +1,46 @@
+# HerdFlow Project Rules
+
+## Two Separate Applications
+
+This project has TWO apps that must NEVER mix:
+
+- herdflow-web/ = Next.js website (herdflow.co.za)
+- herdflow-app/ = React Native Expo mobile app
+
+## Prompt Prefixes Required
+
+- Start with WEBSITE — for website changes
+- Start with MOBILE APP — for mobile changes
+
+## Brand Colors
+
+Navy: #1B3A6B
+Green: #2E7D32
+Gold: #A07C3A
+Tagline: Smarter Herds. Stronger Futures.
+
+## Tech Stack
+
+Website: Next.js TypeScript Tailwind Prisma PostgreSQL
+Mobile: React Native Expo SQLite Zustand
+
+## Rules
+
+- Never hardcode colors use colors.ts or Tailwind
+- TypeScript strict mode always no any types
+- All data saves offline first then syncs to cloud
+- Farm Workers cannot see financial data
+- Every operation logs to activity_log
+- Always use existing components before creating new ones
+- Never mix website and mobile app code
+
+## API Base URL
+
+Production: https://www.herdflow.co.za/api
+Development: http://localhost:3000/api
+
+## Project Owner
+
+Geyer Holdings
+North West Province South Africa
+herdflow.co.za
