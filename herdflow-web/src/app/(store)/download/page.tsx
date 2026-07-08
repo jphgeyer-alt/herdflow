@@ -23,7 +23,7 @@ function qrUrl(data: string, size = 180) {
 
 function StepBadge({ n }: { n: number }) {
   return (
-    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#1B3A6B] text-white text-xs font-bold flex items-center justify-center">
+    <span className="shrink-0 w-7 h-7 rounded-full bg-[#1B3A6B] text-white text-xs font-bold flex items-center justify-center">
       {n}
     </span>
   );
@@ -124,7 +124,7 @@ export default function DownloadPage() {
                 height={160}
                 className="rounded-lg border border-slate-200"
               />
-              <p className="text-xs text-slate-500 text-center max-w-[140px] leading-snug">
+              <p className="text-xs text-slate-500 text-center max-w-35 leading-snug">
                 Scan to go to download page on your phone
               </p>
             </div>
@@ -182,7 +182,7 @@ export default function DownloadPage() {
                 height={160}
                 className="rounded-lg border border-slate-200"
               />
-              <p className="text-xs text-slate-500 text-center max-w-[140px] leading-snug">
+              <p className="text-xs text-slate-500 text-center max-w-35 leading-snug">
                 Scan with Expo Go app
               </p>
             </div>
