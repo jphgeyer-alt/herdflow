@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   const medicine = await prisma.farmerMedicine.create({
     data: {
       localId,
-      farmerId:             auth.id,
+      farmerId:             auth.effectiveFarmerId,
       name:                 String(b.name),
       category:             String(b.category),
       manufacturer:         (b.manufacturer as string | undefined) ?? null,

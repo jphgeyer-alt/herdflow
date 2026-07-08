@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   const camp = await prisma.farmerCamp.create({
     data: {
       localId,
-      farmerId:            auth.id,
+      farmerId:            auth.effectiveFarmerId,
       name:                String(b.name),
       number:              (b.number as string | undefined) ?? null,
       hectares:            b.hectares != null ? Number(b.hectares) : null,

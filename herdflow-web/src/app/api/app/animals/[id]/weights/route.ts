@@ -43,7 +43,7 @@ export async function POST(request: Request, ctx: Ctx) {
     prisma.farmerWeightRecord.create({
       data: {
         animalId:          id,
-        farmerId:          auth.id,
+        farmerId:          auth.effectiveFarmerId,
         weight:            Number(b.weight),
         bodyConditionScore:b.bodyConditionScore != null ? Number(b.bodyConditionScore) : null,
         notes:             (b.notes as string | undefined) ?? null,

@@ -69,8 +69,10 @@ export async function POST(request: Request) {
         let ownerProfile: { userId: string; farmName: string; province: string; species: string[] } | null = null;
         let inviteId: string | null = null;
 
-        // Try XXXX-XXXX invite code format first
-        if (suppliedCode.includes("-") && suppliedCode.length === 9) {
+        // Farm codes are always "HF-XXXXXX" (hyphen at index 2). Invite codes are
+        // "XXXX-XXXX" (hyphen at index 4). Both are 9 chars with one hyphen, so the
+        // hyphen's position — not just length — is what actually distinguishes them.
+        if (!suppliedCode.startsWith("HF-") && suppliedCode.includes("-") && suppliedCode.length === 9) {
           const invite = await prisma.farmInvite.findUnique({ where: { inviteCode: suppliedCode } });
           if (!invite || invite.status !== "PENDING") {
             return NextResponse.json({ error: "Invite code not found or already used.", code: "FARM_CODE_INVALID" }, { status: 400 });

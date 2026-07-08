@@ -42,7 +42,7 @@ export async function POST(request: Request, ctx: Ctx) {
   const record = await prisma.farmerHealthRecord.create({
     data: {
       animalId:    id,
-      farmerId:    auth.id,
+      farmerId:    auth.effectiveFarmerId,
       eventType:   b.eventType as string,
       description: (b.description as string | undefined) ?? null,
       diagnosis:   (b.diagnosis  as string | undefined) ?? null,
