@@ -15,11 +15,11 @@ export async function GET(request: Request) {
   // Get all animals for this farmer to resolve names
   const [allVaccinations, animals] = await Promise.all([
     prisma.farmerVaccination.findMany({
-      where: { farmerId: auth.id },
+      where: { farmerId: auth.effectiveFarmerId },
       orderBy: { nextDueDate: "asc" },
     }),
     prisma.farmerAnimal.findMany({
-      where: { farmerId: auth.id, isDeleted: false },
+      where: { farmerId: auth.effectiveFarmerId, isDeleted: false },
       select: { id: true, name: true, tagNumber: true },
     }),
   ]);
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
   // Verify the animal belongs to this farmer
   const animal = await prisma.farmerAnimal.findFirst({
-    where: { id: b.animalId as string, farmerId: auth.id, isDeleted: false },
+    where: { id: b.animalId as string, farmerId: auth.effectiveFarmerId, isDeleted: false },
   });
   if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 

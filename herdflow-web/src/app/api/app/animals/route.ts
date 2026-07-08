@@ -11,7 +11,7 @@ export async function GET(request: Request) {
 
   try {
     const animals = await prisma.farmerAnimal.findMany({
-      where: { farmerId: auth.id, isDeleted: false },
+      where: { farmerId: auth.effectiveFarmerId, isDeleted: false },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(animals);

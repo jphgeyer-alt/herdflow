@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   if (!isMobileUser(auth)) return auth;
 
   const camps = await prisma.farmerCamp.findMany({
-    where: { farmerId: auth.id, isDeleted: false },
+    where: { farmerId: auth.effectiveFarmerId, isDeleted: false },
     orderBy: { name: "asc" },
   });
   return NextResponse.json(camps);

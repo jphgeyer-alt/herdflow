@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   if (!isMobileUser(auth)) return auth;
 
   const medicines = await prisma.farmerMedicine.findMany({
-    where: { farmerId: auth.id, isActive: true },
+    where: { farmerId: auth.effectiveFarmerId, isActive: true },
     orderBy: { name: "asc" },
   });
   return NextResponse.json(medicines);

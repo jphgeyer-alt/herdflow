@@ -7,12 +7,23 @@ import { prisma } from "@/lib/prisma";
 import { getUserIdFromSession } from "@/lib/user-auth";
 
 export interface MobileUser {
-  id: string;
+  id: string;               // The authenticated user's own ID
   email: string;
   fullName: string;
   phone: string | null;
   role: string;
   isAdmin: boolean;
+  /**
+   * The tenant bucket that owns all farm data (animals, camps, etc.)
+   *
+   * - FARMER:       their own `id`   — they ARE the farm owner
+   * - FARM_MANAGER: `ownerUserId`    — belongs to a farmer's account
+   * - FARM_WORKER:  `ownerUserId`    — belongs to a farmer's account
+   *
+   * Use this in EVERY WHERE clause instead of `auth.id` so that managers
+   * and workers see and write into the correct farm's data pool.
+   */
+  effectiveFarmerId: string;
 }
 
 function extractBearerToken(request: Request): string | null {
@@ -30,12 +41,28 @@ export async function getMobileUser(request: Request): Promise<MobileUser | null
   if (!userId) return null;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, fullName: true, phone: true, role: true },
-    });
+    const [user, profile] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, fullName: true, phone: true, role: true },
+      }),
+      prisma.farmerProfile.findFirst({
+        where: { userId },
+        select: { ownerUserId: true, mobileRole: true },
+      }),
+    ]);
+
     if (!user) return null;
-    return { ...user, isAdmin: user.role === "ADMIN" };
+
+    // For FARM_MANAGER and FARM_WORKER, ownerUserId is the farm owner they
+    // belong to. All data queries should filter by that owner's ID.
+    const effectiveFarmerId = profile?.ownerUserId ?? userId;
+
+    return {
+      ...user,
+      isAdmin: user.role === "ADMIN",
+      effectiveFarmerId,
+    };
   } catch {
     return null;
   }

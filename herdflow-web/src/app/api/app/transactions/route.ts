@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
   const transactions = await prisma.farmerTransaction.findMany({
     where: {
-      farmerId: auth.id,
+      farmerId: auth.effectiveFarmerId,
       ...(type != null && { type }),
       ...((startDate != null || endDate != null) && {
         date: {

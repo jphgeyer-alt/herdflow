@@ -12,7 +12,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const existing = await prisma.farmerHealthRecord.findFirst({ where: { id, farmerId: auth.id } });
+  const existing = await prisma.farmerHealthRecord.findFirst({ where: { id, farmerId: auth.effectiveFarmerId } });
   if (!existing) return NextResponse.json({ error: "Health record not found" }, { status: 404 });
 
   let body: unknown;
