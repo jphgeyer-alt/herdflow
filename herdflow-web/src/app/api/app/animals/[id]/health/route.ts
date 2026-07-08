@@ -12,7 +12,7 @@ export async function GET(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const animal = await prisma.farmerAnimal.findFirst({ where: { id, farmerId: auth.id, isDeleted: false } });
+  const animal = await prisma.farmerAnimal.findFirst({ where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false } });
   if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   const records = await prisma.farmerHealthRecord.findMany({
@@ -28,7 +28,7 @@ export async function POST(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const animal = await prisma.farmerAnimal.findFirst({ where: { id, farmerId: auth.id, isDeleted: false } });
+  const animal = await prisma.farmerAnimal.findFirst({ where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false } });
   if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   let body: unknown;

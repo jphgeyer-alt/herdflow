@@ -12,7 +12,7 @@ export async function GET(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
   const { id } = await ctx.params;
   const camp = await prisma.farmerCamp.findFirst({
-    where: { id, farmerId: auth.id, isDeleted: false },
+    where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
   });
   if (!camp) return NextResponse.json({ error: "Camp not found" }, { status: 404 });
   return NextResponse.json(camp);
@@ -23,7 +23,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
   const { id } = await ctx.params;
 
-  const existing = await prisma.farmerCamp.findFirst({ where: { id, farmerId: auth.id } });
+  const existing = await prisma.farmerCamp.findFirst({ where: { id, farmerId: auth.effectiveFarmerId } });
   if (!existing) return NextResponse.json({ error: "Camp not found" }, { status: 404 });
 
   let body: unknown;
@@ -54,7 +54,7 @@ export async function DELETE(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
   const { id } = await ctx.params;
 
-  const existing = await prisma.farmerCamp.findFirst({ where: { id, farmerId: auth.id } });
+  const existing = await prisma.farmerCamp.findFirst({ where: { id, farmerId: auth.effectiveFarmerId } });
   if (!existing) return NextResponse.json({ error: "Camp not found" }, { status: 404 });
 
   await prisma.farmerCamp.update({ where: { id }, data: { isDeleted: true } });

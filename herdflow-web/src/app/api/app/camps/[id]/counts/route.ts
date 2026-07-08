@@ -13,7 +13,7 @@ export async function GET(request: Request, ctx: Ctx) {
   const { id } = await ctx.params;
 
   const counts = await prisma.farmerCampCount.findMany({
-    where: { campId: id, farmerId: auth.id, isDeleted: false },
+    where: { campId: id, farmerId: auth.effectiveFarmerId, isDeleted: false },
     orderBy: { countDate: "desc" },
     take: 50,
   });

@@ -61,7 +61,7 @@ export async function POST(request: Request) {
         case "UPDATE_ANIMAL": {
           const d = change.data;
           await prisma.farmerAnimal.updateMany({
-            where: { id: d.id as string, farmerId: auth.id },
+            where: { id: d.id as string, farmerId: auth.effectiveFarmerId },
             data: {
               ...(d.tag       != null && { tagNumber:   String(d.tag) }),
               ...(d.name      != null && { name:        String(d.name) }),
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
           });
           if (d.animalId) {
             await prisma.farmerAnimal.updateMany({
-              where: { id: d.animalId as string, farmerId: auth.id },
+              where: { id: d.animalId as string, farmerId: auth.effectiveFarmerId },
               data: { weight: Number(d.weight) },
             });
           }
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
         case "UPDATE_VACCINATION": {
           const d = change.data;
           await prisma.farmerVaccination.updateMany({
-            where: { id: d.id as string, farmerId: auth.id },
+            where: { id: d.id as string, farmerId: auth.effectiveFarmerId },
             data: {
               ...(d.status       != null && { status:       String(d.status) }),
               ...(d.vaccinatedDate != null && { vaccinatedDate: new Date(d.vaccinatedDate as string) }),
