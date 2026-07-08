@@ -633,3 +633,129 @@ model MarketPriceCache {
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 }
+
+// ── Mobile App: Camp Management ───────────────────────────────────────────────
+
+model FarmerCamp {
+  id                   String    @id @default(cuid())
+  localId              String?   @unique   // mobile-generated UUID for dedup
+  farmerId             String
+  name                 String
+  number               String?
+  hectares             Decimal?
+  forageType           String?
+  currentStatus        String    @default("RESTING")
+  maxCarryingCapacity  Int?
+  restingDaysRequired  Int       @default(42)
+  gpsCoordinates       String?
+  notes                String?
+  isDeleted            Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([farmerId])
+  @@index([farmerId, isDeleted])
+}
+
+model FarmerCampCount {
+  id               String    @id @default(cuid())
+  localId          String?
+  campId           String
+  farmerId         String
+  countedByUserId  String
+  countedByName    String
+  countedByRole    String
+  countDate        DateTime
+  expectedCount    Int?
+  actualCount      Int
+  variance         Int?
+  varianceNotes    String?
+  countMethod      String    @default("MANUAL")
+  isDeleted        Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+
+  @@index([campId])
+  @@index([farmerId])
+}
+
+model FarmerCampMovement {
+  id              String   @id @default(cuid())
+  localId         String?
+  farmerId        String
+  fromCampId      String?
+  fromCampName    String?
+  toCampId        String
+  toCampName      String
+  animalIds       String   // JSON array of animal IDs
+  headCount       Int
+  movedByUserId   String
+  movedByName     String
+  movedByRole     String
+  movementDate    DateTime
+  reason          String
+  notes           String?
+  isDeleted       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([farmerId])
+  @@index([toCampId])
+}
+
+model FarmerMedicine {
+  id                    String   @id @default(cuid())
+  localId               String?  @unique
+  farmerId              String
+  name                  String
+  category              String
+  manufacturer          String?
+  withdrawalPeriodDays  Int?
+  dosageUnit            String?
+  standardDosage        Decimal?
+  storageInstructions   String?
+  notes                 String?
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([farmerId])
+}
+
+model FarmerTreatment {
+  id                    String    @id @default(cuid())
+  localId               String?   @unique
+  animalId              String
+  animalTag             String
+  farmerId              String
+  medicineId            String?
+  medicineName          String
+  medicineCategory      String
+  treatmentType         String
+  dosage                Decimal?
+  dosageUnit            String?
+  batchNumber           String?
+  administeredByUserId  String
+  administeredByName    String
+  administeredByRole    String
+  treatmentDate         DateTime
+  nextTreatmentDate     DateTime?
+  withdrawalEndDate     DateTime?
+  campId                String?
+  campName              String?
+  diagnosis             String?
+  symptoms              String?
+  vetName               String?
+  prescriptionNumber    String?
+  cost                  Decimal?
+  notes                 String?
+  followUpRequired      Boolean   @default(false)
+  followUpDate          DateTime?
+  followUpCompleted     Boolean   @default(false)
+  outcome               String?
+  isDeleted             Boolean   @default(false)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([animalId])
+  @@index([farmerId])
+  @@index([withdrawalEndDate])
+}

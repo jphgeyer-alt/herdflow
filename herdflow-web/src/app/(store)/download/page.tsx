@@ -9,12 +9,11 @@ export const metadata: Metadata = {
 };
 
 // Update EAS_APK_URL once eas build --platform android --profile preview completes
-// Build ID: db379d76-fa62-40c4-b14f-03ea326953f9 (v1.4.1 FINAL — finished 2026-07-05)
-// Previous: bD9jWtkpX6zOfvi22wzio0t-t3XnrsabWvUVWLxlHKY.apk (build 6386df59)
-const EAS_BUILDS_PAGE = "https://expo.dev/accounts/hannesgeyer101/projects/herdflow/builds/db379d76-fa62-40c4-b14f-03ea326953f9";
-const EAS_APK_DIRECT  = "https://expo.dev/artifacts/eas/J1BOf4WXQcRlH_qsnRXLujVf5WwHynP_0K81ayGllD8.apk";
-const APP_VERSION     = "v1.4.1";
-const APP_VERSION     = "v1.4.0";
+// Build ID: 76e9c747-0291-44e0-a81f-3851c6e32295 (v1.5.0 Admin Portal — finished 2026-07-05)
+// Previous: J1BOf4WXQcRlH_qsnRXLujVf5WwHynP_0K81ayGllD8.apk (build db379d76)
+const EAS_BUILDS_PAGE = "https://expo.dev/accounts/hannesgeyer101/projects/herdflow/builds/16e7c34f-78b1-43f4-b9b3-4fca273ad553";
+const EAS_APK_DIRECT  = "https://expo.dev/accounts/hannesgeyer101/projects/herdflow/builds/16e7c34f-78b1-43f4-b9b3-4fca273ad553";
+const APP_VERSION     = "v1.8.0";
 const EXPO_GO_URL = "exp://u.expo.dev/9adc77e5-3ea3-4131-a3a6-b4c4091e3e4b?channel-name=production";
 
 // Free QR code API — generates real scannable QR images from any URL
