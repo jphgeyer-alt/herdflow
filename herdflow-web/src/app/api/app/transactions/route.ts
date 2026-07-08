@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
   const transaction = await prisma.farmerTransaction.create({
     data: {
-      farmerId:      auth.id,
+      farmerId:      auth.effectiveFarmerId,
       type:          String(b.type),
       category:      String(b.category),
       amount:        Number(b.amount),

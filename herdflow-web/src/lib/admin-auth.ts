@@ -18,9 +18,15 @@ function sign(value: string) {
   return createHmac("sha256", getSecret()).update(value).digest("hex");
 }
 
+function timingSafeStringEqual(a: string, b: string) {
+  const aHash = createHmac("sha256", getSecret()).update(a).digest();
+  const bHash = createHmac("sha256", getSecret()).update(b).digest();
+  return timingSafeEqual(aHash, bHash);
+}
+
 export function validateAdminCredentials(username: string, password: string) {
-  const userOk = username === getConfiguredUsername();
-  const passOk = password === getConfiguredPassword();
+  const userOk = timingSafeStringEqual(username, getConfiguredUsername());
+  const passOk = timingSafeStringEqual(password, getConfiguredPassword());
   return userOk && passOk;
 }
 

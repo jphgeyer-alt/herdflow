@@ -37,7 +37,7 @@ export async function POST(request: Request, ctx: Ctx) {
     data: {
       localId:          (b.localId as string | undefined) ?? null,
       campId:           id,
-      farmerId:         auth.id,
+      farmerId:         auth.effectiveFarmerId,
       countedByUserId:  (b.countedByUserId as string | undefined) ?? auth.id,
       countedByName:    (b.countedByName   as string | undefined) ?? "Unknown",
       countedByRole:    (b.countedByRole   as string | undefined) ?? "FARMER",

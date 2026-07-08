@@ -18,7 +18,7 @@ export async function GET(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const animal = await getAnimalForFarmer(id, auth.id);
+  const animal = await getAnimalForFarmer(id, auth.effectiveFarmerId);
   if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   const [health, weights, vaccinations] = await Promise.all([
@@ -35,7 +35,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const existing = await getAnimalForFarmer(id, auth.id);
+  const existing = await getAnimalForFarmer(id, auth.effectiveFarmerId);
   if (!existing) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   let body: unknown;
@@ -69,7 +69,7 @@ export async function DELETE(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const existing = await getAnimalForFarmer(id, auth.id);
+  const existing = await getAnimalForFarmer(id, auth.effectiveFarmerId);
   if (!existing) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   // Soft delete — all health records preserved

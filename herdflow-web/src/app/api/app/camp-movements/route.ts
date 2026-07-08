@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const movement = await prisma.farmerCampMovement.create({
     data: {
       localId:        (b.localId      as string | undefined) ?? null,
-      farmerId:       auth.id,
+      farmerId:       auth.effectiveFarmerId,
       fromCampId:     (b.fromCampId   as string | undefined) ?? null,
       fromCampName:   (b.fromCampName as string | undefined) ?? null,
       toCampId:       String(b.toCampId),

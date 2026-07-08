@@ -41,7 +41,7 @@ export async function POST(request: Request) {
           const d = change.data;
           const animal = await prisma.farmerAnimal.create({
             data: {
-              farmerId:   auth.id,
+              farmerId:   auth.effectiveFarmerId,
               tagNumber:  (d.tag as string | undefined) ?? (d.tagNumber as string | undefined) ?? null,
               name:       (d.name as string | undefined) ?? null,
               species:    (d.species as string) || "cattle",
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
           const record = await prisma.farmerHealthRecord.create({
             data: {
               animalId:   d.animalId as string,
-              farmerId:   auth.id,
+              farmerId:   auth.effectiveFarmerId,
               eventType:  (d.type as string) || (d.eventType as string) || "Check-up",
               description:(d.description as string | undefined) ?? null,
               treatment:  (d.treatment   as string | undefined) ?? null,
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
           const record = await prisma.farmerWeightRecord.create({
             data: {
               animalId:    d.animalId as string,
-              farmerId:    auth.id,
+              farmerId:    auth.effectiveFarmerId,
               weight:      Number(d.weight),
               notes:       (d.notes as string | undefined) ?? null,
               recordedDate:d.recordedDate ? new Date(d.recordedDate as string) : new Date(),
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
           const vacc = await prisma.farmerVaccination.create({
             data: {
               animalId:    d.animalId as string,
-              farmerId:    auth.id,
+              farmerId:    auth.effectiveFarmerId,
               vaccineName: (d.vaccineName as string) || (d.name as string) || "Unknown",
               nextDueDate: d.nextDueDate ? new Date(d.nextDueDate as string) : null,
               status:      (d.status as string | undefined) ?? "SCHEDULED",

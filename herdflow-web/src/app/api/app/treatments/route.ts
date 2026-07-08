@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
   const treatments = await prisma.farmerTreatment.findMany({
     where: {
-      farmerId:  auth.id,
+      farmerId:  auth.effectiveFarmerId,
       isDeleted: false,
       ...(animalId && { animalId }),
     },
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       localId,
       animalId:             (b.animalId    as string | undefined) ?? "",
       animalTag:            (b.animalTag   as string | undefined) ?? "",
-      farmerId:             auth.id,
+      farmerId:             auth.effectiveFarmerId,
       medicineId:           (b.medicineId  as string | undefined) ?? null,
       medicineName:         String(b.medicineName),
       medicineCategory:     (b.medicineCategory as string | undefined) ?? "GENERAL",

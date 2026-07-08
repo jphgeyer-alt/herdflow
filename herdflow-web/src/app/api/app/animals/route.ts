@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   try {
     const animal = await prisma.farmerAnimal.create({
       data: {
-        farmerId:    auth.id,
+        farmerId:    auth.effectiveFarmerId,
         tagNumber:   (b.tag as string | undefined) ?? (b.tagNumber as string | undefined) ?? null,
         name:        (b.name as string | undefined) ?? null,
         species:     b.species as string,

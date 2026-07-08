@@ -61,4 +61,4 @@ npm run dev
 
 ## Deployment
 
-Target deployment is Vercel (or similar platform) with managed PostgreSQL.
+Deployed on Render (`render.yaml` at the repo root, `rootDir: herdflow-web`), with managed PostgreSQL on Render. Auto-deploys on push to `main`.

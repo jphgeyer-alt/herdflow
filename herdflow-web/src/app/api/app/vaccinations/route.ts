@@ -62,7 +62,7 @@ export async function POST(request: Request) {
   const vaccination = await prisma.farmerVaccination.create({
     data: {
       animalId:      b.animalId as string,
-      farmerId:      auth.id,
+      farmerId:      auth.effectiveFarmerId,
       vaccineName:   b.vaccineName as string,
       batchNumber:   (b.batchNumber   as string | undefined) ?? null,
       administeredBy:(b.administeredBy as string | undefined) ?? null,
