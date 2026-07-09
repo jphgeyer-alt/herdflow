@@ -1,9 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import { getCommissionRate } from "@/lib/marketplace/commission";
 import { ReportsPanel } from "./reports-panel";
 
 export const dynamic = "force-dynamic";
-
-const COMMISSION_RATE = 0.05;
 
 function monthKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -21,6 +20,8 @@ function lastNMonths(n: number) {
 
 async function getReportData() {
   try {
+    const COMMISSION_RATE = await getCommissionRate();
+
     const [paidOrders, topSellerRows, livestockSales] = await Promise.all([
       prisma.order.findMany({
         where: { status: { in: ["PAID", "PROCESSING", "SHIPPED", "COMPLETED"] } },
@@ -84,6 +85,7 @@ async function getReportData() {
       productCommissionCents,
       topSellers,
       livestockSold: livestockSales.length,
+      commissionRate: COMMISSION_RATE,
     };
   } catch {
     return {
@@ -94,6 +96,7 @@ async function getReportData() {
       productCommissionCents: 0,
       topSellers: [],
       livestockSold: 0,
+      commissionRate: await getCommissionRate(),
     };
   }
 }
@@ -106,8 +109,8 @@ export default async function AdminReportsPage() {
       <header>
         <h1 className="text-brand-navy text-3xl font-semibold">Reports</h1>
         <p className="text-sm text-[#38537a]">
-          Monthly sales breakdown, 5% commission tracker, and top seller rankings. Export to CSV for
-          accounting.
+          Monthly sales breakdown, {Math.round(data.commissionRate * 100)}% commission tracker, and
+          top seller rankings. Export to CSV for accounting.
         </p>
       </header>
       <ReportsPanel data={data} />

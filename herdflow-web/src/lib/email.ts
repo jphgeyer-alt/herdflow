@@ -261,3 +261,42 @@ View it here: ${viewUrl}
 
   await sendEmail({ to, subject: `HerdFlow Invoice ${invoiceNumber}`, html, text });
 }
+
+export async function sendSellerSaleNotification(opts: {
+  to: string;
+  sellerName: string;
+  orderNumber: string;
+  items: Array<{ productName: string; quantity: number }>;
+  netAmountLabel: string;
+  dashboardUrl: string;
+}): Promise<void> {
+  const { to, sellerName, orderNumber, items, netAmountLabel, dashboardUrl } = opts;
+
+  const itemLines = items.map((i) => `${i.quantity} x ${i.productName}`).join(", ");
+
+  const html = documentEmailHtml({
+    heading: "You Made a Sale!",
+    greetingName: sellerName,
+    bodyLines: [
+      `Order <strong>${orderNumber}</strong> just sold: ${itemLines}.`,
+      `Your net earnings (after HerdFlow's commission) are shown below. Check your dashboard for full order details and payout status.`,
+    ],
+    amountLabel: netAmountLabel,
+    viewUrl: dashboardUrl,
+    buttonLabel: "View My Dashboard",
+  });
+
+  const text = `You Made a Sale!
+
+Hi ${sellerName},
+
+Order ${orderNumber} just sold: ${itemLines}.
+Your net earnings: ${netAmountLabel}
+
+View your dashboard: ${dashboardUrl}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `You made a sale on HerdFlow — ${orderNumber}`, html, text });
+}

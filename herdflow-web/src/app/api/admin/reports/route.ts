@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-
-const COMMISSION_RATE = 0.05; // 5% on livestock sales
+import { getCommissionRate } from "@/lib/marketplace/commission";
 
 function ensureAdmin(request: NextRequest) {
   const session = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
@@ -33,6 +32,8 @@ export async function GET(request: NextRequest) {
   const format = searchParams.get("format"); // "csv"
 
   try {
+    const COMMISSION_RATE = await getCommissionRate();
+
     const [paidOrders, topSellerRows, livestockSales] = await Promise.all([
       // All paid orders with items for monthly breakdown
       prisma.order.findMany({

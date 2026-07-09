@@ -294,6 +294,11 @@ export default async function AdminPage() {
               desc: "Review sponsorship applications and manage active sponsors",
             },
             {
+              label: "Seller Payouts",
+              href: "/admin/payouts",
+              desc: "Track and settle what HerdFlow owes each seller",
+            },
+            {
               label: "📱 Mobile App Content",
               href: "/admin/app-content",
               desc: "Push announcements, banners, tips and notifications to farmer phones",

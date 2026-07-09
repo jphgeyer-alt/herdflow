@@ -1,10 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Package, DollarSign, TrendingUp, Clock } from "lucide-react";
+import { Package, DollarSign, TrendingUp, Clock, Wallet } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import type { Prisma, OrderStatus } from "@prisma/client";
 import { getUserIdFromSession, USER_SESSION_COOKIE } from "@/lib/user-auth";
+import { formatRand } from "@/lib/marketing/format";
 import { ListingsTabs } from "./ListingsTabs";
 
 export const dynamic = "force-dynamic";
@@ -149,6 +150,42 @@ export default async function SellerDashboard() {
     createdAt: i.order.createdAt.toLocaleDateString("en-ZA"),
   }));
 
+  // Earnings: net revenue after HerdFlow's commission.
+  const totalEarnedCents = sellerOrderItems.reduce(
+    (sum, i) => sum + (i.lineTotalCents - i.commissionCents),
+    0,
+  );
+  const pendingPayoutCents = sellerOrderItems
+    .filter((i) => i.payoutId === null)
+    .reduce((sum, i) => sum + (i.lineTotalCents - i.commissionCents), 0);
+
+  let recentPayouts: Array<{
+    id: string;
+    number: string;
+    amountCents: number;
+    status: string;
+    createdAt: Date;
+  }> = [];
+  let totalPaidOutCents = 0;
+  try {
+    const [payouts, paidAggregate] = await Promise.all([
+      prisma.sellerPayout.findMany({
+        where: { sellerId: user.sellerProfile.id },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        select: { id: true, number: true, amountCents: true, status: true, createdAt: true },
+      }),
+      prisma.sellerPayout.aggregate({
+        where: { sellerId: user.sellerProfile.id, status: "PAID" },
+        _sum: { amountCents: true },
+      }),
+    ]);
+    recentPayouts = payouts;
+    totalPaidOutCents = paidAggregate._sum.amountCents ?? 0;
+  } catch {
+    // DB error — show empty payouts
+  }
+
   return (
     <div className="min-h-screen bg-[#f5f4ef]">
       {/* Hero Header */}
@@ -218,6 +255,95 @@ export default async function SellerDashboard() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Earnings */}
+        <section>
+          <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">Earnings</h2>
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-lg">
+              <div className="mb-2 flex items-center gap-4">
+                <div className="rounded-xl bg-green-100 p-3">
+                  <Wallet size={32} className="text-[#2E7D32]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#5d7497]">Total Earned</p>
+                  <p className="text-3xl font-black text-[#1B3A6B]">
+                    {formatRand(totalEarnedCents / 100)}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#9aabb9]">Net of HerdFlow&apos;s commission</p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-lg">
+              <div className="mb-2 flex items-center gap-4">
+                <div className="rounded-xl bg-amber-100 p-3">
+                  <Clock size={32} className="text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#5d7497]">Pending Payout</p>
+                  <p className="text-3xl font-black text-[#1B3A6B]">
+                    {formatRand(pendingPayoutCents / 100)}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#9aabb9]">Not yet paid out</p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-lg">
+              <div className="mb-2 flex items-center gap-4">
+                <div className="rounded-xl bg-blue-100 p-3">
+                  <DollarSign size={32} className="text-[#1B3A6B]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#5d7497]">Total Paid Out</p>
+                  <p className="text-3xl font-black text-[#1B3A6B]">
+                    {formatRand(totalPaidOutCents / 100)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {recentPayouts.length > 0 && (
+            <div className="mt-6 overflow-x-auto rounded-2xl border border-[#e4ebf5] bg-white shadow-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-[#f5f8fd]">
+                  <tr>
+                    <th className="px-6 py-3 text-left font-bold text-[#244367]">Payout</th>
+                    <th className="px-6 py-3 text-left font-bold text-[#244367]">Amount</th>
+                    <th className="px-6 py-3 text-left font-bold text-[#244367]">Status</th>
+                    <th className="px-6 py-3 text-left font-bold text-[#244367]">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentPayouts.map((p) => (
+                    <tr key={p.id} className="border-t border-[#e4ebf5]">
+                      <td className="px-6 py-3 font-semibold text-[#1B3A6B]">{p.number}</td>
+                      <td className="px-6 py-3 text-[#244367]">
+                        {formatRand(p.amountCents / 100)}
+                      </td>
+                      <td className="px-6 py-3">
+                        <span
+                          className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+                            p.status === "PAID"
+                              ? "bg-green-100 text-green-800"
+                              : p.status === "CANCELLED"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {p.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 text-[#5d7497]">
+                        {p.createdAt.toLocaleDateString("en-ZA")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         {/* My Listings */}

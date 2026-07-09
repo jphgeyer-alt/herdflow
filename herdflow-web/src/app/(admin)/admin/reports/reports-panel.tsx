@@ -13,13 +13,12 @@ type ReportsData = {
   productCommissionCents: number;
   topSellers: TopSeller[];
   livestockSold: number;
+  commissionRate: number;
 };
 
 type ReportsPanelProps = {
   data: ReportsData;
 };
-
-const COMMISSION_RATE = 0.05;
 
 function toCurrency(cents: number) {
   return new Intl.NumberFormat("en-ZA", {
@@ -38,6 +37,7 @@ export function ReportsPanel({ data }: ReportsPanelProps) {
   const [exporting, setExporting] = useState(false);
 
   const maxMonthly = Math.max(...data.monthlySales.map((r) => r.totalCents), 1);
+  const commissionPct = Math.round(data.commissionRate * 100);
 
   async function exportCsv() {
     setExporting(true);
@@ -61,7 +61,10 @@ export function ReportsPanel({ data }: ReportsPanelProps) {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
           { label: "Total Revenue", value: toCurrency(data.totalRevenueCents) },
-          { label: "Total Commission (5%)", value: toCurrency(data.totalCommissionCents) },
+          {
+            label: `Total Commission (${commissionPct}%)`,
+            value: toCurrency(data.totalCommissionCents),
+          },
           { label: "Product Commission", value: toCurrency(data.productCommissionCents) },
           { label: "Livestock Sold", value: String(data.livestockSold) },
         ].map((card) => (
@@ -101,7 +104,7 @@ export function ReportsPanel({ data }: ReportsPanelProps) {
                 {toCurrency(row.totalCents)}
               </span>
               <span className="w-24 shrink-0 text-right text-xs text-gray-400">
-                {toCurrency(Math.round(row.totalCents * COMMISSION_RATE))} comm.
+                {toCurrency(Math.round(row.totalCents * data.commissionRate))} comm.
               </span>
             </div>
           ))}
@@ -119,7 +122,7 @@ export function ReportsPanel({ data }: ReportsPanelProps) {
               <th className="px-4 py-3 text-left">#</th>
               <th className="px-4 py-3 text-left">Seller / Farm</th>
               <th className="px-4 py-3 text-right">Revenue</th>
-              <th className="px-4 py-3 text-right">Commission (5%)</th>
+              <th className="px-4 py-3 text-right">Commission ({commissionPct}%)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -138,7 +141,7 @@ export function ReportsPanel({ data }: ReportsPanelProps) {
                   {toCurrency(seller.totalCents)}
                 </td>
                 <td className="px-4 py-3 text-right text-gray-500">
-                  {toCurrency(Math.round(seller.totalCents * COMMISSION_RATE))}
+                  {toCurrency(Math.round(seller.totalCents * data.commissionRate))}
                 </td>
               </tr>
             ))}

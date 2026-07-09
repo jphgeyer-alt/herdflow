@@ -9,7 +9,12 @@ async function assertAdmin() {
   return isValidAdminSession(session);
 }
 
-const KEYS = ["payfast_merchant_id", "payfast_merchant_key", "payfast_passphrase"] as const;
+const KEYS = [
+  "payfast_merchant_id",
+  "payfast_merchant_key",
+  "payfast_passphrase",
+  "commission_rate",
+] as const;
 
 export async function GET() {
   if (!(await assertAdmin())) {

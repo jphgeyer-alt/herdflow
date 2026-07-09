@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { saveUploadedFile } from "@/lib/server/upload-storage";
+import { toSlug } from "@/lib/slug";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -88,6 +89,7 @@ export async function POST(request: Request) {
       },
       create: {
         userId: user.id,
+        slug: `${toSlug(farmName)}-${Date.now().toString().slice(-6)}`,
         farmName,
         location,
         region,
