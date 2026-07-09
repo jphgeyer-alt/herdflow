@@ -436,6 +436,32 @@ model Sponsor {
   updatedAt        DateTime          @updatedAt
   quotes           Quote[]
   invoices         Invoice[]
+  creatives        SponsorCreative[]
+}
+
+enum CreativePlacement {
+  HOMEPAGE
+  SHOP
+  LISTINGS
+}
+
+model SponsorCreative {
+  id          String            @id @default(cuid())
+  sponsorId   String
+  sponsor     Sponsor           @relation(fields: [sponsorId], references: [id])
+  placement   CreativePlacement
+  imageUrl    String
+  linkUrl     String?
+  isActive    Boolean           @default(true)
+  startDate   DateTime?
+  endDate     DateTime?
+  impressions Int               @default(0)
+  clicks      Int               @default(0)
+  createdBy   String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([placement, isActive])
 }
 
 model MarketingPackage {

@@ -1,5 +1,6 @@
 import { StoreBanner } from "@/components/store-banner";
 import { SponsorBanner } from "@/components/ui/SponsorBanner";
+import { SponsorCreativeBanner } from "@/components/marketing/SponsorCreativeBanner";
 import { ProductGrid } from "@/components/product-grid";
 import { prisma } from "@/lib/prisma";
 
@@ -81,6 +82,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
 
         {/* Sponsor Strip */}
         <SponsorBanner />
+        <SponsorCreativeBanner placement="SHOP" />
 
         {dbError && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-800">

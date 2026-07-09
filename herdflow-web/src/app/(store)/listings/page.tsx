@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { HerdflowTrusted } from "@/components/ui/HerdflowTrusted";
 import { SafeImg } from "@/components/safe-img";
 import { SponsorBanner } from "@/components/ui/SponsorBanner";
+import { SponsorCreativeBanner } from "@/components/marketing/SponsorCreativeBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -169,6 +170,7 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
 
         {/* Results Count */}
         <SponsorBanner />
+        <SponsorCreativeBanner placement="LISTINGS" />
         <div className="flex items-center justify-between">
           <p className="text-sm text-[#5d7497]">
             <span className="font-bold text-[#244367]">{listings.length}</span> listing(s) found
