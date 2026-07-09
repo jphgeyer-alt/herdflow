@@ -1,24 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
+import { formatRand } from "@/lib/marketing/format";
+
+type PackageOption = {
+  id: string;
+  name: string;
+  monthlyFee: string;
+  isActive: boolean;
+};
 
 type SponsorRow = {
   id: string;
   companyName: string;
   contactPerson: string;
   email: string;
-  package: string;
-  status: string;
-  createdAt: string;
-  monthlyFee: number | null;
-  businessType: string;
   phone: string;
   website: string | null;
+  businessType: string;
+  package: string;
+  packageId: string | null;
   targetProvinces: string[];
   marketingGoal: string;
   brief: string | null;
   logoUrl: string | null;
+  status: string;
+  createdAt: string;
+  monthlyFee: string | null;
+  notes: string | null;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -27,19 +38,176 @@ const STATUS_COLORS: Record<string, string> = {
   REJECTED: "bg-red-100 text-red-700",
 };
 
+function EditSponsorModal({
+  sponsor,
+  packages,
+  onClose,
+  onSaved,
+}: {
+  sponsor: SponsorRow;
+  packages: PackageOption[];
+  onClose: () => void;
+  onSaved: (updated: SponsorRow) => void;
+}) {
+  const [form, setForm] = useState({
+    companyName: sponsor.companyName,
+    contactPerson: sponsor.contactPerson,
+    email: sponsor.email,
+    phone: sponsor.phone,
+    website: sponsor.website ?? "",
+    businessType: sponsor.businessType,
+    packageId: sponsor.packageId ?? "",
+    monthlyFee: sponsor.monthlyFee ?? "",
+    notes: sponsor.notes ?? "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function save() {
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/marketing/sponsors/${sponsor.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          packageId: form.packageId || null,
+          monthlyFee: form.monthlyFee === "" ? null : Number(form.monthlyFee),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to save.");
+        return;
+      }
+      onSaved(data.sponsor);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4">
+      <div className="w-full max-w-2xl rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-[#1B3A6B]">Edit Sponsor</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="text-[#9aabb9] hover:text-[#1B3A6B]"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {[
+            { key: "companyName", label: "Company Name" },
+            { key: "contactPerson", label: "Contact Person" },
+            { key: "email", label: "Email" },
+            { key: "phone", label: "Phone" },
+            { key: "website", label: "Website" },
+            { key: "businessType", label: "Business Type" },
+          ].map((f) => (
+            <label key={f.key} className="text-sm">
+              <span className="mb-1 block font-semibold text-[#244367]">{f.label}</span>
+              <input
+                value={form[f.key as keyof typeof form] as string}
+                onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+              />
+            </label>
+          ))}
+
+          <label className="text-sm">
+            <span className="mb-1 block font-semibold text-[#244367]">Package</span>
+            <select
+              value={form.packageId}
+              onChange={(e) => setForm((p) => ({ ...p, packageId: e.target.value }))}
+              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+            >
+              <option value="">— None —</option>
+              {packages.map((p) => (
+                <option key={p.id} value={p.id} disabled={!p.isActive}>
+                  {p.name} ({formatRand(p.monthlyFee)}/mo){!p.isActive ? " — inactive" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-sm">
+            <span className="mb-1 block font-semibold text-[#244367]">
+              Monthly Fee Override (R)
+            </span>
+            <input
+              type="number"
+              value={form.monthlyFee}
+              onChange={(e) => setForm((p) => ({ ...p, monthlyFee: e.target.value }))}
+              placeholder="Leave blank to use package price"
+              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+            />
+          </label>
+
+          <label className="text-sm sm:col-span-2">
+            <span className="mb-1 block font-semibold text-[#244367]">Internal Notes</span>
+            <textarea
+              rows={3}
+              value={form.notes}
+              onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+            />
+          </label>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-[#cdd8e7] px-4 py-2 text-sm font-semibold text-[#5d7497]"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={save}
+            disabled={saving}
+            className="rounded-lg bg-[#2E7D32] px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+          >
+            {saving ? "Saving…" : "Save Changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminMarketingPage() {
+  const router = useRouter();
   const [sponsors, setSponsors] = useState<SponsorRow[]>([]);
+  const [packages, setPackages] = useState<PackageOption[]>([]);
   const [filter, setFilter] = useState<"ALL" | "PENDING" | "ACTIVE" | "REJECTED">("ALL");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<SponsorRow | null>(null);
+  const [creatingQuoteFor, setCreatingQuoteFor] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/marketing")
-      .then((r) => r.json())
-      .then((d) => {
-        setSponsors(d.sponsors || []);
+    Promise.all([
+      fetch("/api/admin/marketing").then((r) => r.json()),
+      fetch("/api/admin/marketing/packages").then((r) => r.json()),
+    ])
+      .then(([sponsorData, packageData]) => {
+        setSponsors(sponsorData.sponsors || []);
+        setPackages(packageData.packages || []);
       })
       .catch(() => setError("Failed to load sponsors."))
       .finally(() => setLoading(false));
@@ -61,7 +229,28 @@ export default function AdminMarketingPage() {
     setSponsors((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)));
   }
 
+  async function createQuote(sponsor: SponsorRow) {
+    setCreatingQuoteFor(sponsor.id);
+    try {
+      const res = await fetch("/api/admin/marketing/quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sponsorId: sponsor.id, packageId: sponsor.packageId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to create quote.");
+        return;
+      }
+      router.push(`/admin/marketing/quotes/${data.quote.id}`);
+    } finally {
+      setCreatingQuoteFor(null);
+    }
+  }
+
   const filtered = filter === "ALL" ? sponsors : sponsors.filter((s) => s.status === filter);
+
+  const packageFeeById = new Map(packages.map((p) => [p.id, Number(p.monthlyFee)]));
 
   const stats = {
     total: sponsors.length,
@@ -70,33 +259,23 @@ export default function AdminMarketingPage() {
     mrr: sponsors
       .filter((s) => s.status === "ACTIVE")
       .reduce((sum, s) => {
-        const fees: Record<string, number> = { starter: 2500, growth: 5500, premium: 12000 };
-        return sum + (s.monthlyFee ?? fees[s.package] ?? 0);
+        const fee =
+          s.monthlyFee !== null
+            ? Number(s.monthlyFee)
+            : (packageFeeById.get(s.packageId ?? "") ?? 0);
+        return sum + fee;
       }, 0),
   };
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black text-[#1B3A6B]">Marketing & Sponsors</h1>
-          <p className="mt-1 text-sm text-[#5d7497]">
-            Review sponsorship applications and manage active sponsors.
-          </p>
-        </div>
-        <Link href="/admin" className="text-sm text-[#2E7D32] hover:underline">
-          ← Dashboard
-        </Link>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
           { label: "Total Applications", value: stats.total },
           { label: "Active Sponsors", value: stats.active },
           { label: "Pending Review", value: stats.pending },
-          { label: "Monthly Revenue", value: `R ${stats.mrr.toLocaleString()}` },
+          { label: "Monthly Revenue", value: formatRand(stats.mrr) },
         ].map((s) => (
           <article
             key={s.label}
@@ -180,7 +359,7 @@ export default function AdminMarketingPage() {
                         {new Date(s.createdAt).toLocaleDateString("en-ZA")}
                       </td>
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           {s.status !== "ACTIVE" && (
                             <button
                               disabled={saving === s.id}
@@ -199,6 +378,19 @@ export default function AdminMarketingPage() {
                               Reject
                             </button>
                           )}
+                          <button
+                            onClick={() => setEditTarget(s)}
+                            className="rounded-lg border border-[#cdd8e7] px-3 py-1 text-xs font-bold text-[#5d7497] transition hover:border-[#1B3A6B]"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            disabled={creatingQuoteFor === s.id}
+                            onClick={() => createQuote(s)}
+                            className="rounded-lg bg-[#1B3A6B] px-3 py-1 text-xs font-bold text-white transition hover:bg-[#122844] disabled:opacity-50"
+                          >
+                            {creatingQuoteFor === s.id ? "Creating…" : "New Quote"}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -263,6 +455,17 @@ export default function AdminMarketingPage() {
           </div>
         )}
       </div>
+
+      {editTarget && (
+        <EditSponsorModal
+          sponsor={editTarget}
+          packages={packages}
+          onClose={() => setEditTarget(null)}
+          onSaved={(updated) =>
+            setSponsors((prev) => prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s)))
+          }
+        />
+      )}
     </div>
   );
 }

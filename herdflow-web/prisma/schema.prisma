@@ -9,90 +9,90 @@ datasource db {
 }
 
 model User {
-  id                String            @id @default(cuid())
-  email             String            @unique
-  fullName          String
-  phone             String?
-  passwordHash      String?
-  role              UserRole          @default(CUSTOMER)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  fullName     String
+  phone        String?
+  passwordHash String?
+  role         UserRole @default(CUSTOMER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  sellerProfile     Seller?
-  logisticsProfile  LogisticsPartner?
-  orders            Order[]
-  passwordResets    PasswordResetToken[]
+  sellerProfile    Seller?
+  logisticsProfile LogisticsPartner?
+  orders           Order[]
+  passwordResets   PasswordResetToken[]
 }
 
 model Seller {
-  id                 String              @id @default(cuid())
-  userId             String              @unique
-  farmName           String
-  location           String
-  region             String
-  contactPhone       String
-  nationalIdNumber   String
-  idDocumentUrl      String
-  status             VerificationStatus  @default(PENDING)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  id               String             @id @default(cuid())
+  userId           String             @unique
+  farmName         String
+  location         String
+  region           String
+  contactPhone     String
+  nationalIdNumber String
+  idDocumentUrl    String
+  status           VerificationStatus @default(PENDING)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
-  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  livestockListings  Listing[]
-  products           Product[]
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  livestockListings Listing[]
+  products          Product[]
 }
 
 model LogisticsPartner {
-  id                    String              @id @default(cuid())
-  userId                String              @unique
-  companyName           String
-  fleetSize             Int
-  routesCovered         String
-  vehicleDocumentsUrl   String
-  status                VerificationStatus  @default(PENDING)
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
+  id                  String             @id @default(cuid())
+  userId              String             @unique
+  companyName         String
+  fleetSize           Int
+  routesCovered       String
+  vehicleDocumentsUrl String
+  status              VerificationStatus @default(PENDING)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 
-  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Category {
-  id            String        @id @default(cuid())
-  name          String
-  slug          String        @unique
-  kind          CategoryKind  @default(BOTH)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  kind      CategoryKind @default(BOTH)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
-  listings      Listing[]
-  products      Product[]
+  listings Listing[]
+  products Product[]
 }
 
 model Listing {
-  id            String         @id @default(cuid())
-  slug          String         @unique
-  title         String
-  description   String
-  priceCents    Int
-  region        String
-  breed         String
-  weightKg      Int?
-  ageMonths     Int?
-  photos        String[]
-  status        ListingStatus  @default(ACTIVE)
-  isFeatured    Boolean        @default(false)
-  isDeleted     Boolean        @default(false)
-  deletedAt     DateTime?
-  deletedBy     String?
-  deleteReason  String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  title        String
+  description  String
+  priceCents   Int
+  region       String
+  breed        String
+  weightKg     Int?
+  ageMonths    Int?
+  photos       String[]
+  status       ListingStatus @default(ACTIVE)
+  isFeatured   Boolean       @default(false)
+  isDeleted    Boolean       @default(false)
+  deletedAt    DateTime?
+  deletedBy    String?
+  deleteReason String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  sellerId      String
-  categoryId    String
+  sellerId   String
+  categoryId String
 
-  seller        Seller         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  category      Category       @relation(fields: [categoryId], references: [id])
+  seller   Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id])
 
   @@index([categoryId, region])
   @@index([status, isFeatured])
@@ -100,76 +100,76 @@ model Listing {
 }
 
 model Product {
-  id            String         @id @default(cuid())
-  slug          String         @unique
-  name          String
-  description   String
-  priceCents    Int
-  stockOnHand   Int            @default(0)
-  photos        String[]
-  region        String?
-  status        ProductStatus  @default(ACTIVE)
-  isFeatured    Boolean        @default(false)
-  isDeleted     Boolean        @default(false)
-  deletedAt     DateTime?
-  deletedBy     String?
-  deleteReason  String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  name         String
+  description  String
+  priceCents   Int
+  stockOnHand  Int           @default(0)
+  photos       String[]
+  region       String?
+  status       ProductStatus @default(ACTIVE)
+  isFeatured   Boolean       @default(false)
+  isDeleted    Boolean       @default(false)
+  deletedAt    DateTime?
+  deletedBy    String?
+  deleteReason String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  sellerId      String?
-  categoryId    String
+  sellerId   String?
+  categoryId String
 
-  seller        Seller?        @relation(fields: [sellerId], references: [id], onDelete: SetNull)
-  category      Category       @relation(fields: [categoryId], references: [id])
-  orderItems    OrderItem[]
+  seller     Seller?     @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  category   Category    @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
 
   @@index([categoryId, status])
 }
 
 model Order {
-  id                String         @id @default(cuid())
-  orderNumber       String         @unique
-  userId            String?
-  guestEmail        String?
-  status            OrderStatus    @default(PENDING)
-  totalCents        Int
-  currency          String         @default("ZAR")
-  paymentMethod     String         @default("PayFast")
-  paymentReference  String?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id               String      @id @default(cuid())
+  orderNumber      String      @unique
+  userId           String?
+  guestEmail       String?
+  status           OrderStatus @default(PENDING)
+  totalCents       Int
+  currency         String      @default("ZAR")
+  paymentMethod    String      @default("PayFast")
+  paymentReference String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
-  user              User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
-  items             OrderItem[]
+  user  User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items OrderItem[]
 
   @@index([status, createdAt])
 }
 
 model ContactInquiry {
-  id             String   @id @default(cuid())
-  inquiryNumber  String   @unique
-  fullName       String
-  email          String
-  phone          String?
-  subject        String
-  message        String
-  status         String   @default("NEW")
-  createdAt      DateTime @default(now())
+  id            String   @id @default(cuid())
+  inquiryNumber String   @unique
+  fullName      String
+  email         String
+  phone         String?
+  subject       String
+  message       String
+  status        String   @default("NEW")
+  createdAt     DateTime @default(now())
 
   @@index([createdAt])
 }
 
 model OrderItem {
-  id              String    @id @default(cuid())
-  orderId         String
-  productId       String
-  quantity        Int
-  unitPriceCents  Int
-  lineTotalCents  Int
+  id             String @id @default(cuid())
+  orderId        String
+  productId      String
+  quantity       Int
+  unitPriceCents Int
+  lineTotalCents Int
 
-  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product         Product   @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
 }
 
 model SiteConfig {
@@ -179,22 +179,22 @@ model SiteConfig {
 }
 
 model AuctionSession {
-  id            String               @id @default(cuid())
-  slug          String               @unique
-  title         String
-  description   String
-  scheduledAt   DateTime
-  closedAt      DateTime?
-  status        AuctionSessionStatus @default(UPCOMING)
-  createdBy     String               @default("admin")
-  createdAt     DateTime             @default(now())
-  videoType     String?
-  videoUrl      String?
-  streamKey     String?
-  photos        String[]
-  bannerImage   String?
-  thumbnail     String?
-  maxBidders    Int?
+  id          String               @id @default(cuid())
+  slug        String               @unique
+  title       String
+  description String
+  scheduledAt DateTime
+  closedAt    DateTime?
+  status      AuctionSessionStatus @default(UPCOMING)
+  createdBy   String               @default("admin")
+  createdAt   DateTime             @default(now())
+  videoType   String?
+  videoUrl    String?
+  streamKey   String?
+  photos      String[]
+  bannerImage String?
+  thumbnail   String?
+  maxBidders  Int?
 
   lots          AuctionLot[]
   registrations AuctionRegistration[]
@@ -204,45 +204,45 @@ model AuctionSession {
 }
 
 model AuctionLot {
-  id                  String           @id @default(cuid())
-  sessionId           String
-  livestockListingId  String?
-  lotNumber           Int
-  title               String
-  description         String
-  species             String?
-  breed               String?
-  quantity            Int              @default(1)
-  gender              String?
-  weightKg            Int?
-  region              String?
-  location            String?
-  healthStatus        String?
-  images              String[]
-  documents           String[]
-  startingPriceCents  Int
-  reservePriceCents   Int?
-  currentBidCents     Int              @default(0)
-  winnerName          String?
-  winnerEmail         String?
-  status              AuctionLotStatus @default(PENDING)
+  id                 String           @id @default(cuid())
+  sessionId          String
+  livestockListingId String?
+  lotNumber          Int
+  title              String
+  description        String
+  species            String?
+  breed              String?
+  quantity           Int              @default(1)
+  gender             String?
+  weightKg           Int?
+  region             String?
+  location           String?
+  healthStatus       String?
+  images             String[]
+  documents          String[]
+  startingPriceCents Int
+  reservePriceCents  Int?
+  currentBidCents    Int              @default(0)
+  winnerName         String?
+  winnerEmail        String?
+  status             AuctionLotStatus @default(PENDING)
 
-  session             AuctionSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  bids                AuctionBid[]
+  session AuctionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  bids    AuctionBid[]
 
   @@unique([sessionId, lotNumber])
   @@index([status])
 }
 
 model AuctionBid {
-  id           String     @id @default(cuid())
-  lotId        String
-  bidderName   String
-  bidderEmail  String
-  amountCents  Int
-  createdAt    DateTime   @default(now())
+  id          String   @id @default(cuid())
+  lotId       String
+  bidderName  String
+  bidderEmail String
+  amountCents Int
+  createdAt   DateTime @default(now())
 
-  lot          AuctionLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  lot AuctionLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
 
   @@index([lotId, createdAt])
 }
@@ -269,29 +269,29 @@ model AuctionRegistration {
   approvedAt      DateTime?
   createdAt       DateTime  @default(now())
 
-  session         AuctionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session AuctionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, status])
   @@index([biddingNumber])
 }
 
 model AuctionResult {
-  id             String    @id @default(cuid())
-  sessionId      String
-  lotId          String
-  lotNumber      Int
-  lotTitle       String
-  winnerEmail    String?
-  biddingNumber  String?
-  winningBid     Int?
-  reserveMet     Boolean   @default(false)
-  totalBids      Int       @default(0)
-  startPrice     Int
-  lotStatus      String
-  soldAt         DateTime?
-  createdAt      DateTime  @default(now())
+  id            String    @id @default(cuid())
+  sessionId     String
+  lotId         String
+  lotNumber     Int
+  lotTitle      String
+  winnerEmail   String?
+  biddingNumber String?
+  winningBid    Int?
+  reserveMet    Boolean   @default(false)
+  totalBids     Int       @default(0)
+  startPrice    Int
+  lotStatus     String
+  soldAt        DateTime?
+  createdAt     DateTime  @default(now())
 
-  session        AuctionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session AuctionSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
 }
@@ -304,7 +304,7 @@ model PasswordResetToken {
   usedAt    DateTime?
   createdAt DateTime  @default(now())
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([userId])
@@ -368,58 +368,140 @@ enum AuctionLotStatus {
 }
 
 model Sponsor {
-  id              String    @id @default(cuid())
-  companyName     String
-  contactPerson   String
-  email           String    @unique
-  phone           String
-  website         String?
-  businessType    String
-  package         String
-  targetProvinces String[]
-  marketingGoal   String
-  logoUrl         String?
-  bannerUrls      String[]
-  brief           String?
-  status          String    @default("PENDING")
-  monthlyFee      Decimal?
-  notes           String?
-  approvedBy      String?
-  approvedAt      DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id               String            @id @default(cuid())
+  companyName      String
+  contactPerson    String
+  email            String            @unique
+  phone            String
+  website          String?
+  businessType     String
+  package          String
+  packageId        String?
+  marketingPackage MarketingPackage? @relation(fields: [packageId], references: [id])
+  targetProvinces  String[]
+  marketingGoal    String
+  logoUrl          String?
+  bannerUrls       String[]
+  brief            String?
+  status           String            @default("PENDING")
+  monthlyFee       Decimal?
+  notes            String?
+  approvedBy       String?
+  approvedAt       DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  quotes           Quote[]
+  invoices         Invoice[]
+}
+
+model MarketingPackage {
+  id         String    @id @default(cuid())
+  slug       String    @unique
+  name       String
+  monthlyFee Decimal
+  badge      String?
+  isCustom   Boolean   @default(false)
+  features   String[]
+  isActive   Boolean   @default(true)
+  sortOrder  Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  sponsors   Sponsor[]
+  quotes     Quote[]
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model Quote {
+  id          String            @id @default(cuid())
+  number      String            @unique
+  sponsorId   String
+  sponsor     Sponsor           @relation(fields: [sponsorId], references: [id])
+  packageId   String?
+  package     MarketingPackage? @relation(fields: [packageId], references: [id])
+  description String
+  amount      Decimal
+  status      QuoteStatus       @default(DRAFT)
+  validUntil  DateTime
+  notes       String?
+  createdBy   String
+  sentAt      DateTime?
+  respondedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  invoices    Invoice[]
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Invoice {
+  id               String        @id @default(cuid())
+  number           String        @unique
+  sponsorId        String
+  sponsor          Sponsor       @relation(fields: [sponsorId], references: [id])
+  quoteId          String?
+  quote            Quote?        @relation(fields: [quoteId], references: [id])
+  description      String
+  amount           Decimal
+  status           InvoiceStatus @default(UNPAID)
+  issueDate        DateTime      @default(now())
+  dueDate          DateTime
+  paidAt           DateTime?
+  paymentReference String?
+  periodLabel      String?
+  notes            String?
+  createdBy        String
+  sentAt           DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model DocumentCounter {
+  id    String @id
+  value Int    @default(0)
 }
 
 // ─── Mobile App Models ───────────────────────────────────────────────────────
 
 model FarmerProfile {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  farmName     String   @default("")
-  province     String   @default("")
-  species      String[]
-  farmCode     String?  @unique
-  mobileRole   String   @default("FARMER")
-  ownerUserId  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  farmName    String   @default("")
+  province    String   @default("")
+  species     String[]
+  farmCode    String?  @unique
+  mobileRole  String   @default("FARMER")
+  ownerUserId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([farmCode])
   @@index([ownerUserId])
 }
 
 model FarmInvite {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   farmOwnerId   String
   farmName      String
   farmOwnerName String
-  inviteCode    String   @unique
-  role          String   // FARM_MANAGER | FARM_WORKER
-  status        String   @default("PENDING")  // PENDING | ACCEPTED | REVOKED | EXPIRED
+  inviteCode    String    @unique
+  role          String // FARM_MANAGER | FARM_WORKER
+  status        String    @default("PENDING") // PENDING | ACCEPTED | REVOKED | EXPIRED
   expiresAt     DateTime
   acceptedBy    String?
   acceptedAt    DateTime?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime  @default(now())
 
   @@index([farmOwnerId])
   @@index([status])
@@ -436,7 +518,7 @@ model FarmerActivityLog {
   entityId     String?
   entityType   String?
   entityName   String?
-  metadata     String?  // JSON string
+  metadata     String? // JSON string
   createdAt    DateTime @default(now())
 
   @@index([farmId, createdAt])
@@ -542,7 +624,7 @@ model FarmerAnimal {
 }
 
 model FarmerHealthRecord {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   animalId     String
   farmerId     String
   eventType    String
@@ -555,8 +637,8 @@ model FarmerHealthRecord {
   followUpDate DateTime?
   documents    String[]
   eventDate    DateTime
-  status       String   @default("pending")
-  createdAt    DateTime @default(now())
+  status       String    @default("pending")
+  createdAt    DateTime  @default(now())
 
   @@index([animalId])
   @@index([farmerId])
@@ -614,16 +696,16 @@ model FarmerVaccination {
 }
 
 model PushNotificationLog {
-  id             String   @id @default(cuid())
-  title          String
-  message        String
-  target         String
-  targetValue    String?
-  sentCount      Int      @default(0)
-  sentBy         String
-  scheduleTime   DateTime?
-  sentAt         DateTime?
-  createdAt      DateTime @default(now())
+  id           String    @id @default(cuid())
+  title        String
+  message      String
+  target       String
+  targetValue  String?
+  sentCount    Int       @default(0)
+  sentBy       String
+  scheduleTime DateTime?
+  sentAt       DateTime?
+  createdAt    DateTime  @default(now())
 }
 
 model MarketPriceCache {
@@ -637,123 +719,123 @@ model MarketPriceCache {
 // ── Mobile App: Camp Management ───────────────────────────────────────────────
 
 model FarmerCamp {
-  id                   String    @id @default(cuid())
-  localId              String?   @unique   // mobile-generated UUID for dedup
-  farmerId             String
-  name                 String
-  number               String?
-  hectares             Decimal?
-  forageType           String?
-  currentStatus        String    @default("RESTING")
-  maxCarryingCapacity  Int?
-  restingDaysRequired  Int       @default(42)
-  gpsCoordinates       String?
-  notes                String?
-  isDeleted            Boolean   @default(false)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                  String   @id @default(cuid())
+  localId             String?  @unique // mobile-generated UUID for dedup
+  farmerId            String
+  name                String
+  number              String?
+  hectares            Decimal?
+  forageType          String?
+  currentStatus       String   @default("RESTING")
+  maxCarryingCapacity Int?
+  restingDaysRequired Int      @default(42)
+  gpsCoordinates      String?
+  notes               String?
+  isDeleted           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   @@index([farmerId])
   @@index([farmerId, isDeleted])
 }
 
 model FarmerCampCount {
-  id               String    @id @default(cuid())
-  localId          String?
-  campId           String
-  farmerId         String
-  countedByUserId  String
-  countedByName    String
-  countedByRole    String
-  countDate        DateTime
-  expectedCount    Int?
-  actualCount      Int
-  variance         Int?
-  varianceNotes    String?
-  countMethod      String    @default("MANUAL")
-  isDeleted        Boolean   @default(false)
-  createdAt        DateTime  @default(now())
+  id              String   @id @default(cuid())
+  localId         String?
+  campId          String
+  farmerId        String
+  countedByUserId String
+  countedByName   String
+  countedByRole   String
+  countDate       DateTime
+  expectedCount   Int?
+  actualCount     Int
+  variance        Int?
+  varianceNotes   String?
+  countMethod     String   @default("MANUAL")
+  isDeleted       Boolean  @default(false)
+  createdAt       DateTime @default(now())
 
   @@index([campId])
   @@index([farmerId])
 }
 
 model FarmerCampMovement {
-  id              String   @id @default(cuid())
-  localId         String?
-  farmerId        String
-  fromCampId      String?
-  fromCampName    String?
-  toCampId        String
-  toCampName      String
-  animalIds       String   // JSON array of animal IDs
-  headCount       Int
-  movedByUserId   String
-  movedByName     String
-  movedByRole     String
-  movementDate    DateTime
-  reason          String
-  notes           String?
-  isDeleted       Boolean  @default(false)
-  createdAt       DateTime @default(now())
+  id            String   @id @default(cuid())
+  localId       String?
+  farmerId      String
+  fromCampId    String?
+  fromCampName  String?
+  toCampId      String
+  toCampName    String
+  animalIds     String // JSON array of animal IDs
+  headCount     Int
+  movedByUserId String
+  movedByName   String
+  movedByRole   String
+  movementDate  DateTime
+  reason        String
+  notes         String?
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
 
   @@index([farmerId])
   @@index([toCampId])
 }
 
 model FarmerMedicine {
-  id                    String   @id @default(cuid())
-  localId               String?  @unique
-  farmerId              String
-  name                  String
-  category              String
-  manufacturer          String?
-  withdrawalPeriodDays  Int?
-  dosageUnit            String?
-  standardDosage        Decimal?
-  storageInstructions   String?
-  notes                 String?
-  isActive              Boolean  @default(true)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  localId              String?  @unique
+  farmerId             String
+  name                 String
+  category             String
+  manufacturer         String?
+  withdrawalPeriodDays Int?
+  dosageUnit           String?
+  standardDosage       Decimal?
+  storageInstructions  String?
+  notes                String?
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@index([farmerId])
 }
 
 model FarmerTreatment {
-  id                    String    @id @default(cuid())
-  localId               String?   @unique
-  animalId              String
-  animalTag             String
-  farmerId              String
-  medicineId            String?
-  medicineName          String
-  medicineCategory      String
-  treatmentType         String
-  dosage                Decimal?
-  dosageUnit            String?
-  batchNumber           String?
-  administeredByUserId  String
-  administeredByName    String
-  administeredByRole    String
-  treatmentDate         DateTime
-  nextTreatmentDate     DateTime?
-  withdrawalEndDate     DateTime?
-  campId                String?
-  campName              String?
-  diagnosis             String?
-  symptoms              String?
-  vetName               String?
-  prescriptionNumber    String?
-  cost                  Decimal?
-  notes                 String?
-  followUpRequired      Boolean   @default(false)
-  followUpDate          DateTime?
-  followUpCompleted     Boolean   @default(false)
-  outcome               String?
-  isDeleted             Boolean   @default(false)
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                   String    @id @default(cuid())
+  localId              String?   @unique
+  animalId             String
+  animalTag            String
+  farmerId             String
+  medicineId           String?
+  medicineName         String
+  medicineCategory     String
+  treatmentType        String
+  dosage               Decimal?
+  dosageUnit           String?
+  batchNumber          String?
+  administeredByUserId String
+  administeredByName   String
+  administeredByRole   String
+  treatmentDate        DateTime
+  nextTreatmentDate    DateTime?
+  withdrawalEndDate    DateTime?
+  campId               String?
+  campName             String?
+  diagnosis            String?
+  symptoms             String?
+  vetName              String?
+  prescriptionNumber   String?
+  cost                 Decimal?
+  notes                String?
+  followUpRequired     Boolean   @default(false)
+  followUpDate         DateTime?
+  followUpCompleted    Boolean   @default(false)
+  outcome              String?
+  isDeleted            Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   @@index([animalId])
   @@index([farmerId])

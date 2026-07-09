@@ -136,3 +136,128 @@ If you did not request this, please ignore this email.
 
   await sendEmail({ to, subject: "Reset Your HerdFlow Password", html, text });
 }
+
+function documentEmailHtml(opts: {
+  heading: string;
+  greetingName: string;
+  bodyLines: string[];
+  amountLabel: string;
+  viewUrl: string;
+  buttonLabel: string;
+}): string {
+  const { heading, greetingName, bodyLines, amountLabel, viewUrl, buttonLabel } = opts;
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f4ef;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f4ef;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e4ebf5;">
+        <tr>
+          <td style="background:#1B3A6B;padding:28px 32px;text-align:center;">
+            <p style="margin:0;color:#d9c08f;font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;">HerdFlow</p>
+            <h1 style="margin:8px 0 0;color:#ffffff;font-size:24px;font-weight:900;">${heading}</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="margin:0 0 16px;color:#244367;font-size:15px;">Hi ${greetingName},</p>
+            ${bodyLines.map((line) => `<p style="margin:0 0 16px;color:#5d7497;font-size:14px;line-height:1.6;">${line}</p>`).join("")}
+            <p style="margin:0 0 24px;color:#244367;font-size:16px;font-weight:bold;">${amountLabel}</p>
+            <div style="text-align:center;margin:28px 0;">
+              <a href="${viewUrl}" style="display:inline-block;background:#2E7D32;color:#ffffff;font-weight:bold;font-size:14px;text-transform:uppercase;letter-spacing:1px;padding:14px 36px;border-radius:10px;text-decoration:none;">
+                ${buttonLabel}
+              </a>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f5f8fd;padding:20px 32px;border-top:1px solid #e4ebf5;text-align:center;">
+            <p style="margin:0;color:#9aabb9;font-size:11px;">
+              © 2026 HerdFlow — A division of Geyer Holdings<br>
+              North West Province, South Africa
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendQuoteEmail(opts: {
+  to: string;
+  sponsorName: string;
+  quoteNumber: string;
+  amountLabel: string;
+  viewUrl: string;
+  validUntil: string;
+}): Promise<void> {
+  const { to, sponsorName, quoteNumber, amountLabel, viewUrl, validUntil } = opts;
+
+  const html = documentEmailHtml({
+    heading: "Your HerdFlow Sponsorship Quote",
+    greetingName: sponsorName,
+    bodyLines: [
+      `Thanks for your interest in sponsoring HerdFlow. Quote <strong>${quoteNumber}</strong> is ready for your review.`,
+      `This quote is valid until <strong>${validUntil}</strong>.`,
+    ],
+    amountLabel,
+    viewUrl,
+    buttonLabel: "View Quote",
+  });
+
+  const text = `Your HerdFlow Sponsorship Quote
+
+Hi ${sponsorName},
+
+Quote ${quoteNumber} is ready for your review.
+${amountLabel}
+Valid until ${validUntil}.
+
+View it here: ${viewUrl}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `HerdFlow Sponsorship Quote ${quoteNumber}`, html, text });
+}
+
+export async function sendInvoiceEmail(opts: {
+  to: string;
+  sponsorName: string;
+  invoiceNumber: string;
+  amountLabel: string;
+  viewUrl: string;
+  dueDate: string;
+}): Promise<void> {
+  const { to, sponsorName, invoiceNumber, amountLabel, viewUrl, dueDate } = opts;
+
+  const html = documentEmailHtml({
+    heading: "Your HerdFlow Invoice",
+    greetingName: sponsorName,
+    bodyLines: [
+      `Invoice <strong>${invoiceNumber}</strong> has been issued for your HerdFlow sponsorship.`,
+      `Payment is due by <strong>${dueDate}</strong>. Banking details are on the invoice.`,
+    ],
+    amountLabel,
+    viewUrl,
+    buttonLabel: "View Invoice",
+  });
+
+  const text = `Your HerdFlow Invoice
+
+Hi ${sponsorName},
+
+Invoice ${invoiceNumber} has been issued for your HerdFlow sponsorship.
+${amountLabel}
+Due by ${dueDate}.
+
+View it here: ${viewUrl}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `HerdFlow Invoice ${invoiceNumber}`, html, text });
+}

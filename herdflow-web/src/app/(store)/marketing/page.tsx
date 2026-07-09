@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { formatRand } from "@/lib/marketing/format";
 
 export const dynamic = "force-dynamic";
 
@@ -14,93 +15,75 @@ async function getActiveSponsors() {
   }
 }
 
-const PACKAGES = [
+// Presentation only — pricing/features/badge text now come from the
+// MarketingPackage table (admin-editable at /admin/marketing/packages).
+// This map keys the card's visual style to the known tier slugs, with a
+// sane fallback for any future custom package.
+const STYLE_BY_SLUG: Record<
+  string,
   {
-    id: "starter",
-    name: "STARTER",
-    price: "R2,500",
-    period: "per month",
+    border: string;
+    badgeBg: string;
+    cardBg: string;
+    headingColor: string;
+    btnStyle: string;
+  }
+> = {
+  starter: {
     border: "border-[#A07C3A]",
-    badge: null,
     badgeBg: "",
     cardBg: "bg-white",
     headingColor: "text-[#A07C3A]",
     btnStyle: "bg-[#1B3A6B] hover:bg-[#122844] text-white",
-    features: [
-      "Logo on HerdFlow homepage",
-      "Listed in Trusted Suppliers directory",
-      "1 featured product or service listing",
-      "Monthly performance report",
-      "HerdFlow Trusted Sponsor badge",
-      "Email to farmer database once per month",
-    ],
   },
-  {
-    id: "growth",
-    name: "GROWTH",
-    price: "R5,500",
-    period: "per month",
+  growth: {
     border: "border-[#2E7D32]",
-    badge: "MOST POPULAR",
     badgeBg: "bg-[#2E7D32]",
     cardBg: "bg-white ring-2 ring-[#2E7D32]",
     headingColor: "text-[#2E7D32]",
     btnStyle: "bg-[#2E7D32] hover:bg-[#1d5e20] text-white",
-    features: [
-      "Everything in Starter",
-      "Banner ads on listings and shop pages",
-      "3 featured product or service listings",
-      "Social media mention twice per month",
-      "Priority search placement",
-      "Bi-weekly performance reports",
-      "Dedicated account manager contact",
-    ],
   },
-  {
-    id: "premium",
-    name: "PREMIUM",
-    price: "R12,000",
-    period: "per month",
+  premium: {
     border: "border-[#1B3A6B]",
-    badge: null,
     badgeBg: "",
     cardBg: "bg-[#1B3A6B]",
     headingColor: "text-[#A07C3A]",
     btnStyle: "bg-[#A07C3A] hover:bg-[#8a6830] text-white",
-    features: [
-      "Everything in Growth",
-      "Homepage hero banner rotation",
-      "10 featured listings priority placement",
-      "Weekly social media posts about brand",
-      "Email campaign to full farmer database",
-      "Video or image ads in auction rooms",
-      "Weekly detailed analytics report",
-      "Co-branded content creation",
-      "Early access to new HerdFlow features",
-    ],
   },
-  {
-    id: "enterprise",
-    name: "ENTERPRISE",
-    price: "Custom",
-    period: "pricing",
+  enterprise: {
     border: "border-[#1B3A6B]",
-    badge: null,
     badgeBg: "",
     cardBg: "bg-white",
     headingColor: "text-[#1B3A6B]",
     btnStyle: "border-2 border-[#1B3A6B] text-[#1B3A6B] hover:bg-[#1B3A6B] hover:text-white",
-    features: [
-      "Custom sponsorship agreement",
-      "Exclusive category sponsorship available",
-      "Live auction naming rights",
-      "Full website takeover options",
-      "National and regional targeting",
-      "Custom reporting dashboard",
-      "Dedicated HerdFlow marketing team",
-    ],
   },
-];
+};
+
+const DEFAULT_STYLE = STYLE_BY_SLUG.starter;
+
+async function getPackages() {
+  try {
+    const packages = await prisma.marketingPackage.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    return packages.map((pkg) => {
+      const style = STYLE_BY_SLUG[pkg.slug] || DEFAULT_STYLE;
+      return {
+        id: pkg.slug,
+        name: pkg.name.toUpperCase(),
+        price: pkg.isCustom ? "Custom" : formatRand(pkg.monthlyFee.toString()),
+        period: pkg.isCustom ? "pricing" : "per month",
+        badge: pkg.badge,
+        features: pkg.features,
+        isCustom: pkg.isCustom,
+        ...style,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
 
 const FAQS = [
   {
@@ -127,6 +110,7 @@ const FAQS = [
 
 export default async function MarketingPage() {
   const sponsors = await getActiveSponsors();
+  const PACKAGES = await getPackages();
 
   return (
     <div className="bg-white">
@@ -252,13 +236,13 @@ export default async function MarketingPage() {
                   </ul>
                   <Link
                     href={
-                      pkg.id === "enterprise"
+                      pkg.isCustom
                         ? "/contact?subject=enterprise-sponsorship"
                         : `/marketing/register?package=${pkg.id}`
                     }
                     className={`mt-6 block w-full rounded-lg px-4 py-3 text-center text-sm font-bold uppercase tracking-wide transition ${pkg.btnStyle}`}
                   >
-                    {pkg.id === "enterprise" ? "Contact Us" : "Get Started"}
+                    {pkg.isCustom ? "Contact Us" : "Get Started"}
                   </Link>
                 </div>
               </div>

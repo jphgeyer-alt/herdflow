@@ -57,3 +57,7 @@ export function isValidAdminSession(sessionValue?: string) {
 
   return timingSafeEqual(providedBuffer, expectedBuffer);
 }
+
+export function getAdminUsername(sessionValue?: string): string {
+  return sessionValue?.split(".")[0] || "admin";
+}

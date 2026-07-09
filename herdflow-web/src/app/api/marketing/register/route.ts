@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Marketing goal is required." }, { status: 400 });
 
   try {
+    const matchedPackage = await prisma.marketingPackage.findUnique({ where: { slug: pkg } });
+
     const sponsor = await prisma.sponsor.create({
       data: {
         companyName,
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
         website,
         businessType,
         package: pkg,
+        packageId: matchedPackage?.id ?? null,
         targetProvinces,
         marketingGoal,
         brief,
