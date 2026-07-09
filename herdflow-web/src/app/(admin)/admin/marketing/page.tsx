@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { formatRand } from "@/lib/marketing/format";
+import { SingleImageUpload } from "@/components/ui/SingleImageUpload";
 
 type PackageOption = {
   id: string;
@@ -55,6 +56,7 @@ function EditSponsorModal({
     email: sponsor.email,
     phone: sponsor.phone,
     website: sponsor.website ?? "",
+    logoUrl: sponsor.logoUrl,
     businessType: sponsor.businessType,
     packageId: sponsor.packageId ?? "",
     monthlyFee: sponsor.monthlyFee ?? "",
@@ -127,6 +129,15 @@ function EditSponsorModal({
               />
             </label>
           ))}
+
+          <div className="sm:col-span-2">
+            <SingleImageUpload
+              label="Logo"
+              value={form.logoUrl}
+              onChange={(url) => setForm((p) => ({ ...p, logoUrl: url }))}
+              hint="Shown in the sponsor logo strip across the site."
+            />
+          </div>
 
           <label className="text-sm">
             <span className="mb-1 block font-semibold text-[#244367]">Package</span>

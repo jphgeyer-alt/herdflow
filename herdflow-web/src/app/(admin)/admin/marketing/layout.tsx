@@ -9,6 +9,7 @@ const TABS = [
   { label: "Packages", href: "/admin/marketing/packages" },
   { label: "Quotes", href: "/admin/marketing/quotes" },
   { label: "Invoices", href: "/admin/marketing/invoices" },
+  { label: "Creative", href: "/admin/marketing/creative" },
 ];
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {

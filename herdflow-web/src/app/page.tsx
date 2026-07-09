@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { SponsorBanner } from "@/components/ui/SponsorBanner";
+import { SponsorCreativeBanner } from "@/components/marketing/SponsorCreativeBanner";
 
 // Server data is fetched client-side in the banner
 function SponsorBannerSection() {
@@ -319,6 +320,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <SponsorCreativeBanner placement="HOMEPAGE" />
 
       {/* FEATURE CARDS SECTION */}
       <section id="features" className="w-full overflow-hidden bg-white py-12 md:py-16">

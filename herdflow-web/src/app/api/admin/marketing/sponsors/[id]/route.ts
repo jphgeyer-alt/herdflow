@@ -41,6 +41,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         ...(body.email !== undefined && { email: String(body.email) }),
         ...(body.phone !== undefined && { phone: String(body.phone) }),
         ...(body.website !== undefined && { website: body.website ? String(body.website) : null }),
+        ...(body.logoUrl !== undefined && { logoUrl: body.logoUrl ? String(body.logoUrl) : null }),
         ...(body.businessType !== undefined && { businessType: String(body.businessType) }),
         ...(body.packageId !== undefined && {
           packageId: body.packageId ? String(body.packageId) : null,
