@@ -30,6 +30,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid order total" }, { status: 400 });
   }
 
+  const deliveryMethod = customerInfo.deliveryMethod === "PICKUP" ? "PICKUP" : "DELIVERY";
+
+  if (
+    deliveryMethod === "DELIVERY" &&
+    (!customerInfo.address || !customerInfo.city || !customerInfo.province)
+  ) {
+    return NextResponse.json({ error: "Delivery address is required" }, { status: 400 });
+  }
+
   try {
     // Check if user is logged in
     const jar = await cookies();
@@ -49,6 +58,11 @@ export async function POST(request: Request) {
         totalCents,
         currency: "ZAR",
         paymentMethod: "PayFast",
+        deliveryMethod,
+        shippingAddress: customerInfo.address || null,
+        shippingCity: customerInfo.city || null,
+        shippingProvince: customerInfo.province || null,
+        shippingPostalCode: customerInfo.postalCode || null,
         items: {
           create: items.map((item) => ({
             productId: item.productId,

@@ -165,14 +165,31 @@ export default async function OrderPage({ params }: OrderPageProps) {
         </div>
 
         <aside className="space-y-3 rounded-2xl border border-[#d8e0ec] bg-white p-5 shadow-sm">
-          <h2 className="text-brand-navy text-xl font-semibold">Delivery Address</h2>
+          <h2 className="text-brand-navy text-xl font-semibold">
+            {order.deliveryMethod === "PICKUP" ? "Pickup" : "Delivery Address"}
+          </h2>
           <div className="text-sm text-[#38537a]">
             <p>{order.user?.fullName || "Guest customer"}</p>
             <p>{order.guestEmail || order.user?.email || "No email provided"}</p>
             <p>{order.user?.phone || "No phone provided"}</p>
-            <p className="mt-2 text-[#5d7497]">
-              Delivery address details are not yet captured for this order.
-            </p>
+            {order.deliveryMethod === "PICKUP" ? (
+              <p className="mt-2 text-[#5d7497]">
+                This order will be collected directly from the seller.
+              </p>
+            ) : order.shippingAddress ? (
+              <div className="mt-2 space-y-0.5">
+                <p>{order.shippingAddress}</p>
+                <p>
+                  {[order.shippingCity, order.shippingProvince, order.shippingPostalCode]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              </div>
+            ) : (
+              <p className="mt-2 text-[#5d7497]">
+                Delivery address details are not yet captured for this order.
+              </p>
+            )}
           </div>
 
           <h3 className="text-brand-navy pt-2 text-sm font-semibold uppercase tracking-wide">

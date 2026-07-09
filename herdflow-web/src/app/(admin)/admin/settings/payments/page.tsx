@@ -7,6 +7,7 @@ type Config = {
   payfast_merchant_key: string;
   payfast_passphrase: string;
   commission_rate: string;
+  logistics_commission_rate: string;
 };
 
 const EMPTY: Config = {
@@ -14,6 +15,7 @@ const EMPTY: Config = {
   payfast_merchant_key: "",
   payfast_passphrase: "",
   commission_rate: "0.05",
+  logistics_commission_rate: "0.1",
 };
 
 export default function AdminPaymentsSettingsPage() {
@@ -167,6 +169,30 @@ export default function AdminPaymentsSettingsPage() {
               placeholder="0.05"
               value={config.commission_rate}
               onChange={handle("commission_rate")}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label
+              className="block text-sm font-medium text-[#244367]"
+              htmlFor="logistics-commission-rate"
+            >
+              Logistics Commission Rate{" "}
+              <span className="font-normal text-[#5d7497]">
+                (decimal — e.g. 0.1 = 10%. Applied to delivery request transport fees.)
+              </span>
+            </label>
+            <input
+              id="logistics-commission-rate"
+              type="number"
+              step="0.01"
+              min="0"
+              max="1"
+              className="focus:border-brand-navy focus:ring-brand-navy/20 w-full max-w-40 rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm text-[#1a2c42] placeholder-[#9aabb9] outline-none focus:ring-2"
+              placeholder="0.1"
+              value={config.logistics_commission_rate}
+              onChange={handle("logistics_commission_rate")}
               disabled={loading}
             />
           </div>

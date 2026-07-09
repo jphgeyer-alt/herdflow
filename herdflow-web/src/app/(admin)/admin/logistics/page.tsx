@@ -19,13 +19,10 @@ export default async function AdminLogisticsPage() {
 
   return (
     <main className="space-y-4 pb-10">
-      <header>
-        <h1 className="text-brand-navy text-3xl font-semibold">Logistics Partners</h1>
-        <p className="text-sm text-[#38537a]">
-          Review and approve transport companies. Only approved partners are eligible for delivery
-          coordination.
-        </p>
-      </header>
+      <p className="text-sm text-[#38537a]">
+        Review and approve transport companies. Only approved partners are eligible for delivery
+        coordination.
+      </p>
       <LogisticsManager initialPartners={partners} />
     </main>
   );
