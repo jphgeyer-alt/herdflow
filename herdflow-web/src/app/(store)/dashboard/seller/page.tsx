@@ -1,9 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Package, DollarSign, TrendingUp, Clock, Eye, Edit } from "lucide-react";
+import { Package, DollarSign, TrendingUp, Clock } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import type { Prisma, OrderStatus } from "@prisma/client";
 import { getUserIdFromSession, USER_SESSION_COOKIE } from "@/lib/user-auth";
+import { ListingsTabs } from "./ListingsTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -88,22 +90,64 @@ export default async function SellerDashboard() {
     // DB error — show empty listings
   }
 
-  // Calculate stats (stubbed for now - OrderItem model not in schema yet)
-  const totalSales = 0;
-  const productsToday = 0;
-  const pendingOrders = 0;
+  const PAID_STATUSES: OrderStatus[] = ["PAID", "PROCESSING", "SHIPPED", "COMPLETED"];
 
-  // Recent orders (stubbed)
-  const recentOrders: Array<{
-    id: string;
-    orderNumber: string;
-    buyerName: string;
-    productName: string;
-    quantity: number;
-    totalCents: number;
-    status: string;
-    createdAt: string;
-  }> = [];
+  const sellerOrderItemInclude = {
+    order: {
+      select: {
+        orderNumber: true,
+        status: true,
+        createdAt: true,
+        guestEmail: true,
+        user: { select: { fullName: true } },
+      },
+    },
+    product: { select: { name: true } },
+  } satisfies Prisma.OrderItemInclude;
+
+  let sellerOrderItems: Prisma.OrderItemGetPayload<{ include: typeof sellerOrderItemInclude }>[] =
+    [];
+  let pendingOrders = 0;
+
+  try {
+    [sellerOrderItems, pendingOrders] = await Promise.all([
+      prisma.orderItem.findMany({
+        where: {
+          product: { sellerId: user.sellerProfile.id },
+          order: { status: { in: PAID_STATUSES } },
+        },
+        include: sellerOrderItemInclude,
+        orderBy: { order: { createdAt: "desc" } },
+      }),
+      prisma.order.count({
+        where: {
+          status: "PENDING",
+          items: { some: { product: { sellerId: user.sellerProfile.id } } },
+        },
+      }),
+    ]);
+  } catch {
+    // DB error — show empty stats
+  }
+
+  const totalSales = sellerOrderItems.reduce((sum, i) => sum + i.lineTotalCents, 0) / 100;
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const productsToday = sellerOrderItems
+    .filter((i) => i.order.createdAt >= todayStart)
+    .reduce((sum, i) => sum + i.quantity, 0);
+
+  const recentOrders = sellerOrderItems.slice(0, 10).map((i) => ({
+    id: i.id,
+    orderNumber: i.order.orderNumber,
+    buyerName: i.order.user?.fullName || i.order.guestEmail || "Guest",
+    productName: i.product.name,
+    quantity: i.quantity,
+    totalCents: i.lineTotalCents,
+    status: i.order.status,
+    createdAt: i.order.createdAt.toLocaleDateString("en-ZA"),
+  }));
 
   return (
     <div className="min-h-screen bg-[#f5f4ef]">
@@ -179,76 +223,7 @@ export default async function SellerDashboard() {
         {/* My Listings */}
         <section>
           <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">My Listings</h2>
-
-          {/* Tabs */}
-          <div className="mb-6 flex gap-4 border-b border-[#e4ebf5]">
-            <button className="border-b-4 border-[#2E7D32] px-6 py-3 font-bold text-[#1B3A6B]">
-              ACTIVE ({activeListings.length})
-            </button>
-            <button className="px-6 py-3 font-bold text-[#5d7497] transition hover:text-[#1B3A6B]">
-              PENDING ({pendingListings.length})
-            </button>
-            <button className="px-6 py-3 font-bold text-[#5d7497] transition hover:text-[#1B3A6B]">
-              SOLD ({soldListings.length})
-            </button>
-          </div>
-
-          {/* Active Listings */}
-          {activeListings.length === 0 ? (
-            <div className="rounded-2xl border border-[#e4ebf5] bg-white p-12 text-center shadow-lg">
-              <Package size={64} className="mx-auto mb-4 text-[#cdd8e7]" />
-              <p className="mb-6 text-lg text-[#5d7497]">You have no active listings.</p>
-              <Link
-                href="/seller/listings/new"
-                className="inline-block rounded-lg bg-[#2E7D32] px-8 py-3 font-bold text-white transition hover:bg-[#1d5e20]"
-              >
-                Create Your First Listing
-              </Link>
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-3">
-              {activeListings.map((product) => (
-                <div
-                  key={product.id}
-                  className="overflow-hidden rounded-2xl border border-[#e4ebf5] bg-white shadow-lg"
-                >
-                  <img
-                    src={product.photos[0] || "/placeholder-product.jpg"}
-                    alt={product.name}
-                    className="h-48 w-full object-cover"
-                  />
-                  <div className="space-y-3 p-5">
-                    <h3 className="line-clamp-2 font-bold text-[#244367]">{product.name}</h3>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xl font-black text-[#2E7D32]">
-                        R{(product.priceCents / 100).toFixed(2)}
-                      </p>
-                      <p className="text-sm text-[#5d7497]">Stock: {product.stockOnHand}</p>
-                    </div>
-                    <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
-                      {product.status}
-                    </span>
-                    <div className="flex gap-2 pt-2">
-                      <Link
-                        href={`/seller/listings/${product.id}/edit`}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#1B3A6B] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#122844]"
-                      >
-                        <Edit size={16} />
-                        EDIT
-                      </Link>
-                      <Link
-                        href={`/seller/listings/${product.id}/sales`}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-[#1B3A6B] px-4 py-2 text-sm font-bold text-[#1B3A6B] transition hover:bg-[#1B3A6B] hover:text-white"
-                      >
-                        <Eye size={16} />
-                        VIEW SALES
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <ListingsTabs active={activeListings} pending={pendingListings} sold={soldListings} />
         </section>
 
         {/* Recent Orders */}

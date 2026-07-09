@@ -1459,6 +1459,11 @@ export function ListingsManager({
                         </p>
                         <p className="text-xs text-[#5d7497]">
                           Stock: {item.stockOnHand}
+                          {item.stockOnHand <= 5 && item.stockOnHand > 0 && (
+                            <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase text-red-700">
+                              Low Stock
+                            </span>
+                          )}
                           {item.region ? ` • ${item.region}` : ""}
                         </p>
                       </div>
