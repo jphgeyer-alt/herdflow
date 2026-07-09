@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyPassword, createUserSessionValue, SESSION_COOKIE_OPTIONS, USER_SESSION_COOKIE } from "@/lib/user-auth";
+import {
+  verifyPassword,
+  createUserSessionValue,
+  SESSION_COOKIE_OPTIONS,
+  USER_SESSION_COOKIE,
+} from "@/lib/user-auth";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -21,15 +26,17 @@ export async function POST(request: Request) {
   try {
     user = await prisma.user.findUnique({ where: { email } });
   } catch {
-    return NextResponse.json({ error: "Service temporarily unavailable. Please try again." }, { status: 503 });
+    return NextResponse.json(
+      { error: "Service temporarily unavailable. Please try again." },
+      { status: 503 },
+    );
   }
 
   if (!user || !user.passwordHash)
     return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
 
   const valid = await verifyPassword(password, user.passwordHash);
-  if (!valid)
-    return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+  if (!valid) return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
 
   const sessionValue = createUserSessionValue(user.id);
 
@@ -45,26 +52,34 @@ export async function POST(request: Request) {
   }
 
   // Look up FarmerProfile for mobile app users
-  let farmerProfile: { farmName: string; province: string; mobileRole: string; farmCode: string | null; ownerUserId: string | null } | null = null;
+  let farmerProfile: {
+    farmName: string;
+    province: string;
+    mobileRole: string;
+    farmCode: string | null;
+    ownerUserId: string | null;
+  } | null = null;
   try {
     farmerProfile = await prisma.farmerProfile.findUnique({ where: { userId: user.id } });
-  } catch { /* not a farmer account */ }
+  } catch {
+    /* not a farmer account */
+  }
 
   const mobileRole = farmerProfile?.mobileRole ?? (user.role === "ADMIN" ? "ADMIN" : "FARMER");
 
   // Return token for mobile app clients alongside the cookie for web clients
   const mobileUser = {
-    id:          user.id,
-    name:        user.fullName,
-    email:       user.email,
-    phone:       user.phone ?? null,
-    role:        mobileRole,
-    isAdmin:     user.role === "ADMIN",
-    farmName:    farmerProfile?.farmName ?? "",
-    province:    farmerProfile?.province ?? "",
-    farmCode:    farmerProfile?.farmCode ?? null,
+    id: user.id,
+    name: user.fullName,
+    email: user.email,
+    phone: user.phone ?? null,
+    role: mobileRole,
+    isAdmin: user.role === "ADMIN",
+    farmName: farmerProfile?.farmName ?? "",
+    province: farmerProfile?.province ?? "",
+    farmCode: farmerProfile?.farmCode ?? null,
     ownerUserId: farmerProfile?.ownerUserId ?? null,
-    createdAt:   user.createdAt,
+    createdAt: user.createdAt,
   };
 
   const res = NextResponse.json({ ok: true, redirect, token: sessionValue, user: mobileUser });

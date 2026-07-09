@@ -12,11 +12,16 @@ export async function PATCH(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const existing = await prisma.farmerVaccination.findFirst({ where: { id, farmerId: auth.effectiveFarmerId } });
-  if (!existing) return NextResponse.json({ error: "Vaccination record not found" }, { status: 404 });
+  const existing = await prisma.farmerVaccination.findFirst({
+    where: { id, farmerId: auth.effectiveFarmerId },
+  });
+  if (!existing)
+    return NextResponse.json({ error: "Vaccination record not found" }, { status: 404 });
 
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const b = body as Record<string, unknown>;

@@ -29,7 +29,15 @@ type OrdersManagerProps = {
   initialTotal: number;
 };
 
-const STATUS_OPTIONS = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "COMPLETED", "CANCELLED", "FAILED"];
+const STATUS_OPTIONS = [
+  "PENDING",
+  "PAID",
+  "PROCESSING",
+  "SHIPPED",
+  "COMPLETED",
+  "CANCELLED",
+  "FAILED",
+];
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
@@ -121,12 +129,12 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
           placeholder="Search order #, email, or name…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40 w-full sm:w-64"
+          className="focus:ring-brand-navy/40 w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 sm:w-64"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40"
+          className="focus:ring-brand-navy/40 rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2"
         >
           <option value="ALL">All statuses</option>
           {STATUS_OPTIONS.map((s) => (
@@ -141,13 +149,15 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
       </div>
 
       {error && (
-        <p className="rounded bg-red-50 px-4 py-2 text-sm text-red-700 border border-red-200">{error}</p>
+        <p className="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {error}
+        </p>
       )}
 
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
             <tr>
               <th className="px-4 py-3 text-left">Order #</th>
               <th className="px-4 py-3 text-left">Customer</th>
@@ -174,10 +184,12 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
               return (
                 <Fragment key={order.id}>
                   <tr
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className="cursor-pointer hover:bg-gray-50"
                     onClick={() => setExpandedId((prev) => (prev === order.id ? null : order.id))}
                   >
-                    <td className="px-4 py-3 font-mono font-medium text-brand-navy">{order.orderNumber}</td>
+                    <td className="text-brand-navy px-4 py-3 font-mono font-medium">
+                      {order.orderNumber}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-800">{customerName}</div>
                       <div className="text-xs text-gray-500">{customerEmail}</div>
@@ -199,7 +211,7 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
                         disabled={isSaving}
                         value={order.status}
                         onChange={(e) => updateStatus(order.id, e.target.value)}
-                        className="rounded border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-brand-navy/40 disabled:opacity-50"
+                        className="focus:ring-brand-navy/40 rounded border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 disabled:opacity-50"
                       >
                         {STATUS_OPTIONS.map((s) => (
                           <option key={s} value={s}>
@@ -213,15 +225,19 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
                     <tr className="bg-gray-50">
                       <td colSpan={7} className="px-4 py-4">
                         <div className="space-y-2">
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                             Order items
                           </p>
                           <ul className="divide-y divide-gray-200 rounded border border-gray-200 bg-white">
                             {order.items.map((item) => (
-                              <li key={item.id} className="flex items-center justify-between px-4 py-2 text-sm">
+                              <li
+                                key={item.id}
+                                className="flex items-center justify-between px-4 py-2 text-sm"
+                              >
                                 <span className="text-gray-700">{item.product.name}</span>
                                 <span className="text-gray-500">
-                                  {item.quantity} × {toCurrency(item.unitPriceCents, order.currency)} ={" "}
+                                  {item.quantity} ×{" "}
+                                  {toCurrency(item.unitPriceCents, order.currency)} ={" "}
                                   <strong>{toCurrency(item.lineTotalCents, order.currency)}</strong>
                                 </span>
                               </li>
@@ -229,7 +245,8 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
                           </ul>
                           {order.paymentReference && (
                             <p className="text-xs text-gray-500">
-                              Payment ref: <span className="font-mono">{order.paymentReference}</span>
+                              Payment ref:{" "}
+                              <span className="font-mono">{order.paymentReference}</span>
                             </p>
                           )}
                         </div>

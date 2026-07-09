@@ -43,6 +43,7 @@ Then download from https://expo.io/builds
 ## 📚 Choose Your Path
 
 ### Path A: Get APK ASAP (10 minutes)
+
 For those who just want a working app:
 
 1. [QUICK_START_APK.md](QUICK_START_APK.md) - 5 minute quick start
@@ -50,6 +51,7 @@ For those who just want a working app:
 3. Done! 🎉
 
 ### Path B: Understand Everything (30 minutes)
+
 For those who want to understand the setup:
 
 1. [README.md](README.md) - Overview of app
@@ -59,6 +61,7 @@ For those who want to understand the setup:
 5. Now you understand the full setup ✨
 
 ### Path C: Troubleshoot Issues (As Needed)
+
 If something doesn't work:
 
 1. [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Solutions to common problems
@@ -67,6 +70,7 @@ If something doesn't work:
 4. Back on track! 🛠️
 
 ### Path D: Customize & Extend (Advanced)
+
 For app developers:
 
 1. Edit [expo/App.tsx](expo/App.tsx) to customize UI
@@ -78,18 +82,21 @@ For app developers:
 ## ✨ What's Already Built For You
 
 ### 1. **Fully Native React Native App**
+
 - ✅ Complete HerdFlow implementation in React Native
 - ✅ All features working (cattle, camps, vaccines, counts)
 - ✅ Optimized for mobile (tap-friendly, responsive)
 - ✅ Connects to backend API
 
 ### 2. **Automated Build System**
+
 - ✅ One-command builds: `npm run eas:build:preview`
 - ✅ Automatic asset generation
 - ✅ Production-ready configuration
 - ✅ Pre-configured for immediate building
 
 ### 3. **Complete Documentation**
+
 - ✅ Quick start guide (5 minutes)
 - ✅ Step-by-step building guide
 - ✅ API connection setup
@@ -97,6 +104,7 @@ For app developers:
 - ✅ Expo configuration guide
 
 ### 4. **Backend API Ready**
+
 - ✅ Express server with all endpoints
 - ✅ JSON file storage (cross-platform)
 - ✅ Seed data included
@@ -188,13 +196,13 @@ Since your last update:
 
 ## 📞 Support Resources
 
-| Need | Go To |
-|------|-------|
-| How to build APK | [QUICK_START_APK.md](QUICK_START_APK.md) |
-| Step-by-step guide | [APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md) |
-| Got an error? | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
-| Want details? | [expo/EXPO_README.md](expo/EXPO_README.md) |
-| What's installed? | [SETUP_VERIFICATION.md](SETUP_VERIFICATION.md) |
+| Need               | Go To                                          |
+| ------------------ | ---------------------------------------------- |
+| How to build APK   | [QUICK_START_APK.md](QUICK_START_APK.md)       |
+| Step-by-step guide | [APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md)       |
+| Got an error?      | [TROUBLESHOOTING.md](TROUBLESHOOTING.md)       |
+| Want details?      | [expo/EXPO_README.md](expo/EXPO_README.md)     |
+| What's installed?  | [SETUP_VERIFICATION.md](SETUP_VERIFICATION.md) |
 
 ---
 

@@ -35,7 +35,7 @@ export default async function AdminCustomersPage() {
   return (
     <main className="space-y-4 pb-10">
       <header>
-        <h1 className="text-3xl font-semibold text-brand-navy">Customers</h1>
+        <h1 className="text-brand-navy text-3xl font-semibold">Customers</h1>
         <p className="text-sm text-[#38537a]">
           Browse registered users, view their order count, and check seller registration status.
         </p>
@@ -45,4 +45,3 @@ export default async function AdminCustomersPage() {
     </main>
   );
 }
-

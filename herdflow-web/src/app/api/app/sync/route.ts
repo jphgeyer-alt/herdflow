@@ -24,7 +24,9 @@ export async function POST(request: Request) {
   if (!isMobileUser(auth)) return auth;
 
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
@@ -41,17 +43,18 @@ export async function POST(request: Request) {
           const d = change.data;
           const animal = await prisma.farmerAnimal.create({
             data: {
-              farmerId:   auth.effectiveFarmerId,
-              tagNumber:  (d.tag as string | undefined) ?? (d.tagNumber as string | undefined) ?? null,
-              name:       (d.name as string | undefined) ?? null,
-              species:    (d.species as string) || "cattle",
-              breed:      (d.breed  as string | undefined) ?? null,
-              gender:     (d.gender as string | undefined) ?? null,
-              dateOfBirth:d.birthDate ? new Date(d.birthDate as string) : null,
-              weight:     d.weight != null ? Number(d.weight) : null,
-              notes:      (d.note  as string | undefined) ?? null,
-              status:     (d.status as string | undefined) ?? "ACTIVE",
-              healthStatus:(d.healthStatus as string | undefined) ?? "HEALTHY",
+              farmerId: auth.effectiveFarmerId,
+              tagNumber:
+                (d.tag as string | undefined) ?? (d.tagNumber as string | undefined) ?? null,
+              name: (d.name as string | undefined) ?? null,
+              species: (d.species as string) || "cattle",
+              breed: (d.breed as string | undefined) ?? null,
+              gender: (d.gender as string | undefined) ?? null,
+              dateOfBirth: d.birthDate ? new Date(d.birthDate as string) : null,
+              weight: d.weight != null ? Number(d.weight) : null,
+              notes: (d.note as string | undefined) ?? null,
+              status: (d.status as string | undefined) ?? "ACTIVE",
+              healthStatus: (d.healthStatus as string | undefined) ?? "HEALTHY",
             },
           });
           results.push({ localId: change.localId, serverId: animal.id, success: true });
@@ -63,15 +66,15 @@ export async function POST(request: Request) {
           await prisma.farmerAnimal.updateMany({
             where: { id: d.id as string, farmerId: auth.effectiveFarmerId },
             data: {
-              ...(d.tag       != null && { tagNumber:   String(d.tag) }),
-              ...(d.name      != null && { name:        String(d.name) }),
-              ...(d.species   != null && { species:     String(d.species) }),
-              ...(d.breed     != null && { breed:       String(d.breed) }),
-              ...(d.gender    != null && { gender:      String(d.gender) }),
-              ...(d.weight    != null && { weight:      Number(d.weight) }),
-              ...(d.status    != null && { status:      String(d.status) }),
+              ...(d.tag != null && { tagNumber: String(d.tag) }),
+              ...(d.name != null && { name: String(d.name) }),
+              ...(d.species != null && { species: String(d.species) }),
+              ...(d.breed != null && { breed: String(d.breed) }),
+              ...(d.gender != null && { gender: String(d.gender) }),
+              ...(d.weight != null && { weight: Number(d.weight) }),
+              ...(d.status != null && { status: String(d.status) }),
               ...(d.healthStatus != null && { healthStatus: String(d.healthStatus) }),
-              ...(d.isDeleted != null && { isDeleted:   Boolean(d.isDeleted) }),
+              ...(d.isDeleted != null && { isDeleted: Boolean(d.isDeleted) }),
             },
           });
           results.push({ localId: change.localId, serverId: d.id as string, success: true });
@@ -82,15 +85,15 @@ export async function POST(request: Request) {
           const d = change.data;
           const record = await prisma.farmerHealthRecord.create({
             data: {
-              animalId:   d.animalId as string,
-              farmerId:   auth.effectiveFarmerId,
-              eventType:  (d.type as string) || (d.eventType as string) || "Check-up",
-              description:(d.description as string | undefined) ?? null,
-              treatment:  (d.treatment   as string | undefined) ?? null,
-              vetName:    (d.vetName     as string | undefined) ?? null,
-              cost:       d.cost != null ? Number(d.cost) : null,
-              documents:  [],
-              eventDate:  d.eventDate ? new Date(d.eventDate as string) : new Date(),
+              animalId: d.animalId as string,
+              farmerId: auth.effectiveFarmerId,
+              eventType: (d.type as string) || (d.eventType as string) || "Check-up",
+              description: (d.description as string | undefined) ?? null,
+              treatment: (d.treatment as string | undefined) ?? null,
+              vetName: (d.vetName as string | undefined) ?? null,
+              cost: d.cost != null ? Number(d.cost) : null,
+              documents: [],
+              eventDate: d.eventDate ? new Date(d.eventDate as string) : new Date(),
             },
           });
           results.push({ localId: change.localId, serverId: record.id, success: true });
@@ -101,11 +104,11 @@ export async function POST(request: Request) {
           const d = change.data;
           const record = await prisma.farmerWeightRecord.create({
             data: {
-              animalId:    d.animalId as string,
-              farmerId:    auth.effectiveFarmerId,
-              weight:      Number(d.weight),
-              notes:       (d.notes as string | undefined) ?? null,
-              recordedDate:d.recordedDate ? new Date(d.recordedDate as string) : new Date(),
+              animalId: d.animalId as string,
+              farmerId: auth.effectiveFarmerId,
+              weight: Number(d.weight),
+              notes: (d.notes as string | undefined) ?? null,
+              recordedDate: d.recordedDate ? new Date(d.recordedDate as string) : new Date(),
             },
           });
           if (d.animalId) {
@@ -122,12 +125,12 @@ export async function POST(request: Request) {
           const d = change.data;
           const vacc = await prisma.farmerVaccination.create({
             data: {
-              animalId:    d.animalId as string,
-              farmerId:    auth.effectiveFarmerId,
+              animalId: d.animalId as string,
+              farmerId: auth.effectiveFarmerId,
               vaccineName: (d.vaccineName as string) || (d.name as string) || "Unknown",
               nextDueDate: d.nextDueDate ? new Date(d.nextDueDate as string) : null,
-              status:      (d.status as string | undefined) ?? "SCHEDULED",
-              notes:       (d.note   as string | undefined) ?? null,
+              status: (d.status as string | undefined) ?? "SCHEDULED",
+              notes: (d.note as string | undefined) ?? null,
             },
           });
           results.push({ localId: change.localId, serverId: vacc.id, success: true });
@@ -139,9 +142,11 @@ export async function POST(request: Request) {
           await prisma.farmerVaccination.updateMany({
             where: { id: d.id as string, farmerId: auth.effectiveFarmerId },
             data: {
-              ...(d.status       != null && { status:       String(d.status) }),
-              ...(d.vaccinatedDate != null && { vaccinatedDate: new Date(d.vaccinatedDate as string) }),
-              ...(d.notes        != null && { notes:        String(d.notes) }),
+              ...(d.status != null && { status: String(d.status) }),
+              ...(d.vaccinatedDate != null && {
+                vaccinatedDate: new Date(d.vaccinatedDate as string),
+              }),
+              ...(d.notes != null && { notes: String(d.notes) }),
             },
           });
           results.push({ localId: change.localId, serverId: d.id as string, success: true });
@@ -149,7 +154,11 @@ export async function POST(request: Request) {
         }
 
         default:
-          results.push({ localId: change.localId, success: false, error: `Unknown change type: ${change.type}` });
+          results.push({
+            localId: change.localId,
+            success: false,
+            error: `Unknown change type: ${change.type}`,
+          });
       }
     } catch (err) {
       results.push({
@@ -160,6 +169,6 @@ export async function POST(request: Request) {
     }
   }
 
-  const failed = results.filter(r => !r.success).length;
+  const failed = results.filter((r) => !r.success).length;
   return NextResponse.json({ processed: changes.length, failed, results });
 }

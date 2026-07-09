@@ -29,7 +29,10 @@ export async function POST(request: Request) {
 
   if (!companyName || !contactPhone || !contactEmail || !routesCovered || !fleetSizeRaw) {
     return NextResponse.json(
-      { error: "companyName, contactPhone, contactEmail, fleetSize, and routesCovered are required." },
+      {
+        error:
+          "companyName, contactPhone, contactEmail, fleetSize, and routesCovered are required.",
+      },
       { status: 400 },
     );
   }
@@ -51,11 +54,17 @@ export async function POST(request: Request) {
   }
 
   if (vehicleDocumentsEntry.size > 8 * 1024 * 1024) {
-    return NextResponse.json({ error: "Vehicle document must be smaller than 8MB." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Vehicle document must be smaller than 8MB." },
+      { status: 400 },
+    );
   }
 
   if (!isAllowedDocumentType(vehicleDocumentsEntry)) {
-    return NextResponse.json({ error: "Vehicle document must be PDF, JPG, or PNG." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Vehicle document must be PDF, JPG, or PNG." },
+      { status: 400 },
+    );
   }
 
   const applicationId = `LOG-${Date.now()}`;
@@ -74,7 +83,11 @@ export async function POST(request: Request) {
       },
     });
 
-    const vehicleDocumentsUrl = await saveUploadedFile(vehicleDocumentsEntry, "logistics", applicationId);
+    const vehicleDocumentsUrl = await saveUploadedFile(
+      vehicleDocumentsEntry,
+      "logistics",
+      applicationId,
+    );
 
     await prisma.logisticsPartner.upsert({
       where: { userId: user.id },

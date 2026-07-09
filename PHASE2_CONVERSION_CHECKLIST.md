@@ -5,10 +5,12 @@ Use this before and after Phase 2 implementation.
 ## 1) Baseline checks
 
 Start local stack:
+
 1. npm run dev:server:website
 2. npm run dev:client
 
 Test flows on /marketplace:
+
 1. Find a product via search
 2. Filter by category
 3. Add item to cart
@@ -18,6 +20,7 @@ Test flows on /marketplace:
 7. Open /track and lookup order
 
 Record friction points:
+
 - Where users pause/confuse
 - Unclear labels/messages
 - Weak trust cues before purchase
@@ -33,6 +36,7 @@ Record friction points:
 ## 3) Conversion validation
 
 Perform this after implementation:
+
 1. Time-to-add-cart feels faster
 2. Checkout flow requires fewer retries/errors
 3. Mobile layout remains clean without overlap or clipped buttons
@@ -48,11 +52,11 @@ Perform this after implementation:
 
 Score each 1 (poor) to 5 (excellent).
 
-| Check | Before | After | Delta |
-|---|---:|---:|---:|
-| Product discoverability |  |  |  |
-| CTA clarity |  |  |  |
-| Cart usability |  |  |  |
-| Checkout clarity |  |  |  |
-| Mobile polish |  |  |  |
-| Purchase confidence/trust |  |  |  |
+| Check                     | Before | After | Delta |
+| ------------------------- | -----: | ----: | ----: |
+| Product discoverability   |        |       |       |
+| CTA clarity               |        |       |       |
+| Cart usability            |        |       |       |
+| Checkout clarity          |        |       |       |
+| Mobile polish             |        |       |       |
+| Purchase confidence/trust |        |       |       |

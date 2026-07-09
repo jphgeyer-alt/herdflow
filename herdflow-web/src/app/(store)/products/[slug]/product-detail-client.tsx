@@ -47,7 +47,7 @@ export function ProductDetailClient({
               src={selectedImage.src}
             />
           ) : (
-            <div className="flex h-[380px] items-center justify-center bg-cream text-sm text-[#5d7497]">
+            <div className="bg-cream flex h-[380px] items-center justify-center text-sm text-[#5d7497]">
               No product image available
             </div>
           )}
@@ -60,7 +60,7 @@ export function ProductDetailClient({
               type="button"
               onClick={() => setSelectedIndex(index)}
               className={`overflow-hidden rounded-lg border ${
-                selectedIndex === index ? "border-navy ring-2 ring-navy/30" : "border-[#d8e0ec]"
+                selectedIndex === index ? "border-navy ring-navy/30 ring-2" : "border-[#d8e0ec]"
               }`}
               aria-label={`View image ${index + 1}`}
             >
@@ -71,8 +71,8 @@ export function ProductDetailClient({
       </div>
 
       <div className="space-y-4 rounded-2xl border border-[#d8e0ec] bg-white p-5 shadow-sm">
-        <h1 className="text-3xl font-semibold text-brand-navy">{name}</h1>
-        <p className="text-2xl font-semibold text-brand-gold">{priceLabel}</p>
+        <h1 className="text-brand-navy text-3xl font-semibold">{name}</h1>
+        <p className="text-brand-gold text-2xl font-semibold">{priceLabel}</p>
         <p className="text-sm leading-7 text-[#38537a]">{description}</p>
 
         <div className="rounded-lg bg-[#eef3fb] p-3 text-sm text-[#244367]">
@@ -85,7 +85,7 @@ export function ProductDetailClient({
         <form className="space-y-3" action="/cart" method="GET">
           <input type="hidden" name="add" value={slug} />
 
-          <label className="block text-sm font-semibold text-brand-navy" htmlFor="qty">
+          <label className="text-brand-navy block text-sm font-semibold" htmlFor="qty">
             Quantity
           </label>
           <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export function ProductDetailClient({
           <button
             type="submit"
             disabled={!canPurchase}
-            className="inline-flex w-full items-center justify-center rounded-lg bg-brand-navy px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="bg-brand-navy inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
             {canPurchase ? "Add to Cart" : "Out of Stock"}
           </button>

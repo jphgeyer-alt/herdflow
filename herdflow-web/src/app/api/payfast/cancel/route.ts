@@ -26,6 +26,9 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.redirect(
-    new URL(`/checkout?status=cancel&paymentId=${encodeURIComponent(orderNumber || "")}`, url.origin),
+    new URL(
+      `/checkout?status=cancel&paymentId=${encodeURIComponent(orderNumber || "")}`,
+      url.origin,
+    ),
   );
 }

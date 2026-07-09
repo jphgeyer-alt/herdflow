@@ -30,7 +30,10 @@ export async function GET(_req: Request, { params }: RouteContext) {
       const sendSnapshot = async () => {
         try {
           const lots = await prisma.auctionLot.findMany({
-            where: { session: { slug: auctionId }, status: { in: ["PENDING", "OPEN", "SOLD", "PASSED"] } },
+            where: {
+              session: { slug: auctionId },
+              status: { in: ["PENDING", "OPEN", "SOLD", "PASSED"] },
+            },
             orderBy: { lotNumber: "asc" },
             select: {
               id: true,

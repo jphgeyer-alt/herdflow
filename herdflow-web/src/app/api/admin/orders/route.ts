@@ -11,7 +11,15 @@ type OrderActionBody = {
   };
 };
 
-const VALID_STATUSES = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "COMPLETED", "CANCELLED", "FAILED"] as const;
+const VALID_STATUSES = [
+  "PENDING",
+  "PAID",
+  "PROCESSING",
+  "SHIPPED",
+  "COMPLETED",
+  "CANCELLED",
+  "FAILED",
+] as const;
 type ValidStatus = (typeof VALID_STATUSES)[number];
 
 function isValidStatus(s: string): s is ValidStatus {
@@ -35,7 +43,8 @@ export async function GET(request: NextRequest) {
   const pageSize = 25;
 
   try {
-    const where = statusFilter && isValidStatus(statusFilter) ? { status: statusFilter } : undefined;
+    const where =
+      statusFilter && isValidStatus(statusFilter) ? { status: statusFilter } : undefined;
 
     const [total, orders] = await Promise.all([
       prisma.order.count({ where }),

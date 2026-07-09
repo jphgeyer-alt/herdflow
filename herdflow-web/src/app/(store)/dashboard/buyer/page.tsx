@@ -17,7 +17,12 @@ export default async function BuyerDashboard() {
   }
 
   let user: { id: string; fullName: string; email: string } | null = null;
-  let recommendedProducts: Array<{ id: string; name: string; priceCents: number; photos: string[] }> = [];
+  let recommendedProducts: Array<{
+    id: string;
+    name: string;
+    priceCents: number;
+    photos: string[];
+  }> = [];
 
   try {
     user = await prisma.user.findUnique({
@@ -37,44 +42,59 @@ export default async function BuyerDashboard() {
 
   if (!user) redirect("/auth/login");
 
-  const pendingOrders: Array<{ id: string; orderNumber: string; deliveryDate: string; status: string; totalCents: number }> = [];
-  const recentOrders: Array<{ id: string; orderNumber: string; deliveryDate: string; status: string; totalCents: number }> = [];
+  const pendingOrders: Array<{
+    id: string;
+    orderNumber: string;
+    deliveryDate: string;
+    status: string;
+    totalCents: number;
+  }> = [];
+  const recentOrders: Array<{
+    id: string;
+    orderNumber: string;
+    deliveryDate: string;
+    status: string;
+    totalCents: number;
+  }> = [];
 
   return (
     <div className="min-h-screen bg-[#f5f4ef]">
       {/* Hero Header */}
-      <div className="bg-[#1B3A6B] text-white py-12 px-4 md:px-8">
+      <div className="bg-[#1B3A6B] px-4 py-12 text-white md:px-8">
         <div className="mx-auto max-w-7xl">
-          <h1 className="text-4xl font-black mb-2">Welcome back, {user.fullName.split(' ')[0]}!</h1>
+          <h1 className="mb-2 text-4xl font-black">Welcome back, {user.fullName.split(" ")[0]}!</h1>
           <p className="text-lg text-white/80">Manage your orders and explore new products</p>
         </div>
       </div>
 
       {/* Main Dashboard */}
-      <div className="mx-auto max-w-7xl px-4 md:px-8 py-12 space-y-12">
+      <div className="mx-auto max-w-7xl space-y-12 px-4 py-12 md:px-8">
         {/* Quick Actions */}
         <section>
-          <h2 className="text-2xl font-black text-[#1B3A6B] mb-6">Quick Actions</h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">Quick Actions</h2>
+          <div className="grid gap-6 md:grid-cols-3">
             <Link
               href="/shop"
-              className="flex flex-col items-center justify-center p-8 bg-white rounded-2xl shadow-lg border border-[#e4ebf5] hover:shadow-xl hover:border-[#2E7D32] transition group"
+              className="group flex flex-col items-center justify-center rounded-2xl border border-[#e4ebf5] bg-white p-8 shadow-lg transition hover:border-[#2E7D32] hover:shadow-xl"
             >
-              <ShoppingCart size={48} className="text-[#2E7D32] mb-4 group-hover:scale-110 transition" />
+              <ShoppingCart
+                size={48}
+                className="mb-4 text-[#2E7D32] transition group-hover:scale-110"
+              />
               <span className="text-lg font-bold text-[#244367]">GO TO SHOP</span>
             </Link>
             <Link
               href="/listings"
-              className="flex flex-col items-center justify-center p-8 bg-white rounded-2xl shadow-lg border border-[#e4ebf5] hover:shadow-xl hover:border-[#2E7D32] transition group"
+              className="group flex flex-col items-center justify-center rounded-2xl border border-[#e4ebf5] bg-white p-8 shadow-lg transition hover:border-[#2E7D32] hover:shadow-xl"
             >
-              <Eye size={48} className="text-[#2E7D32] mb-4 group-hover:scale-110 transition" />
+              <Eye size={48} className="mb-4 text-[#2E7D32] transition group-hover:scale-110" />
               <span className="text-lg font-bold text-[#244367]">VIEW LIVESTOCK AUCTIONS</span>
             </Link>
             <Link
               href="/tracking"
-              className="flex flex-col items-center justify-center p-8 bg-white rounded-2xl shadow-lg border border-[#e4ebf5] hover:shadow-xl hover:border-[#2E7D32] transition group"
+              className="group flex flex-col items-center justify-center rounded-2xl border border-[#e4ebf5] bg-white p-8 shadow-lg transition hover:border-[#2E7D32] hover:shadow-xl"
             >
-              <Truck size={48} className="text-[#2E7D32] mb-4 group-hover:scale-110 transition" />
+              <Truck size={48} className="mb-4 text-[#2E7D32] transition group-hover:scale-110" />
               <span className="text-lg font-bold text-[#244367]">TRACK MY DELIVERIES</span>
             </Link>
           </div>
@@ -82,18 +102,18 @@ export default async function BuyerDashboard() {
 
         {/* My Orders */}
         <section>
-          <h2 className="text-2xl font-black text-[#1B3A6B] mb-6">My Orders</h2>
+          <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">My Orders</h2>
 
           {/* Pending Orders */}
           <div className="mb-8">
-            <h3 className="text-lg font-bold text-[#244367] mb-4">Pending Orders</h3>
+            <h3 className="mb-4 text-lg font-bold text-[#244367]">Pending Orders</h3>
             {pendingOrders.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] p-12 text-center">
-                <Package size={64} className="mx-auto text-[#cdd8e7] mb-4" />
-                <p className="text-[#5d7497] text-lg">You have no pending orders.</p>
+              <div className="rounded-2xl border border-[#e4ebf5] bg-white p-12 text-center shadow-lg">
+                <Package size={64} className="mx-auto mb-4 text-[#cdd8e7]" />
+                <p className="text-lg text-[#5d7497]">You have no pending orders.</p>
                 <Link
                   href="/shop"
-                  className="inline-block mt-6 px-8 py-3 bg-[#2E7D32] hover:bg-[#1d5e20] text-white font-bold rounded-lg transition"
+                  className="mt-6 inline-block rounded-lg bg-[#2E7D32] px-8 py-3 font-bold text-white transition hover:bg-[#1d5e20]"
                 >
                   Start Shopping
                 </Link>
@@ -101,19 +121,24 @@ export default async function BuyerDashboard() {
             ) : (
               <div className="space-y-4">
                 {pendingOrders.map((order) => (
-                  <div key={order.id} className="bg-white rounded-xl shadow-md border border-[#e4ebf5] p-6 flex items-center justify-between">
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between rounded-xl border border-[#e4ebf5] bg-white p-6 shadow-md"
+                  >
                     <div className="space-y-1">
                       <p className="font-bold text-[#244367]">Order #{order.orderNumber}</p>
                       <p className="text-sm text-[#5d7497]">Delivery: {order.deliveryDate}</p>
-                      <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+                      <span className="inline-block rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-800">
                         {order.status}
                       </span>
                     </div>
-                    <div className="text-right space-y-2">
-                      <p className="text-xl font-black text-[#1B3A6B]">R{(order.totalCents / 100).toFixed(2)}</p>
+                    <div className="space-y-2 text-right">
+                      <p className="text-xl font-black text-[#1B3A6B]">
+                        R{(order.totalCents / 100).toFixed(2)}
+                      </p>
                       <Link
                         href={`/orders/${order.id}`}
-                        className="inline-block px-6 py-2 bg-[#1B3A6B] hover:bg-[#122844] text-white text-sm font-bold rounded-lg transition"
+                        className="inline-block rounded-lg bg-[#1B3A6B] px-6 py-2 text-sm font-bold text-white transition hover:bg-[#122844]"
                       >
                         View Details
                       </Link>
@@ -127,22 +152,27 @@ export default async function BuyerDashboard() {
           {/* Recent Orders */}
           {recentOrders.length > 0 && (
             <div>
-              <h3 className="text-lg font-bold text-[#244367] mb-4">Recent Orders</h3>
+              <h3 className="mb-4 text-lg font-bold text-[#244367]">Recent Orders</h3>
               <div className="space-y-4">
                 {recentOrders.slice(0, 5).map((order) => (
-                  <div key={order.id} className="bg-white rounded-xl shadow-md border border-[#e4ebf5] p-6 flex items-center justify-between">
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between rounded-xl border border-[#e4ebf5] bg-white p-6 shadow-md"
+                  >
                     <div className="space-y-1">
                       <p className="font-bold text-[#244367]">Order #{order.orderNumber}</p>
                       <p className="text-sm text-[#5d7497]">Delivered: {order.deliveryDate}</p>
-                      <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                      <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
                         {order.status}
                       </span>
                     </div>
-                    <div className="text-right space-y-2">
-                      <p className="text-xl font-black text-[#1B3A6B]">R{(order.totalCents / 100).toFixed(2)}</p>
+                    <div className="space-y-2 text-right">
+                      <p className="text-xl font-black text-[#1B3A6B]">
+                        R{(order.totalCents / 100).toFixed(2)}
+                      </p>
                       <Link
                         href={`/orders/${order.id}`}
-                        className="inline-block px-6 py-2 bg-[#1B3A6B] hover:bg-[#122844] text-white text-sm font-bold rounded-lg transition"
+                        className="inline-block rounded-lg bg-[#1B3A6B] px-6 py-2 text-sm font-bold text-white transition hover:bg-[#122844]"
                       >
                         View Details
                       </Link>
@@ -152,7 +182,7 @@ export default async function BuyerDashboard() {
               </div>
               <Link
                 href="/orders"
-                className="block mt-6 w-full text-center py-3 border-2 border-[#1B3A6B] text-[#1B3A6B] font-bold rounded-lg hover:bg-[#1B3A6B] hover:text-white transition"
+                className="mt-6 block w-full rounded-lg border-2 border-[#1B3A6B] py-3 text-center font-bold text-[#1B3A6B] transition hover:bg-[#1B3A6B] hover:text-white"
               >
                 VIEW ALL ORDERS
               </Link>
@@ -162,22 +192,27 @@ export default async function BuyerDashboard() {
 
         {/* Recommended Products */}
         <section>
-          <h2 className="text-2xl font-black text-[#1B3A6B] mb-6">Recommended Products</h2>
+          <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">Recommended Products</h2>
           {recommendedProducts.length === 0 ? (
-            <p className="text-[#5d7497] text-center py-8">No products available at the moment.</p>
+            <p className="py-8 text-center text-[#5d7497]">No products available at the moment.</p>
           ) : (
-            <div className="grid md:grid-cols-4 gap-6">
+            <div className="grid gap-6 md:grid-cols-4">
               {recommendedProducts.map((product) => (
-                <div key={product.id} className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] overflow-hidden hover:shadow-xl transition">
+                <div
+                  key={product.id}
+                  className="overflow-hidden rounded-2xl border border-[#e4ebf5] bg-white shadow-lg transition hover:shadow-xl"
+                >
                   <img
                     src={product.photos[0] || "/placeholder-product.jpg"}
                     alt={product.name}
-                    className="w-full h-48 object-cover"
+                    className="h-48 w-full object-cover"
                   />
-                  <div className="p-4 space-y-3">
-                    <h3 className="font-bold text-[#244367] line-clamp-2">{product.name}</h3>
-                    <p className="text-2xl font-black text-[#2E7D32]">R{(product.priceCents / 100).toFixed(2)}</p>
-                    <button className="w-full bg-[#2E7D32] hover:bg-[#1d5e20] text-white font-bold py-2 rounded-lg transition">
+                  <div className="space-y-3 p-4">
+                    <h3 className="line-clamp-2 font-bold text-[#244367]">{product.name}</h3>
+                    <p className="text-2xl font-black text-[#2E7D32]">
+                      R{(product.priceCents / 100).toFixed(2)}
+                    </p>
+                    <button className="w-full rounded-lg bg-[#2E7D32] py-2 font-bold text-white transition hover:bg-[#1d5e20]">
                       Quick Add to Cart
                     </button>
                   </div>

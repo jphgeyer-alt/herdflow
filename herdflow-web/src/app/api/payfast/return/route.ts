@@ -29,5 +29,7 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(new URL(`/orders/${encodeURIComponent(orderNumber || "unknown")}`, url.origin));
+  return NextResponse.redirect(
+    new URL(`/orders/${encodeURIComponent(orderNumber || "unknown")}`, url.origin),
+  );
 }

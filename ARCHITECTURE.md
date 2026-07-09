@@ -18,7 +18,7 @@
 │    • Responsive CSS      • Android APK           • TypeScript
 │    • Service Worker      • Offline Support       • CORS
 │    • localStorage        • Touch Optimized       • Port 4174
-│                                                  
+│
 └─────────────────────────────────────────────────────────────────┘
 
                               ↑
@@ -43,6 +43,7 @@
 ## Data Flow
 
 ### User on Web
+
 ```
 Browser (client/src/App.tsx)
     ↓
@@ -60,6 +61,7 @@ Save to localStorage (offline fallback)
 ```
 
 ### User on Mobile (APK)
+
 ```
 Android App (expo/App.tsx)
     ↓
@@ -79,6 +81,7 @@ Cache for offline access
 ## Component Architecture
 
 ### Backend (server/)
+
 ```
 server/
 ├── index.ts              Main Express server
@@ -95,6 +98,7 @@ server/
 ```
 
 ### Frontend (client/)
+
 ```
 client/
 ├── src/
@@ -111,6 +115,7 @@ client/
 ```
 
 ### Mobile (expo/)
+
 ```
 expo/
 ├── App.tsx               Main React Native component
@@ -130,6 +135,7 @@ expo/
 ## Build Pipeline
 
 ### For Web
+
 ```
 Source (client/src/)
     ↓
@@ -143,6 +149,7 @@ nginx/static server
 ```
 
 ### For APK (Mobile)
+
 ```
 Source (expo/App.tsx)
     ↓
@@ -202,6 +209,7 @@ Android device installation
 ## Deployment & Distribution
 
 ### Web
+
 ```
 npm run build              Build files
     ↓
@@ -215,6 +223,7 @@ Deploy to:
 ```
 
 ### Mobile (APK)
+
 ```
 npm run eas:build:preview/production
     ↓
@@ -231,17 +240,17 @@ Install on Android
 
 ## Features Matrix
 
-| Feature | Web | Mobile | Backend |
-|---------|-----|--------|---------|
-| Cattle CRUD | ✅ | ✅ | ✅ |
-| Camp Management | ✅ | ✅ | ✅ |
-| Vaccine Scheduling | ✅ | ✅ | ✅ |
-| Count Logging | ✅ | ✅ | ✅ |
-| Dashboard | ✅ | ✅ | - |
-| Offline Support | ✅ | ✅ | - |
-| Color Coding | ✅ | ✅ | ✅ |
-| Status Tracking | ✅ | ✅ | ✅ |
-| Real-time Sync | ✅ | ✅ | - |
+| Feature            | Web | Mobile | Backend |
+| ------------------ | --- | ------ | ------- |
+| Cattle CRUD        | ✅  | ✅     | ✅      |
+| Camp Management    | ✅  | ✅     | ✅      |
+| Vaccine Scheduling | ✅  | ✅     | ✅      |
+| Count Logging      | ✅  | ✅     | ✅      |
+| Dashboard          | ✅  | ✅     | -       |
+| Offline Support    | ✅  | ✅     | -       |
+| Color Coding       | ✅  | ✅     | ✅      |
+| Status Tracking    | ✅  | ✅     | ✅      |
+| Real-time Sync     | ✅  | ✅     | -       |
 
 ## API Endpoints
 
@@ -269,12 +278,12 @@ GET    /api/summary         → Dashboard stats
 
 ## Ports & URLs
 
-| Service | Port | URL |
-|---------|------|-----|
-| Frontend (Web) | 4173 | http://localhost:4173 |
-| Backend (API) | 4174 | http://localhost:4174 |
-| Expo Dev | 19000 | (automatic) |
-| Expo Web | 19006 | (automatic) |
+| Service        | Port  | URL                   |
+| -------------- | ----- | --------------------- |
+| Frontend (Web) | 4173  | http://localhost:4173 |
+| Backend (API)  | 4174  | http://localhost:4174 |
+| Expo Dev       | 19000 | (automatic)           |
+| Expo Web       | 19006 | (automatic)           |
 
 ## Build Tools & Commands
 

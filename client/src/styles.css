@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap");
 
 :root {
   color-scheme: light;
   color: #122033;
   background: #f5f7fb;
-  font-family: 'Manrope', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-family: "Manrope", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
 * {
@@ -21,7 +21,7 @@ body {
 }
 
 body::before {
-  content: '';
+  content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -94,7 +94,7 @@ header h1 {
   margin: 0;
   font-size: clamp(2rem, 2.5vw, 3rem);
   letter-spacing: -0.04em;
-  font-family: 'Plus Jakarta Sans', 'Manrope', sans-serif;
+  font-family: "Plus Jakarta Sans", "Manrope", sans-serif;
 }
 
 h2,
@@ -104,7 +104,7 @@ h3,
 button.primary,
 button.secondary,
 button.danger {
-  font-family: 'Plus Jakarta Sans', 'Manrope', sans-serif;
+  font-family: "Plus Jakarta Sans", "Manrope", sans-serif;
 }
 
 header p {
@@ -190,7 +190,10 @@ header p {
   border-radius: 12px;
   text-decoration: none;
   font-weight: 800;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
 
 .hero-link {
@@ -375,7 +378,10 @@ header p {
   padding: 14px 18px;
   text-align: center;
   font-weight: 700;
-  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
 }
 
 .tab:hover {
@@ -1279,7 +1285,7 @@ header p {
   background: #eff6ff;
 }
 
-.marketplace-dropzone input[type='file'] {
+.marketplace-dropzone input[type="file"] {
   width: 100%;
   margin: 6px 0;
 }
@@ -1503,7 +1509,9 @@ button.danger {
   padding: 12px 18px;
   border-radius: 12px;
   font-weight: 600;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 button.primary {

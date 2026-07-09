@@ -12,14 +12,18 @@ export async function GET(request: Request) {
   if (!isMobileUser(auth)) return auth;
 
   const now = new Date();
-  const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
-  const todayEnd   = new Date(now); todayEnd.setHours(23, 59, 59, 999);
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
 
   try {
     const [announcements, banners, tips, auctionAlerts, promotions] = await Promise.all([
       prisma.appContent.findMany({
         where: {
-          type: "ANNOUNCEMENT", status: "ACTIVE", isDeleted: false,
+          type: "ANNOUNCEMENT",
+          status: "ACTIVE",
+          isDeleted: false,
           OR: [{ startDate: null }, { startDate: { lte: now } }],
           AND: [{ OR: [{ endDate: null }, { endDate: { gte: now } }] }],
         },
@@ -28,7 +32,9 @@ export async function GET(request: Request) {
       }),
       prisma.appContent.findMany({
         where: {
-          type: "BANNER", status: "ACTIVE", isDeleted: false,
+          type: "BANNER",
+          status: "ACTIVE",
+          isDeleted: false,
           OR: [{ startDate: null }, { startDate: { lte: now } }],
           AND: [{ OR: [{ endDate: null }, { endDate: { gte: now } }] }],
         },
@@ -37,11 +43,10 @@ export async function GET(request: Request) {
       }),
       prisma.appContent.findMany({
         where: {
-          type: "TIP", status: "ACTIVE", isDeleted: false,
-          OR: [
-            { scheduledDate: null },
-            { scheduledDate: { gte: todayStart, lte: todayEnd } },
-          ],
+          type: "TIP",
+          status: "ACTIVE",
+          isDeleted: false,
+          OR: [{ scheduledDate: null }, { scheduledDate: { gte: todayStart, lte: todayEnd } }],
         },
         take: 1,
         orderBy: { createdAt: "desc" },
@@ -53,7 +58,9 @@ export async function GET(request: Request) {
       }),
       prisma.appContent.findMany({
         where: {
-          type: "PROMOTION", status: "ACTIVE", isDeleted: false,
+          type: "PROMOTION",
+          status: "ACTIVE",
+          isDeleted: false,
           OR: [{ startDate: null }, { startDate: { lte: now } }],
           AND: [{ OR: [{ endDate: null }, { endDate: { gte: now } }] }],
         },

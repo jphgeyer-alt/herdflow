@@ -131,42 +131,43 @@ export default async function MarketingPage() {
   return (
     <div className="bg-white">
       {/* ── HERO ──────────────────────────────────────────────── */}
-      <section className="relative min-h-[520px] flex items-center overflow-hidden">
+      <section className="relative flex min-h-[520px] items-center overflow-hidden">
         {/* Background */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&q=80"
           alt="Marketing hero"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#1B3A6B]/90 via-[#1B3A6B]/70 to-transparent" />
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-[#A07C3A]/20 text-[#d4a84b] border border-[#A07C3A]/40 mb-4">
+            <span className="mb-4 inline-block rounded-full border border-[#A07C3A]/40 bg-[#A07C3A]/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#d4a84b]">
               HerdFlow Marketing
             </span>
-            <h1 className="text-4xl sm:text-5xl font-black text-white uppercase leading-tight tracking-tight">
-              Reach South Africa&apos;s<br />
+            <h1 className="text-4xl font-black uppercase leading-tight tracking-tight text-white sm:text-5xl">
+              Reach South Africa&apos;s
+              <br />
               <span className="text-[#2E7D32]">Farming Community</span>
             </h1>
-            <p className="mt-2 text-lg font-semibold text-[#A07C3A] uppercase tracking-wide">
+            <p className="mt-2 text-lg font-semibold uppercase tracking-wide text-[#A07C3A]">
               Advertise Your Brand Where Farmers Shop
             </p>
-            <p className="mt-4 text-white/80 text-base leading-relaxed max-w-lg">
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-white/80">
               HerdFlow connects your business directly with thousands of active farmers, livestock
-              traders and agricultural buyers across South Africa. Become a HerdFlow Sponsor and
-              put your brand in front of the right audience.
+              traders and agricultural buyers across South Africa. Become a HerdFlow Sponsor and put
+              your brand in front of the right audience.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
                 href="/marketing/register"
-                className="px-8 py-3 bg-[#2E7D32] hover:bg-[#1d5e20] text-white font-bold rounded-lg uppercase tracking-wide transition shadow-lg"
+                className="rounded-lg bg-[#2E7D32] px-8 py-3 font-bold uppercase tracking-wide text-white shadow-lg transition hover:bg-[#1d5e20]"
               >
                 Become a Sponsor
               </Link>
               <a
                 href="#packages"
-                className="px-8 py-3 border-2 border-white/40 text-white hover:border-white font-bold rounded-lg uppercase tracking-wide transition"
+                className="rounded-lg border-2 border-white/40 px-8 py-3 font-bold uppercase tracking-wide text-white transition hover:border-white"
               >
                 View Packages
               </a>
@@ -178,7 +179,7 @@ export default async function MarketingPage() {
       {/* ── STATS STRIP ───────────────────────────────────────── */}
       <section className="bg-[#1B3A6B] py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 text-center text-white">
+          <div className="grid grid-cols-2 gap-6 text-center text-white sm:grid-cols-3 lg:grid-cols-5">
             {[
               { value: "10 000+", label: "Active Farmers Reached" },
               { value: "250 000+", label: "Monthly Platform Views" },
@@ -187,8 +188,8 @@ export default async function MarketingPage() {
               { value: "R2.5M+", label: "Livestock Traded Monthly" },
             ].map((s) => (
               <div key={s.label}>
-                <p className="text-2xl sm:text-3xl font-black text-[#A07C3A]">{s.value}</p>
-                <p className="text-xs text-white/70 mt-1">{s.label}</p>
+                <p className="text-2xl font-black text-[#A07C3A] sm:text-3xl">{s.value}</p>
+                <p className="mt-1 text-xs text-white/70">{s.label}</p>
               </div>
             ))}
           </div>
@@ -196,50 +197,66 @@ export default async function MarketingPage() {
       </section>
 
       {/* ── PACKAGES ──────────────────────────────────────────── */}
-      <section id="packages" className="py-20 bg-[#f5f4ef]">
+      <section id="packages" className="bg-[#f5f4ef] py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-black text-[#1B3A6B] uppercase tracking-tight">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-black uppercase tracking-tight text-[#1B3A6B] sm:text-4xl">
               Choose Your Marketing Package
             </h2>
-            <p className="mt-3 text-[#5d7497] max-w-xl mx-auto">
-              All packages include the HerdFlow Trusted Sponsor badge and access to our farmer network.
+            <p className="mx-auto mt-3 max-w-xl text-[#5d7497]">
+              All packages include the HerdFlow Trusted Sponsor badge and access to our farmer
+              network.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {PACKAGES.map((pkg) => (
               <div
                 key={pkg.id}
-                className={`relative flex flex-col rounded-2xl border-2 ${pkg.border} ${pkg.cardBg} shadow-lg overflow-hidden`}
+                className={`relative flex flex-col rounded-2xl border-2 ${pkg.border} ${pkg.cardBg} overflow-hidden shadow-lg`}
               >
                 {pkg.badge && (
-                  <div className={`${pkg.badgeBg} text-white text-xs font-bold uppercase tracking-widest py-1 text-center`}>
+                  <div
+                    className={`${pkg.badgeBg} py-1 text-center text-xs font-bold uppercase tracking-widest text-white`}
+                  >
                     {pkg.badge}
                   </div>
                 )}
-                <div className="p-6 flex-1 flex flex-col">
-                  <h3 className={`text-xl font-black ${pkg.headingColor} ${pkg.cardBg === "bg-[#1B3A6B]" ? "text-[#A07C3A]" : ""}`}>
+                <div className="flex flex-1 flex-col p-6">
+                  <h3
+                    className={`text-xl font-black ${pkg.headingColor} ${pkg.cardBg === "bg-[#1B3A6B]" ? "text-[#A07C3A]" : ""}`}
+                  >
                     {pkg.name}
                   </h3>
-                  <div className="mt-2 mb-4">
-                    <span className={`text-3xl font-black ${pkg.cardBg === "bg-[#1B3A6B]" ? "text-white" : "text-[#1B3A6B]"}`}>
+                  <div className="mb-4 mt-2">
+                    <span
+                      className={`text-3xl font-black ${pkg.cardBg === "bg-[#1B3A6B]" ? "text-white" : "text-[#1B3A6B]"}`}
+                    >
                       {pkg.price}
                     </span>
-                    <span className={`text-sm ml-1 ${pkg.cardBg === "bg-[#1B3A6B]" ? "text-white/60" : "text-[#5d7497]"}`}>
+                    <span
+                      className={`ml-1 text-sm ${pkg.cardBg === "bg-[#1B3A6B]" ? "text-white/60" : "text-[#5d7497]"}`}
+                    >
                       {pkg.period}
                     </span>
                   </div>
-                  <ul className="space-y-2 flex-1">
+                  <ul className="flex-1 space-y-2">
                     {pkg.features.map((f) => (
-                      <li key={f} className={`flex items-start gap-2 text-sm ${pkg.cardBg === "bg-[#1B3A6B]" ? "text-white/80" : "text-[#5d7497]"}`}>
-                        <span className="text-[#2E7D32] mt-0.5 shrink-0">✓</span>
+                      <li
+                        key={f}
+                        className={`flex items-start gap-2 text-sm ${pkg.cardBg === "bg-[#1B3A6B]" ? "text-white/80" : "text-[#5d7497]"}`}
+                      >
+                        <span className="mt-0.5 shrink-0 text-[#2E7D32]">✓</span>
                         {f}
                       </li>
                     ))}
                   </ul>
                   <Link
-                    href={pkg.id === "enterprise" ? "/contact?subject=enterprise-sponsorship" : `/marketing/register?package=${pkg.id}`}
-                    className={`mt-6 block w-full text-center py-3 px-4 rounded-lg font-bold uppercase tracking-wide text-sm transition ${pkg.btnStyle}`}
+                    href={
+                      pkg.id === "enterprise"
+                        ? "/contact?subject=enterprise-sponsorship"
+                        : `/marketing/register?package=${pkg.id}`
+                    }
+                    className={`mt-6 block w-full rounded-lg px-4 py-3 text-center text-sm font-bold uppercase tracking-wide transition ${pkg.btnStyle}`}
                   >
                     {pkg.id === "enterprise" ? "Contact Us" : "Get Started"}
                   </Link>
@@ -251,12 +268,12 @@ export default async function MarketingPage() {
       </section>
 
       {/* ── WHY ADVERTISE ─────────────────────────────────────── */}
-      <section className="py-20 bg-white">
+      <section className="bg-white py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-black text-[#1B3A6B] uppercase text-center mb-12">
+          <h2 className="mb-12 text-center text-3xl font-black uppercase text-[#1B3A6B]">
             Why Advertise With HerdFlow?
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 icon: "🎯",
@@ -279,10 +296,13 @@ export default async function MarketingPage() {
                 desc: "Reach thousands of agricultural buyers for a fraction of traditional advertising.",
               },
             ].map((b) => (
-              <div key={b.title} className="text-center p-6 rounded-2xl border border-[#e4ebf5] bg-[#f5f8fd]">
-                <div className="text-4xl mb-3">{b.icon}</div>
-                <h3 className="text-base font-bold text-[#1B3A6B] uppercase mb-2">{b.title}</h3>
-                <p className="text-sm text-[#5d7497] leading-relaxed">{b.desc}</p>
+              <div
+                key={b.title}
+                className="rounded-2xl border border-[#e4ebf5] bg-[#f5f8fd] p-6 text-center"
+              >
+                <div className="mb-3 text-4xl">{b.icon}</div>
+                <h3 className="mb-2 text-base font-bold uppercase text-[#1B3A6B]">{b.title}</h3>
+                <p className="text-sm leading-relaxed text-[#5d7497]">{b.desc}</p>
               </div>
             ))}
           </div>
@@ -290,12 +310,12 @@ export default async function MarketingPage() {
       </section>
 
       {/* ── CURRENT SPONSORS ──────────────────────────────────── */}
-      <section className="py-16 bg-[#f5f4ef]">
+      <section className="bg-[#f5f4ef] py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-black text-[#1B3A6B] uppercase text-center mb-2">
+          <h2 className="mb-2 text-center text-2xl font-black uppercase text-[#1B3A6B]">
             Our Trusted Sponsors
           </h2>
-          <p className="text-center text-[#5d7497] text-sm mb-10">
+          <p className="mb-10 text-center text-sm text-[#5d7497]">
             Join these forward-thinking businesses reaching South Africa&apos;s farming community.
           </p>
           {sponsors.length > 0 ? (
@@ -306,11 +326,15 @@ export default async function MarketingPage() {
                   href={s.website || "#"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center w-40 h-20 bg-white rounded-xl border border-[#cdd8e7] shadow-sm hover:shadow-md transition"
+                  className="flex h-20 w-40 items-center justify-center rounded-xl border border-[#cdd8e7] bg-white shadow-sm transition hover:shadow-md"
                 >
                   {s.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s.logoUrl} alt={s.companyName} className="max-h-12 max-w-full object-contain" />
+                    <img
+                      src={s.logoUrl}
+                      alt={s.companyName}
+                      className="max-h-12 max-w-full object-contain"
+                    />
                   ) : (
                     <span className="text-sm font-bold text-[#5d7497]">{s.companyName}</span>
                   )}
@@ -322,15 +346,15 @@ export default async function MarketingPage() {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-center w-40 h-20 bg-white rounded-xl border-2 border-dashed border-[#cdd8e7]"
+                  className="flex h-20 w-40 items-center justify-center rounded-xl border-2 border-dashed border-[#cdd8e7] bg-white"
                 >
-                  <span className="text-xs text-[#9aabb9] font-medium">Your Logo Here</span>
+                  <span className="text-xs font-medium text-[#9aabb9]">Your Logo Here</span>
                 </div>
               ))}
             </div>
           )}
-          <p className="text-center mt-8">
-            <Link href="/marketing/register" className="text-[#2E7D32] font-bold hover:underline">
+          <p className="mt-8 text-center">
+            <Link href="/marketing/register" className="font-bold text-[#2E7D32] hover:underline">
               Become a Sponsor →
             </Link>
           </p>
@@ -338,22 +362,24 @@ export default async function MarketingPage() {
       </section>
 
       {/* ── FAQ ───────────────────────────────────────────────── */}
-      <section className="py-20 bg-white">
+      <section className="bg-white py-20">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-black text-[#1B3A6B] uppercase text-center mb-10">
+          <h2 className="mb-10 text-center text-3xl font-black uppercase text-[#1B3A6B]">
             Frequently Asked Questions
           </h2>
           <div className="space-y-4">
             {FAQS.map((faq) => (
               <details
                 key={faq.q}
-                className="group rounded-xl border border-[#e4ebf5] bg-[#f5f8fd] overflow-hidden"
+                className="group overflow-hidden rounded-xl border border-[#e4ebf5] bg-[#f5f8fd]"
               >
-                <summary className="flex items-center justify-between px-6 py-4 cursor-pointer font-semibold text-[#1B3A6B] list-none">
+                <summary className="flex cursor-pointer list-none items-center justify-between px-6 py-4 font-semibold text-[#1B3A6B]">
                   {faq.q}
-                  <span className="text-[#2E7D32] ml-4 shrink-0 group-open:rotate-180 transition-transform">▼</span>
+                  <span className="ml-4 shrink-0 text-[#2E7D32] transition-transform group-open:rotate-180">
+                    ▼
+                  </span>
                 </summary>
-                <p className="px-6 pb-5 text-sm text-[#5d7497] leading-relaxed">{faq.a}</p>
+                <p className="px-6 pb-5 text-sm leading-relaxed text-[#5d7497]">{faq.a}</p>
               </details>
             ))}
           </div>
@@ -361,22 +387,24 @@ export default async function MarketingPage() {
       </section>
 
       {/* ── BOTTOM CTA ────────────────────────────────────────── */}
-      <section className="bg-[#1B3A6B] py-20 text-white text-center">
+      <section className="bg-[#1B3A6B] py-20 text-center text-white">
         <div className="mx-auto max-w-2xl px-4">
-          <h2 className="text-3xl sm:text-4xl font-black uppercase leading-tight">
-            Ready to Reach<br />South Africa&apos;s Farmers?
+          <h2 className="text-3xl font-black uppercase leading-tight sm:text-4xl">
+            Ready to Reach
+            <br />
+            South Africa&apos;s Farmers?
           </h2>
           <p className="mt-4 text-white/70">Join HerdFlow as a Sponsor Today</p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <a
               href="#packages"
-              className="px-8 py-3 bg-[#2E7D32] hover:bg-[#1d5e20] text-white font-bold rounded-lg uppercase tracking-wide transition"
+              className="rounded-lg bg-[#2E7D32] px-8 py-3 font-bold uppercase tracking-wide text-white transition hover:bg-[#1d5e20]"
             >
               View Packages
             </a>
             <Link
               href="/contact"
-              className="px-8 py-3 border-2 border-white/40 hover:border-white text-white font-bold rounded-lg uppercase tracking-wide transition"
+              className="rounded-lg border-2 border-white/40 px-8 py-3 font-bold uppercase tracking-wide text-white transition hover:border-white"
             >
               Contact Us
             </Link>

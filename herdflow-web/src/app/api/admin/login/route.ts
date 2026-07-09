@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { ADMIN_SESSION_COOKIE, createAdminSessionValue, validateAdminCredentials } from "@/lib/admin-auth";
+import {
+  ADMIN_SESSION_COOKIE,
+  createAdminSessionValue,
+  validateAdminCredentials,
+} from "@/lib/admin-auth";
 
 type LoginBody = {
   username?: string;

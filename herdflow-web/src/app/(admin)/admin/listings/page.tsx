@@ -58,7 +58,7 @@ export default async function AdminListingsPage() {
   const { listings, sellers, categories } = await getData();
 
   return (
-    <main className="pb-10 space-y-6">
+    <main className="space-y-6 pb-10">
       <AdminListingsManager
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         initialListings={listings as any}

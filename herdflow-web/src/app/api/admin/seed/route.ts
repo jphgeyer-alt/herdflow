@@ -33,12 +33,19 @@ export async function POST(request: NextRequest) {
       await prisma.category.upsert({
         where: { slug: cat.slug },
         update: {},
-        create: { name: cat.name, slug: cat.slug, kind: cat.kind as "LIVESTOCK" | "PRODUCT" | "BOTH" },
+        create: {
+          name: cat.name,
+          slug: cat.slug,
+          kind: cat.kind as "LIVESTOCK" | "PRODUCT" | "BOTH",
+        },
       });
       created++;
     }
 
-    const categories = await prisma.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } });
+    const categories = await prisma.category.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    });
     return NextResponse.json({ ok: true, created, categories });
   } catch (err) {
     console.error("Seed error:", err);

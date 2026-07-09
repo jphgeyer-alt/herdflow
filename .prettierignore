@@ -1,0 +1,32 @@
+node_modules/
+**/node_modules/
+
+# Build output
+.next/
+**/.next/
+dist/
+**/dist/
+build/
+**/build/
+.expo/
+**/.expo/
+android/
+ios/
+desktop-dist/
+win-unpacked/
+
+# Lockfiles
+package-lock.json
+**/package-lock.json
+
+# Generated / binary / vendor
+*.tsbuildinfo
+prisma/migrations/
+**/*.exe
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.ico
+**/*.svg
+**/*.webmanifest
+CHANGELOG.md

@@ -46,7 +46,8 @@ export const listingData: MarketplaceListing[] = [
     sellerPhone: "+27 79 444 1001",
     sellerEmail: "hello@kopanoagri.co.za",
     photos: ["photo-1", "photo-2"],
-    description: "Healthy ewes from rotational grazing system. Bulk pricing available for larger herd purchases.",
+    description:
+      "Healthy ewes from rotational grazing system. Bulk pricing available for larger herd purchases.",
   },
   {
     slug: "boer-goat-pair-lp",
@@ -61,7 +62,8 @@ export const listingData: MarketplaceListing[] = [
     sellerPhone: "+27 83 300 5600",
     sellerEmail: "trade@pitseholdings.co.za",
     photos: ["photo-1", "photo-2"],
-    description: "Breeding pair from disease-monitored line. Veterinary records available on request.",
+    description:
+      "Breeding pair from disease-monitored line. Veterinary records available on request.",
   },
   {
     slug: "large-white-pigs-nw",

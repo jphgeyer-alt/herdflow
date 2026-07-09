@@ -9,8 +9,8 @@ export async function GET(request: Request) {
   const auth = await requireAdminToken(request);
   if (!isMobileUser(auth)) return auth;
 
-  const now            = new Date();
-  const sevenDaysAgo   = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   const [totalFarmers, totalAnimals, contentPublished, newFarmersThisMonth, totalHealthRecords] =

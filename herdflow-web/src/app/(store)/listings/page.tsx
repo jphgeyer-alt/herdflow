@@ -15,7 +15,15 @@ type ListingsPageProps = {
   }>;
 };
 
-const regionOptions = ["All Regions", "North West", "Free State", "Limpopo", "Gauteng", "Mpumalanga", "Northern Cape"];
+const regionOptions = [
+  "All Regions",
+  "North West",
+  "Free State",
+  "Limpopo",
+  "Gauteng",
+  "Mpumalanga",
+  "Northern Cape",
+];
 
 export default async function ListingsPage({ searchParams }: ListingsPageProps) {
   const params = await searchParams;
@@ -73,33 +81,38 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
   return (
     <div className="min-h-screen bg-[#f5f4ef] pb-12">
       {/* Hero Header */}
-      <div className="bg-[#1B3A6B] text-white py-12 px-4 md:px-8">
+      <div className="bg-[#1B3A6B] px-4 py-12 text-white md:px-8">
         <div className="mx-auto max-w-7xl">
-          <h1 className="text-4xl font-black mb-2">Livestock Listings</h1>
-          <p className="text-lg text-white/80">Browse quality livestock from verified farmers across South Africa</p>
+          <h1 className="mb-2 text-4xl font-black">Livestock Listings</h1>
+          <p className="text-lg text-white/80">
+            Browse quality livestock from verified farmers across South Africa
+          </p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="mx-auto max-w-7xl px-4 md:px-8 py-12 space-y-8">
-
+      <div className="mx-auto max-w-7xl space-y-8 px-4 py-12 md:px-8">
         {dbError && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-800">
-            <strong>Note:</strong> We&apos;re having trouble connecting to the listings database right now. Please try again shortly.
+            <strong>Note:</strong> We&apos;re having trouble connecting to the listings database
+            right now. Please try again shortly.
           </div>
         )}
 
         {/* Filters */}
-        <section className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] p-6">
+        <section className="rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-lg">
           <form className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" method="GET">
             <div className="lg:col-span-2">
-              <label className="block text-sm font-semibold text-[#244367] mb-2" htmlFor="q">
+              <label className="mb-2 block text-sm font-semibold text-[#244367]" htmlFor="q">
                 Search
               </label>
               <div className="relative">
-                <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5d7497]" />
+                <Search
+                  size={20}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5d7497]"
+                />
                 <input
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
+                  className="w-full rounded-lg border border-[#cdd8e7] py-3 pl-10 pr-4 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                   id="q"
                   name="q"
                   defaultValue={params.q || ""}
@@ -109,11 +122,11 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[#244367] mb-2" htmlFor="category">
+              <label className="mb-2 block text-sm font-semibold text-[#244367]" htmlFor="category">
                 Category
               </label>
               <select
-                className="w-full px-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
+                className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                 id="category"
                 name="category"
                 defaultValue={selectedCategory}
@@ -128,11 +141,11 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[#244367] mb-2" htmlFor="region">
+              <label className="mb-2 block text-sm font-semibold text-[#244367]" htmlFor="region">
                 Region
               </label>
               <select
-                className="w-full px-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
+                className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                 id="region"
                 name="region"
                 defaultValue={selectedRegion}
@@ -146,7 +159,7 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
             </div>
 
             <button
-              className="md:col-span-2 lg:col-span-4 bg-[#2E7D32] hover:bg-[#1d5e20] text-white font-bold uppercase tracking-wide py-3 rounded-lg shadow-lg transition"
+              className="rounded-lg bg-[#2E7D32] py-3 font-bold uppercase tracking-wide text-white shadow-lg transition hover:bg-[#1d5e20] md:col-span-2 lg:col-span-4"
               type="submit"
             >
               Apply Filters
@@ -164,11 +177,11 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
 
         {/* Listings Grid */}
         {listings.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] p-12 text-center">
-            <p className="text-[#5d7497] text-lg mb-4">No listings found matching your criteria.</p>
+          <div className="rounded-2xl border border-[#e4ebf5] bg-white p-12 text-center shadow-lg">
+            <p className="mb-4 text-lg text-[#5d7497]">No listings found matching your criteria.</p>
             <Link
               href="/listings"
-              className="inline-block px-8 py-3 bg-[#1B3A6B] hover:bg-[#122844] text-white font-bold rounded-lg transition"
+              className="inline-block rounded-lg bg-[#1B3A6B] px-8 py-3 font-bold text-white transition hover:bg-[#122844]"
             >
               Clear Filters
             </Link>
@@ -176,25 +189,43 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
         ) : (
           <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {listings.map((listing) => (
-              <article key={listing.id} className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] overflow-hidden hover:shadow-xl transition group">
+              <article
+                key={listing.id}
+                className="group overflow-hidden rounded-2xl border border-[#e4ebf5] bg-white shadow-lg transition hover:shadow-xl"
+              >
                 {listing.photos.length > 0 ? (
                   <SafeImg
                     src={listing.photos[0]}
                     alt={listing.title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                    className="h-48 w-full object-cover transition duration-300 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-[#e8eef9] to-[#dce6f6] flex flex-col items-center justify-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-[#9aabb9]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    <span className="text-[#5d7497] text-xs">No photo</span>
+                  <div className="flex h-48 w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-[#e8eef9] to-[#dce6f6]">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-10 w-10 text-[#9aabb9]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span className="text-xs text-[#5d7497]">No photo</span>
                   </div>
                 )}
 
-                <div className="p-5 space-y-3">
+                <div className="space-y-3 p-5">
                   <div className="flex items-start justify-between gap-2">
-                    <h2 className="text-lg font-bold text-[#1B3A6B] line-clamp-2">{listing.title}</h2>
+                    <h2 className="line-clamp-2 text-lg font-bold text-[#1B3A6B]">
+                      {listing.title}
+                    </h2>
                     {listing.isFeatured && (
-                      <span className="px-2 py-1 bg-[#A07C3A] text-white text-[10px] font-bold uppercase rounded-full">
+                      <span className="rounded-full bg-[#A07C3A] px-2 py-1 text-[10px] font-bold uppercase text-white">
                         Featured
                       </span>
                     )}
@@ -216,7 +247,8 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
 
                   {listing.ageMonths && (
                     <div className="flex items-center gap-3 text-sm text-[#5d7497]">
-                      <span className="font-semibold">Age:</span> {Math.floor(listing.ageMonths / 12)} years {listing.ageMonths % 12} months
+                      <span className="font-semibold">Age:</span>{" "}
+                      {Math.floor(listing.ageMonths / 12)} years {listing.ageMonths % 12} months
                     </div>
                   )}
 
@@ -224,15 +256,20 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
                     <HerdflowTrusted compact />
                   </div>
 
-                  <p className="text-2xl font-black text-[#2E7D32]">R{(listing.priceCents / 100).toLocaleString()}</p>
+                  <p className="text-2xl font-black text-[#2E7D32]">
+                    R{(listing.priceCents / 100).toLocaleString()}
+                  </p>
 
                   <p className="text-sm text-[#5d7497]">
-                    Seller: <span className="font-semibold text-[#244367]">{listing.seller.farmName || listing.seller.user.fullName}</span>
+                    Seller:{" "}
+                    <span className="font-semibold text-[#244367]">
+                      {listing.seller.farmName || listing.seller.user.fullName}
+                    </span>
                   </p>
 
                   <Link
                     href={`/listings/${listing.slug}`}
-                    className="block w-full text-center bg-[#1B3A6B] hover:bg-[#122844] text-white font-bold py-3 rounded-lg transition"
+                    className="block w-full rounded-lg bg-[#1B3A6B] py-3 text-center font-bold text-white transition hover:bg-[#122844]"
                   >
                     View Details
                   </Link>

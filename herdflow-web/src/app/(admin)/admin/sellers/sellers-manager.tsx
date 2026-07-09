@@ -29,13 +29,19 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function toCurrency(cents: number) {
-  return new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 2 }).format(
-    cents / 100,
-  );
+  return new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
 }
 
 function formatDate(v: Date | string) {
-  return new Date(v).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" });
+  return new Date(v).toLocaleDateString("en-ZA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 export function SellersManager({ initialSellers }: SellersManagerProps) {
@@ -84,25 +90,33 @@ export function SellersManager({ initialSellers }: SellersManagerProps) {
           placeholder="Search farm, email, or region…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40 w-full sm:w-64"
+          className="focus:ring-brand-navy/40 w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 sm:w-64"
         />
         <select
           aria-label="Filter sellers by status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40"
+          className="focus:ring-brand-navy/40 rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2"
         >
           <option value="ALL">All statuses</option>
-          {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          {STATUS_OPTIONS.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
         </select>
         <span className="ml-auto self-center text-xs text-gray-500">{filtered.length} sellers</span>
       </div>
 
-      {error && <p className="rounded bg-red-50 px-4 py-2 text-sm text-red-700 border border-red-200">{error}</p>}
+      {error && (
+        <p className="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
 
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
             <tr>
               <th className="px-4 py-3 text-left">Farm</th>
               <th className="px-4 py-3 text-left">Owner</th>
@@ -117,13 +131,21 @@ export function SellersManager({ initialSellers }: SellersManagerProps) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {filtered.length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">No sellers found.</td></tr>
+              <tr>
+                <td colSpan={9} className="px-4 py-8 text-center text-gray-400">
+                  No sellers found.
+                </td>
+              </tr>
             )}
             {filtered.map((seller) => (
               <tr key={seller.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3">
                   <div className="font-medium text-gray-800">{seller.farmName}</div>
-                  {seller.status === "APPROVED" && <div className="mt-1"><HerdflowTrusted compact /></div>}
+                  {seller.status === "APPROVED" && (
+                    <div className="mt-1">
+                      <HerdflowTrusted compact />
+                    </div>
+                  )}
                   <div className="text-xs text-gray-500">{seller.location}</div>
                 </td>
                 <td className="px-4 py-3">
@@ -131,12 +153,18 @@ export function SellersManager({ initialSellers }: SellersManagerProps) {
                   <div className="text-xs text-gray-500">{seller.user.email}</div>
                 </td>
                 <td className="px-4 py-3 text-gray-600">{seller.region}</td>
-                <td className="px-4 py-3 text-right text-gray-700">{seller._count.livestockListings}</td>
+                <td className="px-4 py-3 text-right text-gray-700">
+                  {seller._count.livestockListings}
+                </td>
                 <td className="px-4 py-3 text-right text-gray-700">{seller._count.products}</td>
-                <td className="px-4 py-3 text-right font-medium text-gray-800">{toCurrency(seller.totalSalesCents)}</td>
+                <td className="px-4 py-3 text-right font-medium text-gray-800">
+                  {toCurrency(seller.totalSalesCents)}
+                </td>
                 <td className="px-4 py-3 text-gray-500">{formatDate(seller.createdAt)}</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[seller.status] ?? "bg-gray-100 text-gray-700"}`}>
+                  <span
+                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[seller.status] ?? "bg-gray-100 text-gray-700"}`}
+                  >
                     {seller.status}
                   </span>
                 </td>
@@ -146,9 +174,13 @@ export function SellersManager({ initialSellers }: SellersManagerProps) {
                     disabled={savingId === seller.id}
                     value={seller.status}
                     onChange={(e) => updateStatus(seller.id, e.target.value)}
-                    className="rounded border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-brand-navy/40 disabled:opacity-50"
+                    className="focus:ring-brand-navy/40 rounded border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 disabled:opacity-50"
                   >
-                    {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
                   </select>
                 </td>
               </tr>

@@ -66,10 +66,10 @@ export default function AdminPaymentsSettingsPage() {
   return (
     <main className="space-y-5 pb-10">
       <header>
-        <h1 className="text-3xl font-semibold text-brand-navy">Payment Settings</h1>
+        <h1 className="text-brand-navy text-3xl font-semibold">Payment Settings</h1>
         <p className="text-sm text-[#38537a]">
-          Configure PayFast merchant credentials. These values are stored in the database and override environment
-          variables at runtime.
+          Configure PayFast merchant credentials. These values are stored in the database and
+          override environment variables at runtime.
         </p>
       </header>
 
@@ -86,9 +86,12 @@ export default function AdminPaymentsSettingsPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="max-w-xl space-y-5 rounded-xl border border-[#d8e0ec] bg-white p-6 shadow-sm">
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-xl space-y-5 rounded-xl border border-[#d8e0ec] bg-white p-6 shadow-sm"
+      >
         <section className="space-y-4">
-          <h2 className="text-base font-semibold text-brand-navy">PayFast Credentials</h2>
+          <h2 className="text-brand-navy text-base font-semibold">PayFast Credentials</h2>
 
           <div className="space-y-1">
             <label className="block text-sm font-medium text-[#244367]" htmlFor="pf-merchant-id">
@@ -97,7 +100,7 @@ export default function AdminPaymentsSettingsPage() {
             <input
               id="pf-merchant-id"
               type="text"
-              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm text-[#1a2c42] placeholder-[#9aabb9] outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20"
+              className="focus:border-brand-navy focus:ring-brand-navy/20 w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm text-[#1a2c42] placeholder-[#9aabb9] outline-none focus:ring-2"
               placeholder="10000100"
               value={config.payfast_merchant_id}
               onChange={handle("payfast_merchant_id")}
@@ -113,7 +116,7 @@ export default function AdminPaymentsSettingsPage() {
             <input
               id="pf-merchant-key"
               type="text"
-              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm text-[#1a2c42] placeholder-[#9aabb9] outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20"
+              className="focus:border-brand-navy focus:ring-brand-navy/20 w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm text-[#1a2c42] placeholder-[#9aabb9] outline-none focus:ring-2"
               placeholder="46f0cd694581a"
               value={config.payfast_merchant_key}
               onChange={handle("payfast_merchant_key")}
@@ -125,12 +128,14 @@ export default function AdminPaymentsSettingsPage() {
           <div className="space-y-1">
             <label className="block text-sm font-medium text-[#244367]" htmlFor="pf-passphrase">
               Passphrase{" "}
-              <span className="font-normal text-[#5d7497]">(optional — leave blank if not set)</span>
+              <span className="font-normal text-[#5d7497]">
+                (optional — leave blank if not set)
+              </span>
             </label>
             <input
               id="pf-passphrase"
               type="password"
-              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm text-[#1a2c42] placeholder-[#9aabb9] outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20"
+              className="focus:border-brand-navy focus:ring-brand-navy/20 w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm text-[#1a2c42] placeholder-[#9aabb9] outline-none focus:ring-2"
               placeholder="••••••••"
               value={config.payfast_passphrase}
               onChange={handle("payfast_passphrase")}
@@ -145,23 +150,24 @@ export default function AdminPaymentsSettingsPage() {
           <p className="mt-1">
             For production deployments set{" "}
             <code className="rounded bg-[#e4ebf5] px-1 py-0.5">PAYFAST_MERCHANT_ID</code>,{" "}
-            <code className="rounded bg-[#e4ebf5] px-1 py-0.5">PAYFAST_MERCHANT_KEY</code>, and optionally{" "}
-            <code className="rounded bg-[#e4ebf5] px-1 py-0.5">PAYFAST_PASSPHRASE</code> as server environment
-            variables. Values saved here take effect immediately without a redeploy.
+            <code className="rounded bg-[#e4ebf5] px-1 py-0.5">PAYFAST_MERCHANT_KEY</code>, and
+            optionally <code className="rounded bg-[#e4ebf5] px-1 py-0.5">PAYFAST_PASSPHRASE</code>{" "}
+            as server environment variables. Values saved here take effect immediately without a
+            redeploy.
           </p>
         </div>
 
         <button
           type="submit"
           disabled={loading || saving}
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-navy px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="bg-brand-navy inline-flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save Settings"}
         </button>
       </form>
 
       <aside className="max-w-xl rounded-xl border border-[#d8e0ec] bg-white p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-brand-navy">PayFast Sandbox</h2>
+        <h2 className="text-brand-navy text-base font-semibold">PayFast Sandbox</h2>
         <p className="mt-2 text-sm text-[#38537a]">
           To test payments use PayFast sandbox credentials and set{" "}
           <code className="rounded bg-[#eef3fb] px-1 py-0.5 text-xs">PAYFAST_PROCESS_URL</code> to{" "}

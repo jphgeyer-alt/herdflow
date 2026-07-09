@@ -24,18 +24,31 @@ export async function GET(request: Request) {
     }),
   ]);
 
-  const animalMap = new Map(animals.map(a => [a.id, a]));
+  const animalMap = new Map(animals.map((a) => [a.id, a]));
 
-  const enrich = (v: typeof allVaccinations[number]) => ({
+  const enrich = (v: (typeof allVaccinations)[number]) => ({
     ...v,
-    animalName: animalMap.get(v.animalId)?.name ?? animalMap.get(v.animalId)?.tagNumber ?? v.animalId,
-    animalTag:  animalMap.get(v.animalId)?.tagNumber ?? null,
+    animalName:
+      animalMap.get(v.animalId)?.name ?? animalMap.get(v.animalId)?.tagNumber ?? v.animalId,
+    animalTag: animalMap.get(v.animalId)?.tagNumber ?? null,
   });
 
-  const overdue    = allVaccinations.filter(v => v.status !== "COMPLETED" && v.nextDueDate && v.nextDueDate < now).map(enrich);
-  const thisWeek   = allVaccinations.filter(v => v.status !== "COMPLETED" && v.nextDueDate && v.nextDueDate >= now && v.nextDueDate <= sevenDaysLater).map(enrich);
-  const upcoming   = allVaccinations.filter(v => v.status !== "COMPLETED" && v.nextDueDate && v.nextDueDate > sevenDaysLater).map(enrich);
-  const completed  = allVaccinations.filter(v => v.status === "COMPLETED").map(enrich);
+  const overdue = allVaccinations
+    .filter((v) => v.status !== "COMPLETED" && v.nextDueDate && v.nextDueDate < now)
+    .map(enrich);
+  const thisWeek = allVaccinations
+    .filter(
+      (v) =>
+        v.status !== "COMPLETED" &&
+        v.nextDueDate &&
+        v.nextDueDate >= now &&
+        v.nextDueDate <= sevenDaysLater,
+    )
+    .map(enrich);
+  const upcoming = allVaccinations
+    .filter((v) => v.status !== "COMPLETED" && v.nextDueDate && v.nextDueDate > sevenDaysLater)
+    .map(enrich);
+  const completed = allVaccinations.filter((v) => v.status === "COMPLETED").map(enrich);
 
   return NextResponse.json({ overdue, thisWeek, upcoming, completed });
 }
@@ -45,7 +58,9 @@ export async function POST(request: Request) {
   if (!isMobileUser(auth)) return auth;
 
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const b = body as Record<string, unknown>;
@@ -61,17 +76,17 @@ export async function POST(request: Request) {
 
   const vaccination = await prisma.farmerVaccination.create({
     data: {
-      animalId:      b.animalId as string,
-      farmerId:      auth.effectiveFarmerId,
-      vaccineName:   b.vaccineName as string,
-      batchNumber:   (b.batchNumber   as string | undefined) ?? null,
-      administeredBy:(b.administeredBy as string | undefined) ?? null,
-      vetName:       (b.vetName       as string | undefined) ?? null,
-      cost:          b.cost != null ? Number(b.cost) : null,
-      vaccinatedDate:b.vaccinatedDate ? new Date(b.vaccinatedDate as string) : null,
-      nextDueDate:   b.nextDueDate    ? new Date(b.nextDueDate as string)    : null,
-      status:        (b.status as string | undefined) ?? "SCHEDULED",
-      notes:         (b.notes  as string | undefined) ?? null,
+      animalId: b.animalId as string,
+      farmerId: auth.effectiveFarmerId,
+      vaccineName: b.vaccineName as string,
+      batchNumber: (b.batchNumber as string | undefined) ?? null,
+      administeredBy: (b.administeredBy as string | undefined) ?? null,
+      vetName: (b.vetName as string | undefined) ?? null,
+      cost: b.cost != null ? Number(b.cost) : null,
+      vaccinatedDate: b.vaccinatedDate ? new Date(b.vaccinatedDate as string) : null,
+      nextDueDate: b.nextDueDate ? new Date(b.nextDueDate as string) : null,
+      status: (b.status as string | undefined) ?? "SCHEDULED",
+      notes: (b.notes as string | undefined) ?? null,
     },
   });
 

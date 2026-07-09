@@ -17,14 +17,24 @@ interface PasswordInputProps {
 }
 
 export function PasswordInput({
-  id, name, placeholder, value, onChange, label, required, autoComplete, error, minLength,
+  id,
+  name,
+  placeholder,
+  value,
+  onChange,
+  label,
+  required,
+  autoComplete,
+  error,
+  minLength,
 }: PasswordInputProps) {
   const [show, setShow] = useState(false);
 
   return (
     <div className="w-full">
-      <label htmlFor={id} className="block text-sm font-semibold text-[#244367] mb-2">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      <label htmlFor={id} className="mb-2 block text-sm font-semibold text-[#244367]">
+        {label}
+        {required && <span className="ml-0.5 text-red-500">*</span>}
       </label>
       <div className="relative">
         <input
@@ -37,18 +47,18 @@ export function PasswordInput({
           required={required}
           autoComplete={autoComplete}
           minLength={minLength}
-          className={`w-full px-4 py-3 pr-12 rounded-lg border text-[#1B3A6B] placeholder-[#9aabb9] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20 focus:border-[#1B3A6B] transition ${
+          className={`w-full rounded-lg border px-4 py-3 pr-12 text-[#1B3A6B] placeholder-[#9aabb9] transition focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20 ${
             error ? "border-red-400 bg-red-50" : "border-[#cdd8e7] bg-white"
           }`}
         />
         <button
           type="button"
           onClick={() => setShow((s) => !s)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9aabb9] hover:text-[#5d7497] transition focus:outline-none focus:text-[#2E7D32]"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9aabb9] transition hover:text-[#5d7497] focus:text-[#2E7D32] focus:outline-none"
           aria-label={show ? "Hide password" : "Show password"}
           tabIndex={-1}
         >
-          {show ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
         </button>
       </div>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}

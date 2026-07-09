@@ -12,7 +12,9 @@ export async function POST(request: Request) {
   }
 
   const b = body as Record<string, unknown>;
-  const items = b.items as Array<{ productId: string; productName: string; priceCents: number; quantity: number }> | undefined;
+  const items = b.items as
+    | Array<{ productId: string; productName: string; priceCents: number; quantity: number }>
+    | undefined;
   const customerInfo = b.customerInfo as Record<string, string> | undefined;
   const totalCents = b.totalCents as number | undefined;
 
@@ -72,6 +74,9 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     console.error("Order creation error:", err);
-    return NextResponse.json({ error: "Failed to create order. Please try again." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create order. Please try again." },
+      { status: 500 },
+    );
   }
 }

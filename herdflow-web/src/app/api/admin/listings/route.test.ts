@@ -2,12 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { createAdminSessionValue } from "@/lib/admin-auth";
 
-const { mockListingUpdate, mockListingDelete, mockProductUpdate, mockProductDelete } = vi.hoisted(() => ({
-  mockListingUpdate: vi.fn(),
-  mockListingDelete: vi.fn(),
-  mockProductUpdate: vi.fn(),
-  mockProductDelete: vi.fn(),
-}));
+const { mockListingUpdate, mockListingDelete, mockProductUpdate, mockProductDelete } = vi.hoisted(
+  () => ({
+    mockListingUpdate: vi.fn(),
+    mockListingDelete: vi.fn(),
+    mockProductUpdate: vi.fn(),
+    mockProductDelete: vi.fn(),
+  }),
+);
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {

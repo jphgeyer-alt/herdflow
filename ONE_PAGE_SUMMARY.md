@@ -5,6 +5,7 @@ Everything you need in **one page**.
 ## Build APK in 3 Steps
 
 ### 1️⃣ Setup (One-time, 5 min)
+
 ```bash
 npm run eas:install          # Install EAS
 eas login                     # Create account at https://expo.io, then login
@@ -12,6 +13,7 @@ npm run generate:assets       # Create app icons
 ```
 
 ### 2️⃣ Build (10 min - mostly waiting)
+
 ```bash
 npm run eas:build:preview     # For testing
 # OR
@@ -19,6 +21,7 @@ npm run eas:build:production  # For release
 ```
 
 ### 3️⃣ Download & Install (5 min)
+
 1. Go to https://expo.io/builds
 2. Download APK
 3. Transfer to phone
@@ -31,7 +34,7 @@ npm run eas:build:production  # For release
 ✅ Vaccine scheduling  
 ✅ Inventory counting  
 ✅ Dashboard stats  
-✅ Works on Android phones  
+✅ Works on Android phones
 
 ## File Structure
 
@@ -55,13 +58,13 @@ npm run build         # Production web build
 
 ## Documentation
 
-| Doc | Purpose |
-|-----|---------|
-| [README.md](README.md) | Project overview |
-| [QUICK_START_APK.md](QUICK_START_APK.md) | 5-min quick start |
-| [APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md) | Full APK guide |
-| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | FAQ & fixes |
-| [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) | All docs map |
+| Doc                                              | Purpose           |
+| ------------------------------------------------ | ----------------- |
+| [README.md](README.md)                           | Project overview  |
+| [QUICK_START_APK.md](QUICK_START_APK.md)         | 5-min quick start |
+| [APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md)         | Full APK guide    |
+| [TROUBLESHOOTING.md](TROUBLESHOOTING.md)         | FAQ & fixes       |
+| [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) | All docs map      |
 
 ## Commands Cheat Sheet
 
@@ -91,12 +94,12 @@ npm run eas:build:production       # APK
 
 ## Common Issues
 
-| Issue | Fix |
-|-------|-----|
-| "eas not found" | `npm run eas:install` |
-| "Not authenticated" | `eas login` |
-| App crashes on startup | Start backend: `npm run dev:server` |
-| Can't connect to API | Check firewall allows port 4174 |
+| Issue                  | Fix                                  |
+| ---------------------- | ------------------------------------ |
+| "eas not found"        | `npm run eas:install`                |
+| "Not authenticated"    | `eas login`                          |
+| App crashes on startup | Start backend: `npm run dev:server`  |
+| Can't connect to API   | Check firewall allows port 4174      |
 | Won't install on phone | Enable "Unknown sources" in Settings |
 
 ## API Connection
@@ -106,12 +109,12 @@ npm run eas:build:production       # APK
 
 ## Key Files
 
-| File | Changes Here For... |
-|------|---------------------|
-| `expo/app.json` | App name, version, package ID |
-| `expo/App.tsx` | Mobile UI & features |
-| `server/index.ts` | API endpoints |
-| `client/src/App.tsx` | Web UI & features |
+| File                 | Changes Here For...           |
+| -------------------- | ----------------------------- |
+| `expo/app.json`      | App name, version, package ID |
+| `expo/App.tsx`       | Mobile UI & features          |
+| `server/index.ts`    | API endpoints                 |
+| `client/src/App.tsx` | Web UI & features             |
 
 ## Quick Facts
 

@@ -63,14 +63,19 @@ export default async function CartPage({ searchParams }: CartPageProps) {
   return (
     <main className="space-y-5 pb-10">
       <div className="space-y-2">
-        <h1 className="text-3xl font-semibold text-brand-navy">Your Cart</h1>
-        <p className="text-sm text-[#38537a]">Review product items before continuing to secure checkout.</p>
+        <h1 className="text-brand-navy text-3xl font-semibold">Your Cart</h1>
+        <p className="text-sm text-[#38537a]">
+          Review product items before continuing to secure checkout.
+        </p>
       </div>
 
       {items.length === 0 ? (
         <section className="rounded-xl border border-[#d8e0ec] bg-white p-5 text-sm text-[#38537a] shadow-sm">
           <p>Your cart is currently empty.</p>
-          <Link className="mt-3 inline-flex rounded-lg bg-brand-navy px-4 py-2 font-semibold text-white" href="/listings">
+          <Link
+            className="bg-brand-navy mt-3 inline-flex rounded-lg px-4 py-2 font-semibold text-white"
+            href="/listings"
+          >
             Browse Listings
           </Link>
         </section>
@@ -81,11 +86,18 @@ export default async function CartPage({ searchParams }: CartPageProps) {
               const linkCartParam = encodeURIComponent(cartParam);
 
               return (
-                <article key={item.product.slug} className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
+                <article
+                  key={item.product.slug}
+                  className="rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm"
+                >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">{item.product.category}</p>
-                      <h2 className="text-lg font-semibold text-brand-navy">{item.product.title}</h2>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">
+                        {item.product.category}
+                      </p>
+                      <h2 className="text-brand-navy text-lg font-semibold">
+                        {item.product.title}
+                      </h2>
                       <p className="text-sm text-[#38537a]">{toCurrency(item.unitPrice)} each</p>
                     </div>
 
@@ -96,7 +108,9 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                       >
                         -
                       </Link>
-                      <span className="min-w-8 text-center text-sm font-semibold text-brand-navy">{item.quantity}</span>
+                      <span className="text-brand-navy min-w-8 text-center text-sm font-semibold">
+                        {item.quantity}
+                      </span>
                       <Link
                         className="rounded-md border border-[#cdd8e7] px-3 py-1 text-sm text-[#244367]"
                         href={`/cart?cart=${linkCartParam}&inc=${encodeURIComponent(item.product.slug)}`}
@@ -112,19 +126,23 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                     </div>
                   </div>
 
-                  <p className="mt-3 text-sm font-semibold text-brand-gold">Line Total: {toCurrency(item.lineTotal)}</p>
+                  <p className="text-brand-gold mt-3 text-sm font-semibold">
+                    Line Total: {toCurrency(item.lineTotal)}
+                  </p>
                 </article>
               );
             })}
           </div>
 
           <aside className="space-y-3 rounded-xl border border-[#d8e0ec] bg-white p-4 shadow-sm">
-            <h2 className="text-lg font-semibold text-brand-navy">Summary</h2>
+            <h2 className="text-brand-navy text-lg font-semibold">Summary</h2>
             <p className="text-sm text-[#38537a]">Items: {totals.totalItems}</p>
-            <p className="text-xl font-semibold text-brand-gold">Total: {toCurrency(totals.subtotal)}</p>
+            <p className="text-brand-gold text-xl font-semibold">
+              Total: {toCurrency(totals.subtotal)}
+            </p>
 
             <Link
-              className="inline-flex w-full items-center justify-center rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white"
+              className="bg-brand-navy inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white"
               href={`/checkout?cart=${encodedCartParam}`}
             >
               Continue to Checkout

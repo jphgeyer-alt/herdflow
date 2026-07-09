@@ -11,8 +11,10 @@ export async function GET(request: Request) {
     const limitRaw = Number.parseInt(url.searchParams.get("limit") || "24", 10);
     const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 24;
 
-    const minPriceCents = Number.isFinite(minPrice) && minPrice >= 0 ? Math.round(minPrice * 100) : undefined;
-    const maxPriceCents = Number.isFinite(maxPrice) && maxPrice >= 0 ? Math.round(maxPrice * 100) : undefined;
+    const minPriceCents =
+      Number.isFinite(minPrice) && minPrice >= 0 ? Math.round(minPrice * 100) : undefined;
+    const maxPriceCents =
+      Number.isFinite(maxPrice) && maxPrice >= 0 ? Math.round(maxPrice * 100) : undefined;
 
     const products = await prisma.product.findMany({
       where: {

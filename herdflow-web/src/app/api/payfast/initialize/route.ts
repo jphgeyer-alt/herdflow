@@ -18,7 +18,14 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as InitializeBody;
   const payFastConfig = await getPayFastConfig();
 
-  if (!body.amount || body.amount <= 0 || !body.itemName || !body.returnUrl || !body.cancelUrl || !body.notifyUrl) {
+  if (
+    !body.amount ||
+    body.amount <= 0 ||
+    !body.itemName ||
+    !body.returnUrl ||
+    !body.cancelUrl ||
+    !body.notifyUrl
+  ) {
     return NextResponse.json(
       { error: "amount, itemName, returnUrl, cancelUrl, and notifyUrl are required." },
       { status: 400 },
@@ -34,17 +41,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const fields = buildPayFastInitializePayload({
-    amount: body.amount,
-    itemName: body.itemName,
-    returnUrl: body.returnUrl,
-    cancelUrl: body.cancelUrl,
-    notifyUrl: body.notifyUrl,
-    paymentId,
-    customerFirstName: body.customerFirstName,
-    customerLastName: body.customerLastName,
-    customerEmail: body.customerEmail,
-  }, payFastConfig);
+  const fields = buildPayFastInitializePayload(
+    {
+      amount: body.amount,
+      itemName: body.itemName,
+      returnUrl: body.returnUrl,
+      cancelUrl: body.cancelUrl,
+      notifyUrl: body.notifyUrl,
+      paymentId,
+      customerFirstName: body.customerFirstName,
+      customerLastName: body.customerLastName,
+      customerEmail: body.customerEmail,
+    },
+    payFastConfig,
+  );
 
   return NextResponse.json({
     provider: "PayFast",

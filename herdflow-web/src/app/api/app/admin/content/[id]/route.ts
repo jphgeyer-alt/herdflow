@@ -34,7 +34,9 @@ export async function PATCH(request: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Content not found" }, { status: 404 });
 
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const b = body as Record<string, unknown>;
@@ -42,15 +44,15 @@ export async function PATCH(request: Request, ctx: Ctx) {
   const updated = await prisma.appContent.update({
     where: { id },
     data: {
-      ...(b.title      != null && { title:       String(b.title) }),
-      ...(b.message    != null && { message:     String(b.message) }),
-      ...(b.content    != null && { content:     String(b.content) }),
-      ...(b.status     != null && { status:      String(b.status).toUpperCase() }),
-      ...(b.priority   != null && { priority:    String(b.priority).toUpperCase() }),
-      ...(b.startDate  != null && { startDate:   new Date(b.startDate as string) }),
-      ...(b.endDate    != null && { endDate:     new Date(b.endDate   as string) }),
-      ...(b.imageUrl   != null && { imageUrl:    String(b.imageUrl) }),
-      ...(b.linkUrl    != null && { linkUrl:     String(b.linkUrl) }),
+      ...(b.title != null && { title: String(b.title) }),
+      ...(b.message != null && { message: String(b.message) }),
+      ...(b.content != null && { content: String(b.content) }),
+      ...(b.status != null && { status: String(b.status).toUpperCase() }),
+      ...(b.priority != null && { priority: String(b.priority).toUpperCase() }),
+      ...(b.startDate != null && { startDate: new Date(b.startDate as string) }),
+      ...(b.endDate != null && { endDate: new Date(b.endDate as string) }),
+      ...(b.imageUrl != null && { imageUrl: String(b.imageUrl) }),
+      ...(b.linkUrl != null && { linkUrl: String(b.linkUrl) }),
     },
   });
 

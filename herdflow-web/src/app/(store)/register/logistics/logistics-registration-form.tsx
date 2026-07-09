@@ -22,12 +22,12 @@ export function LogisticsRegistrationForm() {
     const parsedFleet = Number.parseInt(fleetSize, 10);
     return Boolean(
       companyName.trim() &&
-        contactPhone.trim() &&
-        contactEmail.trim() &&
-        routesCovered.trim() &&
-        vehicleDocuments &&
-        Number.isInteger(parsedFleet) &&
-        parsedFleet > 0,
+      contactPhone.trim() &&
+      contactEmail.trim() &&
+      routesCovered.trim() &&
+      vehicleDocuments &&
+      Number.isInteger(parsedFleet) &&
+      parsedFleet > 0,
     );
   }, [companyName, contactPhone, contactEmail, fleetSize, routesCovered, vehicleDocuments]);
 
@@ -64,7 +64,11 @@ export function LogisticsRegistrationForm() {
           };
 
       if (!response.ok) {
-        setErrorMessage(payload && "error" in payload && payload.error ? payload.error : "Could not submit application.");
+        setErrorMessage(
+          payload && "error" in payload && payload.error
+            ? payload.error
+            : "Could not submit application.",
+        );
         setIsSubmitting(false);
         return;
       }
@@ -156,7 +160,7 @@ export function LogisticsRegistrationForm() {
       </label>
 
       <button
-        className="inline-flex w-full items-center justify-center rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white"
+        className="bg-brand-navy inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white"
         disabled={!canSubmit || isSubmitting}
         type="submit"
       >
@@ -170,7 +174,11 @@ export function LogisticsRegistrationForm() {
       )}
 
       {result && (
-        <div aria-live="polite" className="rounded-lg bg-[#eef8f0] p-3 text-sm text-[#255638]" role="status">
+        <div
+          aria-live="polite"
+          className="rounded-lg bg-[#eef8f0] p-3 text-sm text-[#255638]"
+          role="status"
+        >
           <p className="font-semibold">{result.message}</p>
           <p>Application Reference: {result.applicationId}</p>
         </div>

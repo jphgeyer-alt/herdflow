@@ -72,7 +72,9 @@ async function getReportData() {
         totalCents: (existing?.totalCents ?? 0) + (row._sum.lineTotalCents ?? 0),
       });
     }
-    const topSellers = [...sellerRevMap.values()].sort((a, b) => b.totalCents - a.totalCents).slice(0, 10);
+    const topSellers = [...sellerRevMap.values()]
+      .sort((a, b) => b.totalCents - a.totalCents)
+      .slice(0, 10);
 
     return {
       monthlySales,
@@ -102,9 +104,10 @@ export default async function AdminReportsPage() {
   return (
     <main className="space-y-4 pb-10">
       <header>
-        <h1 className="text-3xl font-semibold text-brand-navy">Reports</h1>
+        <h1 className="text-brand-navy text-3xl font-semibold">Reports</h1>
         <p className="text-sm text-[#38537a]">
-          Monthly sales breakdown, 5% commission tracker, and top seller rankings. Export to CSV for accounting.
+          Monthly sales breakdown, 5% commission tracker, and top seller rankings. Export to CSV for
+          accounting.
         </p>
       </header>
       <ReportsPanel data={data} />

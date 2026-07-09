@@ -29,7 +29,10 @@ export async function POST(request: Request) {
 
   if (!farmName || !location || !region || !contactPhone || !contactEmail || !nationalIdNumber) {
     return NextResponse.json(
-      { error: "farmName, location, region, contactPhone, contactEmail, and nationalIdNumber are required." },
+      {
+        error:
+          "farmName, location, region, contactPhone, contactEmail, and nationalIdNumber are required.",
+      },
       { status: 400 },
     );
   }

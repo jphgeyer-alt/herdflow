@@ -13,6 +13,6 @@
     "resolveJsonModule": true,
     "noEmit": true
   },
-  "include": ["client/src", "server", "expo", "**/*.ts", "**/*.tsx"],
+  "include": ["client/src", "server", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }

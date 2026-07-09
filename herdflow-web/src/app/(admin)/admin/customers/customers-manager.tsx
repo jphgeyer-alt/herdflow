@@ -79,12 +79,12 @@ export function CustomersManager({ initialCustomers, initialTotal }: CustomersMa
           placeholder="Search name, email, or farm…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40 w-full sm:w-64"
+          className="focus:ring-brand-navy/40 w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 sm:w-64"
         />
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40"
+          className="focus:ring-brand-navy/40 rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2"
         >
           <option value="ALL">All roles</option>
           <option value="CUSTOMER">Customer</option>
@@ -98,7 +98,7 @@ export function CustomersManager({ initialCustomers, initialTotal }: CustomersMa
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
             <tr>
               <th className="px-4 py-3 text-left">Name</th>
               <th className="px-4 py-3 text-left">Email</th>
@@ -133,7 +133,9 @@ export function CustomersManager({ initialCustomers, initialTotal }: CustomersMa
                 <td className="px-4 py-3">
                   {customer.sellerProfile ? (
                     <div>
-                      <div className="text-xs font-medium text-gray-700">{customer.sellerProfile.farmName}</div>
+                      <div className="text-xs font-medium text-gray-700">
+                        {customer.sellerProfile.farmName}
+                      </div>
                       <span
                         className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${SELLER_STATUS_COLORS[customer.sellerProfile.status] ?? "bg-gray-100 text-gray-700"}`}
                       >

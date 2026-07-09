@@ -21,7 +21,10 @@ async function getListingData() {
         },
       }),
       prisma.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-      prisma.seller.findMany({ orderBy: { farmName: "asc" }, select: { id: true, farmName: true } }),
+      prisma.seller.findMany({
+        orderBy: { farmName: "asc" },
+        select: { id: true, farmName: true },
+      }),
     ]);
 
     return { initialLivestock, initialProducts, categories, sellers };
@@ -36,9 +39,10 @@ export default async function AdminProductsPage() {
   return (
     <main className="space-y-4 pb-10">
       <header>
-        <h1 className="text-3xl font-semibold text-brand-navy">Manage Listings</h1>
+        <h1 className="text-brand-navy text-3xl font-semibold">Manage Listings</h1>
         <p className="text-sm text-[#38537a]">
-          Review livestock and products, approve new entries, edit details, delete records, and feature items for the homepage.
+          Review livestock and products, approve new entries, edit details, delete records, and
+          feature items for the homepage.
         </p>
       </header>
 

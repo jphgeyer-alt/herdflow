@@ -26,7 +26,11 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function formatDate(v: Date | string) {
-  return new Date(v).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" });
+  return new Date(v).toLocaleDateString("en-ZA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 export function LogisticsManager({ initialPartners }: LogisticsManagerProps) {
@@ -75,25 +79,35 @@ export function LogisticsManager({ initialPartners }: LogisticsManagerProps) {
           placeholder="Search company, email, or routes…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40 w-full sm:w-64"
+          className="focus:ring-brand-navy/40 w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 sm:w-64"
         />
         <select
           aria-label="Filter logistics partners by status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/40"
+          className="focus:ring-brand-navy/40 rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2"
         >
           <option value="ALL">All statuses</option>
-          {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          {STATUS_OPTIONS.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
         </select>
-        <span className="ml-auto self-center text-xs text-gray-500">{filtered.length} partners</span>
+        <span className="ml-auto self-center text-xs text-gray-500">
+          {filtered.length} partners
+        </span>
       </div>
 
-      {error && <p className="rounded bg-red-50 px-4 py-2 text-sm text-red-700 border border-red-200">{error}</p>}
+      {error && (
+        <p className="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
 
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
             <tr>
               <th className="px-4 py-3 text-left">Company</th>
               <th className="px-4 py-3 text-left">Contact</th>
@@ -107,7 +121,11 @@ export function LogisticsManager({ initialPartners }: LogisticsManagerProps) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {filtered.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No logistics partners found.</td></tr>
+              <tr>
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
+                  No logistics partners found.
+                </td>
+              </tr>
             )}
             {filtered.map((partner) => (
               <tr key={partner.id} className="hover:bg-gray-50">
@@ -122,24 +140,28 @@ export function LogisticsManager({ initialPartners }: LogisticsManagerProps) {
                   <div className="text-xs text-gray-500">{partner.user.email}</div>
                 </td>
                 <td className="px-4 py-3 text-right text-gray-700">{partner.fleetSize}</td>
-                <td className="px-4 py-3 text-gray-600 max-w-xs truncate">{partner.routesCovered}</td>
+                <td className="max-w-xs truncate px-4 py-3 text-gray-600">
+                  {partner.routesCovered}
+                </td>
                 <td className="px-4 py-3">
                   {partner.vehicleDocumentsUrl ? (
                     <a
                       href={partner.vehicleDocumentsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-brand-navy underline text-xs"
+                      className="text-brand-navy text-xs underline"
                     >
                       View
                     </a>
                   ) : (
-                    <span className="text-gray-400 text-xs">—</span>
+                    <span className="text-xs text-gray-400">—</span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-gray-500">{formatDate(partner.createdAt)}</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[partner.status] ?? "bg-gray-100 text-gray-700"}`}>
+                  <span
+                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[partner.status] ?? "bg-gray-100 text-gray-700"}`}
+                  >
                     {partner.status}
                   </span>
                 </td>
@@ -149,9 +171,13 @@ export function LogisticsManager({ initialPartners }: LogisticsManagerProps) {
                     disabled={savingId === partner.id}
                     value={partner.status}
                     onChange={(e) => updateStatus(partner.id, e.target.value)}
-                    className="rounded border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-brand-navy/40 disabled:opacity-50"
+                    className="focus:ring-brand-navy/40 rounded border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 disabled:opacity-50"
                   >
-                    {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
                   </select>
                 </td>
               </tr>

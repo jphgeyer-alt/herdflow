@@ -23,8 +23,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const statusFilter = searchParams.get("status");
 
-  const where =
-    statusFilter && isValidStatus(statusFilter) ? { status: statusFilter } : undefined;
+  const where = statusFilter && isValidStatus(statusFilter) ? { status: statusFilter } : undefined;
 
   try {
     const partners = await prisma.logisticsPartner.findMany({
@@ -46,7 +45,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json().catch(() => ({})) as { id?: string; status?: string };
+  const body = (await request.json().catch(() => ({}))) as { id?: string; status?: string };
 
   if (!body.id || !body.status || !isValidStatus(body.status)) {
     return NextResponse.json({ error: "id and a valid status are required." }, { status: 400 });

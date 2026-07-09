@@ -11,7 +11,12 @@ export const dynamic = "force-dynamic";
 const ipRequests = new Map<string, { count: number; resetAt: number }>();
 const emailRequests = new Map<string, { count: number; resetAt: number }>();
 
-function checkRateLimit(key: string, store: Map<string, { count: number; resetAt: number }>, maxRequests: number, windowMs: number): boolean {
+function checkRateLimit(
+  key: string,
+  store: Map<string, { count: number; resetAt: number }>,
+  maxRequests: number,
+  windowMs: number,
+): boolean {
   const now = Date.now();
   const entry = store.get(key);
   if (!entry || entry.resetAt < now) {
@@ -28,7 +33,10 @@ export async function POST(request: NextRequest) {
 
   // Rate limit: 10 req/IP per hour, 3 req/email per 15 min
   if (checkRateLimit(ip, ipRequests, 10, 60 * 60 * 1000)) {
-    return NextResponse.json({ error: "Too many requests. Please wait before trying again." }, { status: 429 });
+    return NextResponse.json(
+      { error: "Too many requests. Please wait before trying again." },
+      { status: 429 },
+    );
   }
 
   // Always return the same success response to prevent email enumeration
@@ -51,7 +59,10 @@ export async function POST(request: NextRequest) {
 
   // Per-email rate limit: 3 per 15 min
   if (checkRateLimit(email, emailRequests, 3, 15 * 60 * 1000)) {
-    return NextResponse.json({ error: "Too many requests for this email. Please wait 15 minutes." }, { status: 429 });
+    return NextResponse.json(
+      { error: "Too many requests for this email. Please wait 15 minutes." },
+      { status: 429 },
+    );
   }
 
   try {
