@@ -8,11 +8,14 @@ export const metadata: Metadata = {
     "Download the free HerdFlow farm management app for Android or Windows. Track your herd, health records and vaccinations — works offline in remote farm areas.",
 };
 
-// Update EAS_APK_URL once eas build --platform android --profile preview completes
-// Build ID: 76e9c747-0291-44e0-a81f-3851c6e32295 (v1.5.0 Admin Portal — finished 2026-07-05)
-// Previous: J1BOf4WXQcRlH_qsnRXLujVf5WwHynP_0K81ayGllD8.apk (build db379d76)
+// Direct .apk artifact link (downloads the file immediately, no expo.dev
+// build-details page in between). Get this via:
+//   eas build:view <build-id> --json   ->  .artifacts.applicationArchiveUrl
+// Build ID: 16e7c34f-78b1-43f4-b9b3-4fca273ad553 (v1.8.0 — finished 2026-07-08)
+// NOTE: EAS artifact links expire — this one expires 2026-10-06. Refresh
+// before then by running the command above against the latest build.
 const EAS_APK_DIRECT =
-  "https://expo.dev/accounts/hannesgeyer101/projects/herdflow/builds/16e7c34f-78b1-43f4-b9b3-4fca273ad553";
+  "https://expo.dev/artifacts/eas/1rz8lJhfycENpWSC5b8K8mxEzFkcC4MdTE8ngiAqipA.apk";
 const APP_VERSION = "v1.8.0";
 
 // Stable filename (see herdflow-desktop/package.json nsis.artifactName) so this
@@ -138,7 +141,7 @@ export default function DownloadPage() {
                 className="rounded-lg border border-slate-200"
               />
               <p className="max-w-35 text-center text-xs leading-snug text-slate-500">
-                Scan to go to download page on your phone
+                Scan to download the APK on your phone
               </p>
             </div>
           </div>
