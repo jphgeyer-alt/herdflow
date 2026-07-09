@@ -1,6 +1,5 @@
 ﻿// WEBSITE — herdflow-web/src/app/(store)/download/page.tsx
 import type { Metadata } from "next";
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Download HerdFlow | Free Farm App for Mobile & Desktop",
@@ -253,7 +252,7 @@ export default function DownloadPage() {
               },
               {
                 q: "How do I get support?",
-                a: "WhatsApp us on +27600000000 or email support@herdflow.co.za.",
+                a: "WhatsApp us on +27 60 522 6267 or email support@herdflow.co.za.",
               },
               {
                 q: "Can I use it on iPhone?",
@@ -279,19 +278,19 @@ export default function DownloadPage() {
           <p className="mb-6 text-white/70">Our team helps any farmer get set up in minutes.</p>
           <div className="flex flex-wrap justify-center gap-4">
             <a
-              href="https://wa.me/27600000000"
+              href="https://wa.me/27605226267"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-[#2E7D32] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#1d5e20]"
             >
               WhatsApp Support
             </a>
-            <Link
-              href="/contact"
+            <a
+              href="mailto:support@herdflow.co.za"
               className="inline-flex items-center gap-2 rounded-xl border-2 border-white/30 px-6 py-3 text-sm font-bold text-white transition-colors hover:border-white"
             >
               Email Support
-            </Link>
+            </a>
           </div>
         </div>
       </div>
