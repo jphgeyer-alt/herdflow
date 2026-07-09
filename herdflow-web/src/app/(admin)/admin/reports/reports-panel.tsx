@@ -1,9 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type MonthRow = { month: string; totalCents: number };
 type TopSeller = { name: string; totalCents: number };
+type ExpenseCategory = { category: string; totalCents: number };
+type MonthlyPnl = {
+  month: string;
+  commissionCents: number;
+  marketingCents: number;
+  expenseCents: number;
+  netProfitCents: number;
+};
 
 type ReportsData = {
   monthlySales: MonthRow[];
@@ -14,6 +23,11 @@ type ReportsData = {
   topSellers: TopSeller[];
   livestockSold: number;
   commissionRate: number;
+  marketingRevenueCents: number;
+  expensesCents: number;
+  netProfitCents: number;
+  expensesByCategory: ExpenseCategory[];
+  monthlyPnl: MonthlyPnl[];
 };
 
 type ReportsPanelProps = {
@@ -38,6 +52,7 @@ export function ReportsPanel({ data }: ReportsPanelProps) {
 
   const maxMonthly = Math.max(...data.monthlySales.map((r) => r.totalCents), 1);
   const commissionPct = Math.round(data.commissionRate * 100);
+  const businessRevenueCents = data.totalCommissionCents + data.marketingRevenueCents;
 
   async function exportCsv() {
     setExporting(true);
@@ -60,7 +75,7 @@ export function ReportsPanel({ data }: ReportsPanelProps) {
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
-          { label: "Total Revenue", value: toCurrency(data.totalRevenueCents) },
+          { label: "Gross Marketplace Volume", value: toCurrency(data.totalRevenueCents) },
           {
             label: `Total Commission (${commissionPct}%)`,
             value: toCurrency(data.totalCommissionCents),
@@ -81,7 +96,9 @@ export function ReportsPanel({ data }: ReportsPanelProps) {
       {/* Monthly bar chart */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-700">Sales by Month (last 12 months)</h2>
+          <h2 className="text-base font-semibold text-gray-700">
+            Gross Sales by Month (last 12 months)
+          </h2>
           <button
             onClick={exportCsv}
             disabled={exporting}
@@ -109,6 +126,100 @@ export function ReportsPanel({ data }: ReportsPanelProps) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Profit & Loss */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-brand-navy text-lg font-semibold">Profit &amp; Loss</h2>
+          <Link
+            href="/admin/expenses"
+            className="text-brand-navy text-sm font-semibold hover:underline"
+          >
+            Manage Expenses →
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+          {[
+            { label: "Commission Revenue", value: toCurrency(data.totalCommissionCents) },
+            { label: "Marketing Revenue", value: toCurrency(data.marketingRevenueCents) },
+            { label: "Total Revenue", value: toCurrency(businessRevenueCents) },
+            { label: "Expenses", value: toCurrency(data.expensesCents) },
+            {
+              label: "Net Profit",
+              value: toCurrency(data.netProfitCents),
+              negative: data.netProfitCents < 0,
+            },
+          ].map((card) => (
+            <div
+              key={card.label}
+              className="rounded-lg border border-gray-200 bg-white px-5 py-4 shadow-sm"
+            >
+              <p className="text-xs uppercase tracking-wide text-gray-500">{card.label}</p>
+              <p
+                className={`mt-1 text-2xl font-semibold ${card.negative ? "text-red-600" : "text-brand-navy"}`}
+              >
+                {card.value}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <tr>
+                <th className="px-4 py-3 text-left">Month</th>
+                <th className="px-4 py-3 text-right">Commission</th>
+                <th className="px-4 py-3 text-right">Marketing</th>
+                <th className="px-4 py-3 text-right">Expenses</th>
+                <th className="px-4 py-3 text-right">Net Profit</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.monthlyPnl.map((row) => (
+                <tr key={row.month} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-gray-700">{row.month}</td>
+                  <td className="px-4 py-3 text-right text-gray-700">
+                    {toCurrency(row.commissionCents)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-gray-700">
+                    {toCurrency(row.marketingCents)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-gray-700">
+                    {toCurrency(row.expenseCents)}
+                  </td>
+                  <td
+                    className={`px-4 py-3 text-right font-semibold ${row.netProfitCents < 0 ? "text-red-600" : "text-green-700"}`}
+                  >
+                    {toCurrency(row.netProfitCents)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {data.expensesByCategory.length > 0 && (
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-100 px-6 py-4">
+              <h3 className="text-base font-semibold text-gray-700">Expenses by Category</h3>
+            </div>
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-gray-100">
+                {data.expensesByCategory.map((c) => (
+                  <tr key={c.category} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium text-gray-800">{c.category}</td>
+                    <td className="px-4 py-3 text-right text-gray-700">
+                      {toCurrency(c.totalCents)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Top sellers */}
