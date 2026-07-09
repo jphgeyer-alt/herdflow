@@ -75,7 +75,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="mb-1 font-bold text-[#244367]">Email</h3>
-                  <p className="text-[#5d7497]">support@herdflow.co.za</p>
+                  <p className="text-[#5d7497]">info@herdflow.co.za</p>
                 </div>
               </div>
 
