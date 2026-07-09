@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
+import { X } from "lucide-react";
 
 type OrderItem = {
   id: string;
@@ -20,8 +21,14 @@ type Order = {
   paymentReference: string | null;
   guestEmail: string | null;
   createdAt: Date | string;
+  deliveryMethod: string;
+  shippingAddress: string | null;
+  shippingCity: string | null;
+  shippingProvince: string | null;
+  shippingPostalCode: string | null;
   user: { fullName: string; email: string } | null;
   items: OrderItem[];
+  deliveryRequest: { id: string; status: string } | null;
 };
 
 type OrdersManagerProps = {
@@ -65,6 +72,167 @@ function formatDate(value: Date | string) {
   });
 }
 
+function RequestDeliveryModal({
+  order,
+  onClose,
+  onCreated,
+}: {
+  order: Order;
+  onClose: () => void;
+  onCreated: (id: string, status: string) => void;
+}) {
+  const [pickupAddress, setPickupAddress] = useState("");
+  const [pickupRegion, setPickupRegion] = useState("");
+  const [dropoffAddress, setDropoffAddress] = useState(order.shippingAddress || "");
+  const [dropoffRegion, setDropoffRegion] = useState(order.shippingProvince || "");
+  const [cargoDescription, setCargoDescription] = useState(
+    order.items.map((i) => `${i.quantity}x ${i.product.name}`).join(", "),
+  );
+  const [price, setPrice] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function create() {
+    if (
+      !pickupAddress.trim() ||
+      !pickupRegion.trim() ||
+      !dropoffAddress.trim() ||
+      !dropoffRegion.trim() ||
+      !cargoDescription.trim() ||
+      !price
+    ) {
+      setError("Please complete all required fields.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/logistics/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.id,
+          pickupAddress,
+          pickupRegion,
+          dropoffAddress,
+          dropoffRegion,
+          cargoDescription,
+          priceCents: Math.round(Number(price) * 100),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to create delivery request.");
+        return;
+      }
+      onCreated(data.request.id, data.request.status);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4">
+      <div className="w-full max-w-lg rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-brand-navy text-lg font-bold">
+            Request Delivery Partner — {order.orderNumber}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="text-[#9aabb9] hover:text-[#1B3A6B]"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block font-semibold text-[#244367]">Pickup Address</span>
+            <input
+              value={pickupAddress}
+              onChange={(e) => setPickupAddress(e.target.value)}
+              placeholder="Seller / warehouse address"
+              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-semibold text-[#244367]">Pickup Region</span>
+            <input
+              value={pickupRegion}
+              onChange={(e) => setPickupRegion(e.target.value)}
+              placeholder="e.g. Gauteng"
+              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+            />
+          </label>
+
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block font-semibold text-[#244367]">Dropoff Address</span>
+            <input
+              value={dropoffAddress}
+              onChange={(e) => setDropoffAddress(e.target.value)}
+              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-semibold text-[#244367]">Dropoff Region</span>
+            <input
+              value={dropoffRegion}
+              onChange={(e) => setDropoffRegion(e.target.value)}
+              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+            />
+          </label>
+
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block font-semibold text-[#244367]">Cargo Description</span>
+            <input
+              value={cargoDescription}
+              onChange={(e) => setCargoDescription(e.target.value)}
+              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+            />
+          </label>
+
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block font-semibold text-[#244367]">Transport Price (R)</span>
+            <input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+            />
+          </label>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-[#cdd8e7] px-4 py-2 text-sm font-semibold text-[#5d7497]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={create}
+            disabled={saving}
+            className="rounded-lg bg-[#2E7D32] px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+          >
+            {saving ? "Creating…" : "Create Request"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProps) {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [search, setSearch] = useState("");
@@ -72,6 +240,7 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [deliveryModalOrder, setDeliveryModalOrder] = useState<Order | null>(null);
   const total = initialTotal;
 
   const filtered = useMemo(() => {
@@ -249,6 +418,29 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
                               <span className="font-mono">{order.paymentReference}</span>
                             </p>
                           )}
+                          {order.deliveryMethod === "DELIVERY" && (
+                            <div className="pt-1">
+                              {order.deliveryRequest ? (
+                                <p className="text-xs text-gray-500">
+                                  Delivery request status:{" "}
+                                  <span className="font-semibold text-gray-700">
+                                    {order.deliveryRequest.status}
+                                  </span>
+                                </p>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeliveryModalOrder(order);
+                                  }}
+                                  className="rounded-lg bg-[#1B3A6B] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#122844]"
+                                >
+                                  Request Delivery Partner
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -259,6 +451,21 @@ export function OrdersManager({ initialOrders, initialTotal }: OrdersManagerProp
           </tbody>
         </table>
       </div>
+
+      {deliveryModalOrder && (
+        <RequestDeliveryModal
+          order={deliveryModalOrder}
+          onClose={() => setDeliveryModalOrder(null)}
+          onCreated={(id, status) => {
+            setOrders((prev) =>
+              prev.map((o) =>
+                o.id === deliveryModalOrder.id ? { ...o, deliveryRequest: { id, status } } : o,
+              ),
+            );
+            setDeliveryModalOrder(null);
+          }}
+        />
+      )}
     </div>
   );
 }

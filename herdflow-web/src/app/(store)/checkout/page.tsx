@@ -4,7 +4,7 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
-import { ShoppingBag, ChevronRight, CreditCard, MapPin, User, Check } from "lucide-react";
+import { ShoppingBag, ChevronRight, CreditCard, MapPin, Truck, User, Check } from "lucide-react";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -18,6 +18,7 @@ export default function CheckoutPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState<"PICKUP" | "DELIVERY">("DELIVERY");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [province, setProvince] = useState("");
@@ -47,7 +48,16 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items,
-          customerInfo: { fullName, email, phone, address, city, province, postalCode },
+          customerInfo: {
+            fullName,
+            email,
+            phone,
+            deliveryMethod,
+            address,
+            city,
+            province,
+            postalCode,
+          },
           totalCents,
         }),
       });
@@ -274,14 +284,66 @@ export default function CheckoutPage() {
 
                 <div>
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#244367]">
+                    <Truck size={16} />
+                    Delivery Method *
+                  </label>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 px-4 py-3 transition ${
+                        deliveryMethod === "DELIVERY"
+                          ? "border-[#2E7D32] bg-[#eef8f0]"
+                          : "border-[#cdd8e7]"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="deliveryMethod"
+                        value="DELIVERY"
+                        checked={deliveryMethod === "DELIVERY"}
+                        onChange={() => setDeliveryMethod("DELIVERY")}
+                        className="h-4 w-4"
+                      />
+                      <div>
+                        <p className="font-semibold text-[#244367]">Delivery</p>
+                        <p className="text-xs text-[#5d7497]">
+                          Shipped to your address by a logistics partner
+                        </p>
+                      </div>
+                    </label>
+
+                    <label
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 px-4 py-3 transition ${
+                        deliveryMethod === "PICKUP"
+                          ? "border-[#2E7D32] bg-[#eef8f0]"
+                          : "border-[#cdd8e7]"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="deliveryMethod"
+                        value="PICKUP"
+                        checked={deliveryMethod === "PICKUP"}
+                        onChange={() => setDeliveryMethod("PICKUP")}
+                        className="h-4 w-4"
+                      />
+                      <div>
+                        <p className="font-semibold text-[#244367]">Pickup</p>
+                        <p className="text-xs text-[#5d7497]">Collect directly from the seller</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#244367]">
                     <MapPin size={16} />
-                    Street Address *
+                    Street Address {deliveryMethod === "DELIVERY" ? "*" : ""}
                   </label>
                   <input
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    required
+                    required={deliveryMethod === "DELIVERY"}
                     className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                     placeholder="123 Main Street"
                   />
@@ -290,13 +352,13 @@ export default function CheckoutPage() {
                 <div className="grid gap-4 md:grid-cols-3">
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-[#244367]">
-                      City *
+                      City {deliveryMethod === "DELIVERY" ? "*" : ""}
                     </label>
                     <input
                       type="text"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      required
+                      required={deliveryMethod === "DELIVERY"}
                       className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                       placeholder="Johannesburg"
                     />
@@ -304,12 +366,13 @@ export default function CheckoutPage() {
 
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-[#244367]">
-                      Province *
+                      Province {deliveryMethod === "DELIVERY" ? "*" : ""}
                     </label>
                     <select
+                      aria-label="Province"
                       value={province}
                       onChange={(e) => setProvince(e.target.value)}
-                      required
+                      required={deliveryMethod === "DELIVERY"}
                       className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                     >
                       <option value="">Select</option>
@@ -323,13 +386,13 @@ export default function CheckoutPage() {
 
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-[#244367]">
-                      Postal Code *
+                      Postal Code {deliveryMethod === "DELIVERY" ? "*" : ""}
                     </label>
                     <input
                       type="text"
                       value={postalCode}
                       onChange={(e) => setPostalCode(e.target.value)}
-                      required
+                      required={deliveryMethod === "DELIVERY"}
                       className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                       placeholder="2000"
                     />
@@ -351,10 +414,8 @@ export default function CheckoutPage() {
                     !fullName ||
                     !email ||
                     !phone ||
-                    !address ||
-                    !city ||
-                    !province ||
-                    !postalCode
+                    (deliveryMethod === "DELIVERY" &&
+                      (!address || !city || !province || !postalCode))
                   ) {
                     setError("Please fill in all required fields");
                     return;

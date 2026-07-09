@@ -17,6 +17,7 @@ async function getOrders() {
               product: { select: { name: true, slug: true } },
             },
           },
+          deliveryRequest: { select: { id: true, status: true } },
         },
       }),
     ]);
