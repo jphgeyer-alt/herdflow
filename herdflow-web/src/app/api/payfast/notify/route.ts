@@ -44,12 +44,26 @@ export async function POST(request: Request) {
 
   try {
     if (paymentStatus === "COMPLETE") {
-      await prisma.order.update({
-        where: { orderNumber },
-        data: {
-          status: "PROCESSING",
-          paymentReference,
-        },
+      await prisma.$transaction(async (tx) => {
+        const order = await tx.order.update({
+          where: { orderNumber },
+          data: {
+            status: "PROCESSING",
+            paymentReference,
+          },
+          include: { items: { include: { product: true } } },
+        });
+
+        for (const item of order.items) {
+          const newStock = Math.max(0, item.product.stockOnHand - item.quantity);
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stockOnHand: newStock,
+              ...(newStock === 0 && { status: "OUT_OF_STOCK" }),
+            },
+          });
+        }
       });
       return new NextResponse("OK", { status: 200 });
     }
