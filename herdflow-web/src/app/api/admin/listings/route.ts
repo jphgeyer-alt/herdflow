@@ -79,13 +79,15 @@ async function findOrCreateSeller(
   });
   if (existing) return existing.id;
   const emailSlug = toSlug(farmName);
-  const email = `${emailSlug}-${Date.now().toString().slice(-6)}@herdflow-managed.local`;
+  const uniqueSuffix = Date.now().toString().slice(-6);
+  const email = `${emailSlug}-${uniqueSuffix}@herdflow-managed.local`;
   const user = await prisma.user.create({
     data: { email, fullName: farmName, phone: phone || null, role: "CUSTOMER", passwordHash: null },
   });
   const seller = await prisma.seller.create({
     data: {
       userId: user.id,
+      slug: `${emailSlug}-${uniqueSuffix}`,
       farmName,
       location: region || "South Africa",
       region: region || "North West",

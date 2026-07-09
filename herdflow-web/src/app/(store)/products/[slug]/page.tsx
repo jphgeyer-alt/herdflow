@@ -44,7 +44,7 @@ async function getProduct(slug: string) {
     where: { slug },
     include: {
       category: { select: { id: true, name: true } },
-      seller: { select: { id: true, farmName: true } },
+      seller: { select: { id: true, farmName: true, slug: true } },
     },
   });
 }
@@ -107,7 +107,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <header className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7497]">
           {product.category.name}
-          {product.seller?.farmName ? ` • Sold by ${product.seller.farmName}` : ""}
+          {product.seller?.farmName && (
+            <>
+              {" • Sold by "}
+              {product.seller.slug ? (
+                <Link href={`/sellers/${product.seller.slug}`} className="hover:underline">
+                  {product.seller.farmName}
+                </Link>
+              ) : (
+                product.seller.farmName
+              )}
+            </>
+          )}
         </p>
       </header>
 

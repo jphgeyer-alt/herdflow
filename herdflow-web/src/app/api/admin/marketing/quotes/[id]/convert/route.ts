@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, getAdminUsername, isValidAdminSession } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-import { getNextDocumentNumber } from "@/lib/marketing/document-number";
+import { getNextDocumentNumber } from "@/lib/document-number";
 
 type Params = { params: Promise<{ id: string }> };
 

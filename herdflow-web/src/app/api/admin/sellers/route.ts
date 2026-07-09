@@ -101,11 +101,12 @@ export async function POST(request: NextRequest) {
 
   try {
     // Create a system user for this admin-managed seller
-    const slug = farmName
+    const baseSlug = farmName
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "-")
       .replace(/-+/g, "-");
-    const email = `${slug}-${Date.now().toString().slice(-5)}@herdflow-managed.local`;
+    const uniqueSuffix = Date.now().toString().slice(-5);
+    const email = `${baseSlug}-${uniqueSuffix}@herdflow-managed.local`;
 
     const user = await prisma.user.create({
       data: {
@@ -120,6 +121,7 @@ export async function POST(request: NextRequest) {
     const seller = await prisma.seller.create({
       data: {
         userId: user.id,
+        slug: `${baseSlug}-${uniqueSuffix}`,
         farmName,
         location: location || region,
         region,
