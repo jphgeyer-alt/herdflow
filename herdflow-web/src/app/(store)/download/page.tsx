@@ -11,12 +11,9 @@ export const metadata: Metadata = {
 // Update EAS_APK_URL once eas build --platform android --profile preview completes
 // Build ID: 76e9c747-0291-44e0-a81f-3851c6e32295 (v1.5.0 Admin Portal — finished 2026-07-05)
 // Previous: J1BOf4WXQcRlH_qsnRXLujVf5WwHynP_0K81ayGllD8.apk (build db379d76)
-const EAS_BUILDS_PAGE =
-  "https://expo.dev/accounts/hannesgeyer101/projects/herdflow/builds/16e7c34f-78b1-43f4-b9b3-4fca273ad553";
 const EAS_APK_DIRECT =
   "https://expo.dev/accounts/hannesgeyer101/projects/herdflow/builds/16e7c34f-78b1-43f4-b9b3-4fca273ad553";
 const APP_VERSION = "v1.8.0";
-const EXPO_GO_URL = "exp://u.expo.dev/9adc77e5-3ea3-4131-a3a6-b4c4091e3e4b?channel-name=production";
 
 // Stable filename (see herdflow-desktop/package.json nsis.artifactName) so this
 // GitHub "latest" redirect always resolves to the newest release's installer.
@@ -147,68 +144,7 @@ export default function DownloadPage() {
           </div>
         </div>
 
-        {/* Option 2 — Expo Go */}
-        <div className="overflow-hidden rounded-2xl border-2 border-[#1B3A6B] bg-white shadow-md">
-          <div className="flex items-center gap-3 bg-[#1B3A6B] px-6 py-4">
-            <span className="text-3xl">🚀</span>
-            <div>
-              <h2 className="text-xl font-bold text-white">Test with Expo Go</h2>
-              <p className="text-sm text-blue-200">For developers and testers — instant preview</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-8 p-6 sm:flex-row">
-            <div className="flex-1 space-y-4">
-              <p className="text-sm leading-relaxed text-slate-600">
-                Use the free <strong>Expo Go</strong> app to run HerdFlow instantly without
-                installing a full APK.
-              </p>
-              <div className="space-y-3">
-                {[
-                  "Download Expo Go from Google Play Store (free)",
-                  "Open Expo Go and tap Scan QR Code",
-                  "Scan the QR code on the right",
-                  "HerdFlow opens immediately",
-                ].map((step, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <StepBadge n={i + 1} />
-                    <p className="pt-0.5 text-sm text-slate-600">{step}</p>
-                  </div>
-                ))}
-              </div>
-              <a
-                href="https://play.google.com/store/apps/details?id=host.exp.exponent"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#1B3A6B] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#0f1e44]"
-              >
-                Download Expo Go from Play Store
-              </a>
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <p className="mb-1 text-xs font-semibold text-slate-600">
-                  Or paste this link into Expo Go:
-                </p>
-                <code className="select-all break-all text-xs text-[#1B3A6B]">{EXPO_GO_URL}</code>
-              </div>
-            </div>
-            <div className="flex shrink-0 flex-col items-center gap-2">
-              {/* Real QR code for Expo Go */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={qrUrl(EXPO_GO_URL)}
-                alt="QR code — HerdFlow on Expo Go"
-                width={160}
-                height={160}
-                className="rounded-lg border border-slate-200"
-              />
-              <p className="max-w-35 text-center text-xs leading-snug text-slate-500">
-                Scan with Expo Go app
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Option 3 — Windows Desktop */}
+        {/* Option 2 — Windows Desktop */}
         <div className="overflow-hidden rounded-2xl border-2 border-slate-300 bg-white shadow-md">
           <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-800 px-6 py-4">
             <div className="flex items-center gap-3">
