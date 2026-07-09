@@ -50,14 +50,16 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   const sellerRegion = listing.seller.region;
   const isTrusted = listing.seller.status === "APPROVED";
 
-  const FALLBACK_PHOTO = "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1200&h=900&fit=crop";
+  const FALLBACK_PHOTO =
+    "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1200&h=900&fit=crop";
 
   function isValidPhoto(url: string) {
-    return url && (
-      url.startsWith("data:image/") ||
-      url.startsWith("http://") ||
-      url.startsWith("https://") ||
-      url.startsWith("/")
+    return (
+      url &&
+      (url.startsWith("data:image/") ||
+        url.startsWith("http://") ||
+        url.startsWith("https://") ||
+        url.startsWith("/"))
     );
   }
 
@@ -65,7 +67,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   const mainPhoto = photos.length > 0 && isValidPhoto(photos[0]) ? photos[0] : FALLBACK_PHOTO;
 
   return (
-    <div className="min-h-screen bg-[#f5f4ef] py-8 px-4 md:px-8">
+    <div className="min-h-screen bg-[#f5f4ef] px-4 py-8 md:px-8">
       <div className="mx-auto max-w-5xl space-y-6">
         {/* Breadcrumb */}
         <nav className="text-sm text-[#5d7497]">
@@ -114,10 +116,10 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
             <p className="text-2xl font-bold text-[#A07C3A]">{toCurrency(listing.priceCents)}</p>
 
-            <p className="text-sm text-[#38537a] leading-relaxed">{listing.description}</p>
+            <p className="text-sm leading-relaxed text-[#38537a]">{listing.description}</p>
 
             {/* Livestock Details */}
-            <div className="rounded-xl bg-[#eef3fb] p-4 text-sm text-[#244367] space-y-2">
+            <div className="space-y-2 rounded-xl bg-[#eef3fb] p-4 text-sm text-[#244367]">
               {listing.breed && (
                 <p className="flex items-center gap-2">
                   <Tag size={14} className="text-[#1B3A6B]" />
@@ -141,8 +143,8 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
             </div>
 
             {/* Seller Info */}
-            <div className="rounded-xl border border-[#d8e0ec] p-4 text-sm text-[#244367] space-y-2">
-              <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="space-y-2 rounded-xl border border-[#d8e0ec] p-4 text-sm text-[#244367]">
+              <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="font-bold text-[#1B3A6B]">{sellerName}</p>
                 {isTrusted && <HerdflowTrusted compact />}
               </div>
@@ -158,17 +160,17 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <div className="flex flex-col gap-3 pt-2 sm:flex-row">
               <a
                 href={`mailto:${sellerEmail}?subject=Enquiry%20about%20${encodeURIComponent(listing.title)}`}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-[#1B3A6B] hover:bg-[#16305a] px-5 py-3 text-sm font-bold text-white transition"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#1B3A6B] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#16305a]"
               >
                 <Mail size={16} />
                 Contact Seller
               </a>
               <Link
                 href={`/contact?subject=transport&listing=${encodeURIComponent(listing.title)}`}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border-2 border-[#2E7D32] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white px-5 py-3 text-sm font-bold transition"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-[#2E7D32] px-5 py-3 text-sm font-bold text-[#2E7D32] transition hover:bg-[#2E7D32] hover:text-white"
               >
                 <Truck size={16} />
                 Arrange Transport

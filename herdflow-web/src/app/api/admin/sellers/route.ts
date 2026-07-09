@@ -23,8 +23,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const statusFilter = searchParams.get("status");
 
-  const where =
-    statusFilter && isValidStatus(statusFilter) ? { status: statusFilter } : undefined;
+  const where = statusFilter && isValidStatus(statusFilter) ? { status: statusFilter } : undefined;
 
   try {
     const sellers = await prisma.seller.findMany({
@@ -60,7 +59,10 @@ export async function GET(request: NextRequest) {
     for (const agg of orderAggregates) {
       const sellerId = productToSeller.get(agg.productId);
       if (sellerId) {
-        sellerSales.set(sellerId, (sellerSales.get(sellerId) ?? 0) + (agg._sum.lineTotalCents ?? 0));
+        sellerSales.set(
+          sellerId,
+          (sellerSales.get(sellerId) ?? 0) + (agg._sum.lineTotalCents ?? 0),
+        );
       }
     }
 
@@ -81,7 +83,11 @@ export async function POST(request: NextRequest) {
   }
 
   let body: Record<string, unknown>;
-  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid request" }, { status: 400 }); }
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
 
   const farmName = (body.farmName as string | undefined)?.trim();
   const ownerName = (body.ownerName as string | undefined)?.trim();
@@ -95,7 +101,10 @@ export async function POST(request: NextRequest) {
 
   try {
     // Create a system user for this admin-managed seller
-    const slug = farmName.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
+    const slug = farmName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-");
     const email = `${slug}-${Date.now().toString().slice(-5)}@herdflow-managed.local`;
 
     const user = await prisma.user.create({
@@ -126,7 +135,10 @@ export async function POST(request: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "";
     if (msg.includes("Unique") || msg.includes("already exists")) {
-      return NextResponse.json({ error: "A seller with that name already exists." }, { status: 409 });
+      return NextResponse.json(
+        { error: "A seller with that name already exists." },
+        { status: 409 },
+      );
     }
     return NextResponse.json({ error: "Failed to create seller." }, { status: 500 });
   }
@@ -138,13 +150,18 @@ export async function PATCH(request: NextRequest) {
   }
 
   let body: Record<string, unknown>;
-  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid request" }, { status: 400 }); }
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
 
   const id = (body.id as string | undefined)?.trim();
   const status = body.status as string | undefined;
 
   if (!id) return NextResponse.json({ error: "id is required." }, { status: 400 });
-  if (!status || !isValidStatus(status)) return NextResponse.json({ error: "Valid status is required." }, { status: 400 });
+  if (!status || !isValidStatus(status))
+    return NextResponse.json({ error: "Valid status is required." }, { status: 400 });
 
   try {
     await prisma.seller.update({ where: { id }, data: { status } });

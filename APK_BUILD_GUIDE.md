@@ -18,6 +18,7 @@ npm run eas:install
 ```
 
 Verify installation:
+
 ```bash
 eas --version
 ```
@@ -36,6 +37,7 @@ You'll be prompted to enter your Expo credentials. Create a free account at [exp
 ## Step 3: Build the APK
 
 ### Option A: Preview Build (Recommended for Testing)
+
 Testing build with development-like environment:
 
 ```bash
@@ -43,11 +45,13 @@ npm run eas:build:preview
 ```
 
 This creates an APK that:
+
 - Installs directly on Android device
 - Perfect for testing and debugging
 - Completes faster (5-10 minutes)
 
 ### Option B: Production Build
+
 Production-optimized APK:
 
 ```bash
@@ -55,6 +59,7 @@ npm run eas:build:production
 ```
 
 This creates an APK that:
+
 - Optimized and minified
 - Ready to publish to Play Store
 - Completes in 10-15 minutes
@@ -64,18 +69,21 @@ This creates an APK that:
 Once the build completes, you have two options:
 
 ### Option A: Direct Download from Expo Dashboard
+
 1. Visit [https://expo.io/builds](https://expo.io/builds)
 2. Find your completed build
 3. Click the download button
 4. APK will download to your computer
 
 ### Option B: Scan QR Code
+
 1. After build completes, a QR code is displayed
 2. Scan with your Android phone
 3. Opens Expo Go app
 4. Tap "Install" to test the app
 
 ### Option C: Using Expo Go App
+
 1. Install [Expo Go](https://play.google.com/store/apps/details?id=host.exp.exponent) from Play Store
 2. Open the app
 3. Scan the QR code from build output
@@ -84,6 +92,7 @@ Once the build completes, you have two options:
 ## Step 5: Install APK on Android Device
 
 ### From Computer:
+
 1. Download APK from Expo dashboard
 2. Transfer to your Android phone via USB or cloud
 3. Open file manager on phone
@@ -93,6 +102,7 @@ Once the build completes, you have two options:
 7. Launch HerdFlow app
 
 ### Using ADB (Android Debug Bridge):
+
 ```bash
 adb install herdflow-*.apk
 ```
@@ -100,16 +110,19 @@ adb install herdflow-*.apk
 ## Troubleshooting
 
 ### Build Fails
+
 - Check you're logged in: `eas whoami`
 - Verify Android config in `expo/app.json`
 - Check iOS/Android requirements in app.json
 
 ### APK Won't Install
+
 - Enable "Unknown Sources" in Android settings
 - Ensure device has enough storage
 - Try the preview build instead
 
 ### API Connection Issues
+
 - Ensure backend server is running: `npm run dev:server`
 - Update API URL in `expo/App.tsx` if needed
 - On Android emulator, use `10.0.2.2:4174` instead of `localhost:4174`

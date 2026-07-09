@@ -30,14 +30,16 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id: sessionId } = await params;
 
-  const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const registrationId = body.id as string;
   const status = body.status as string;
   const adminNotes = body.adminNotes as string | undefined;
 
-  if (!registrationId || !status) return NextResponse.json({ error: "id and status are required" }, { status: 400 });
+  if (!registrationId || !status)
+    return NextResponse.json({ error: "id and status are required" }, { status: 400 });
   const valid = ["PENDING", "APPROVED", "REJECTED", "SUSPENDED"];
-  if (!valid.includes(status)) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  if (!valid.includes(status))
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
   try {
     const updated = await prisma.auctionRegistration.update({

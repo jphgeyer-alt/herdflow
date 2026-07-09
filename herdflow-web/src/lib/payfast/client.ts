@@ -39,7 +39,10 @@ export function createPayFastSignature(fields: Record<string, string>, passphras
   return createHash("md5").update(withPassphrase).digest("hex");
 }
 
-export function buildPayFastInitializePayload(input: InitializePaymentInput, config: PayFastConfig) {
+export function buildPayFastInitializePayload(
+  input: InitializePaymentInput,
+  config: PayFastConfig,
+) {
   const fields = {
     merchant_id: config.merchantId,
     merchant_key: config.merchantKey,

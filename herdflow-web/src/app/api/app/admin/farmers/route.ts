@@ -9,29 +9,36 @@ export async function GET(request: Request) {
   const auth = await requireAdminToken(request);
   if (!isMobileUser(auth)) return auth;
 
-  const url    = new URL(request.url);
+  const url = new URL(request.url);
   const search = url.searchParams.get("search") ?? "";
   const status = url.searchParams.get("status") ?? "";
-  const page   = Math.max(1, Number(url.searchParams.get("page") ?? "1"));
-  const limit  = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") ?? "20")));
-  const skip   = (page - 1) * limit;
+  const page = Math.max(1, Number(url.searchParams.get("page") ?? "1"));
+  const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") ?? "20")));
+  const skip = (page - 1) * limit;
 
   const where: Record<string, unknown> = { role: "FARMER" };
   if (search.trim()) {
     where.OR = [
       { fullName: { contains: search, mode: "insensitive" } },
-      { email:    { contains: search, mode: "insensitive" } },
+      { email: { contains: search, mode: "insensitive" } },
     ];
   }
 
   const [users, total] = await Promise.all([
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prisma.user.findMany({
-      where:    where as any,
+      where: where as any,
       skip,
-      take:     limit,
-      orderBy:  { createdAt: "desc" },
-      select:   { id: true, email: true, fullName: true, phone: true, createdAt: true, updatedAt: true },
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        phone: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prisma.user.count({ where: where as any }),
@@ -46,13 +53,13 @@ export async function GET(request: Request) {
       ]);
       return {
         ...u,
-        farmName:    profile?.farmName ?? null,
-        province:    profile?.province ?? null,
+        farmName: profile?.farmName ?? null,
+        province: profile?.province ?? null,
         animalCount,
-        status:      "active",
-        lastActive:  u.updatedAt,
+        status: "active",
+        lastActive: u.updatedAt,
       };
-    })
+    }),
   );
 
   return NextResponse.json({

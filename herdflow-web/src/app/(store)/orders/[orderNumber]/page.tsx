@@ -87,38 +87,41 @@ export default async function OrderPage({ params }: OrderPageProps) {
   return (
     <main className="space-y-6 pb-10">
       <nav className="text-sm text-[#38537a]">
-        <Link className="font-semibold text-brand-navy" href="/shop">
+        <Link className="text-brand-navy font-semibold" href="/shop">
           Back to Shop
         </Link>
       </nav>
 
       <header className="rounded-2xl border border-[#d8e0ec] bg-white p-5 shadow-sm">
-        <h1 className="text-3xl font-semibold text-brand-navy">Order Tracking</h1>
+        <h1 className="text-brand-navy text-3xl font-semibold">Order Tracking</h1>
         <div className="mt-3 grid gap-2 text-sm text-[#38537a] sm:grid-cols-2">
           <p>
-            <span className="font-semibold text-brand-navy">Order Number:</span> {order.orderNumber}
+            <span className="text-brand-navy font-semibold">Order Number:</span> {order.orderNumber}
           </p>
           <p>
-            <span className="font-semibold text-brand-navy">Order Date:</span> {formatDate(order.createdAt)}
+            <span className="text-brand-navy font-semibold">Order Date:</span>{" "}
+            {formatDate(order.createdAt)}
           </p>
           <p>
-            <span className="font-semibold text-brand-navy">Current Status:</span> {order.status}
+            <span className="text-brand-navy font-semibold">Current Status:</span> {order.status}
           </p>
           <p>
-            <span className="font-semibold text-brand-navy">Payment Status:</span> {paymentStatus}
+            <span className="text-brand-navy font-semibold">Payment Status:</span> {paymentStatus}
           </p>
         </div>
       </header>
 
       <section className="rounded-2xl border border-[#d8e0ec] bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-semibold text-brand-navy">Order Progress</h2>
+        <h2 className="text-brand-navy text-xl font-semibold">Order Progress</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-5">
           {TRACK_STEPS.map((step, index) => {
             const done = index <= stepIndex;
             return (
               <div key={step} className="space-y-1">
                 <div className={`h-2 rounded-full ${done ? "bg-green" : "bg-[#d8e0ec]"}`} />
-                <p className={`text-xs font-semibold uppercase tracking-wide ${done ? "text-brand-navy" : "text-[#8fa1b8]"}`}>
+                <p
+                  className={`text-xs font-semibold uppercase tracking-wide ${done ? "text-brand-navy" : "text-[#8fa1b8]"}`}
+                >
                   {step}
                 </p>
               </div>
@@ -129,33 +132,40 @@ export default async function OrderPage({ params }: OrderPageProps) {
 
       <section className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         <div className="space-y-3 rounded-2xl border border-[#d8e0ec] bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-semibold text-brand-navy">Items Ordered</h2>
+          <h2 className="text-brand-navy text-xl font-semibold">Items Ordered</h2>
           {order.items.length === 0 ? (
             <p className="text-sm text-[#5d7497]">No items were recorded for this order.</p>
           ) : (
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             order.items.map((item: any) => (
-              <article key={item.id} className="grid gap-3 rounded-xl border border-[#e4ebf5] p-3 sm:grid-cols-[88px_1fr_auto] sm:items-center">
+              <article
+                key={item.id}
+                className="grid gap-3 rounded-xl border border-[#e4ebf5] p-3 sm:grid-cols-[88px_1fr_auto] sm:items-center"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={normalizePhoto(item.product.photos[0])}
                   alt={item.product.name}
-                  className="h-20 w-22 rounded-lg object-cover"
+                  className="w-22 h-20 rounded-lg object-cover"
                 />
                 <div>
-                  <p className="font-semibold text-brand-navy">{item.product.name}</p>
+                  <p className="text-brand-navy font-semibold">{item.product.name}</p>
                   <p className="text-sm text-[#38537a]">Qty: {item.quantity}</p>
                   <p className="text-xs text-[#5d7497]">Unit: {toCurrency(item.unitPriceCents)}</p>
                 </div>
-                <p className="text-sm font-semibold text-brand-gold">{toCurrency(item.lineTotalCents)}</p>
+                <p className="text-brand-gold text-sm font-semibold">
+                  {toCurrency(item.lineTotalCents)}
+                </p>
               </article>
             ))
           )}
-          <p className="pt-1 text-right text-lg font-semibold text-brand-gold">Total: {toCurrency(order.totalCents)}</p>
+          <p className="text-brand-gold pt-1 text-right text-lg font-semibold">
+            Total: {toCurrency(order.totalCents)}
+          </p>
         </div>
 
         <aside className="space-y-3 rounded-2xl border border-[#d8e0ec] bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-semibold text-brand-navy">Delivery Address</h2>
+          <h2 className="text-brand-navy text-xl font-semibold">Delivery Address</h2>
           <div className="text-sm text-[#38537a]">
             <p>{order.user?.fullName || "Guest customer"}</p>
             <p>{order.guestEmail || order.user?.email || "No email provided"}</p>
@@ -165,7 +175,9 @@ export default async function OrderPage({ params }: OrderPageProps) {
             </p>
           </div>
 
-          <h3 className="pt-2 text-sm font-semibold uppercase tracking-wide text-brand-navy">Payment Reference</h3>
+          <h3 className="text-brand-navy pt-2 text-sm font-semibold uppercase tracking-wide">
+            Payment Reference
+          </h3>
           <p className="text-sm text-[#38537a]">{order.paymentReference || "Not available"}</p>
         </aside>
       </section>

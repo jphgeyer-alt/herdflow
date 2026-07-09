@@ -12,9 +12,12 @@ export async function POST(request: Request, ctx: Ctx) {
 
   const { code } = await ctx.params;
 
-  const invite = await prisma.farmInvite.findUnique({ where: { inviteCode: code } }).catch(() => null);
+  const invite = await prisma.farmInvite
+    .findUnique({ where: { inviteCode: code } })
+    .catch(() => null);
   if (!invite) return NextResponse.json({ error: "Invite not found" }, { status: 404 });
-  if (invite.farmOwnerId !== auth.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (invite.farmOwnerId !== auth.id)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   await prisma.farmInvite.update({
     where: { inviteCode: code },

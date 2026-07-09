@@ -22,7 +22,9 @@ export async function POST(request: Request) {
   if (!isMobileUser(auth)) return auth;
 
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const b = body as Record<string, unknown>;
@@ -39,16 +41,17 @@ export async function POST(request: Request) {
   const camp = await prisma.farmerCamp.create({
     data: {
       localId,
-      farmerId:            auth.effectiveFarmerId,
-      name:                String(b.name),
-      number:              (b.number as string | undefined) ?? null,
-      hectares:            b.hectares != null ? Number(b.hectares) : null,
-      forageType:          (b.forageType as string | undefined) ?? null,
-      currentStatus:       (b.status as string | undefined) ?? (b.currentStatus as string | undefined) ?? "RESTING",
+      farmerId: auth.effectiveFarmerId,
+      name: String(b.name),
+      number: (b.number as string | undefined) ?? null,
+      hectares: b.hectares != null ? Number(b.hectares) : null,
+      forageType: (b.forageType as string | undefined) ?? null,
+      currentStatus:
+        (b.status as string | undefined) ?? (b.currentStatus as string | undefined) ?? "RESTING",
       maxCarryingCapacity: b.maxCapacity != null ? Number(b.maxCapacity) : null,
       restingDaysRequired: b.restingDaysRequired != null ? Number(b.restingDaysRequired) : 42,
-      gpsCoordinates:      (b.gpsCoordinates as string | undefined) ?? null,
-      notes:               (b.notes as string | undefined) ?? null,
+      gpsCoordinates: (b.gpsCoordinates as string | undefined) ?? null,
+      notes: (b.notes as string | undefined) ?? null,
     },
   });
   return NextResponse.json(camp, { status: 201 });

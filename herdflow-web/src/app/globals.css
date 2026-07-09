@@ -19,12 +19,12 @@ img {
 :root {
   --background: #f7f9fc;
   --foreground: #13263f;
-  --navy: #1B3A6B;
-  --green: #2E7D32;
-  --gold: #A07C3A;
-  --gold-light: #C9A55A;
-  --green-light: #4CAF50;
-  --cream: #F9F6EE;
+  --navy: #1b3a6b;
+  --green: #2e7d32;
+  --gold: #a07c3a;
+  --gold-light: #c9a55a;
+  --green-light: #4caf50;
+  --cream: #f9f6ee;
 
   /* Backward-compatible aliases used by existing utility classes */
   --brand-navy: var(--navy);
@@ -65,13 +65,13 @@ body {
 
 /* Premium button styles */
 .btn-primary {
-  @apply px-6 py-3 bg-brand-green text-white font-semibold rounded-lg hover:bg-emerald-700 transition-all shadow-md hover:shadow-lg;
+  @apply bg-brand-green rounded-lg px-6 py-3 font-semibold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg;
 }
 
 .btn-secondary {
-  @apply px-6 py-3 bg-brand-navy text-white font-semibold rounded-lg hover:bg-blue-900 transition-all shadow-md hover:shadow-lg;
+  @apply bg-brand-navy rounded-lg px-6 py-3 font-semibold text-white shadow-md transition-all hover:bg-blue-900 hover:shadow-lg;
 }
 
 .btn-outline {
-  @apply px-6 py-3 border-2 border-brand-navy text-brand-navy font-semibold rounded-lg hover:bg-brand-navy hover:text-white transition-all;
+  @apply border-brand-navy text-brand-navy hover:bg-brand-navy rounded-lg border-2 px-6 py-3 font-semibold transition-all hover:text-white;
 }

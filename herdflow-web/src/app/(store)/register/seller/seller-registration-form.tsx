@@ -22,12 +22,12 @@ export function SellerRegistrationForm() {
   const canSubmit = useMemo(() => {
     return Boolean(
       farmName.trim() &&
-        location.trim() &&
-        region.trim() &&
-        contactPhone.trim() &&
-        contactEmail.trim() &&
-        nationalIdNumber.trim() &&
-        idDocument,
+      location.trim() &&
+      region.trim() &&
+      contactPhone.trim() &&
+      contactEmail.trim() &&
+      nationalIdNumber.trim() &&
+      idDocument,
     );
   }, [farmName, location, region, contactPhone, contactEmail, nationalIdNumber, idDocument]);
 
@@ -65,7 +65,11 @@ export function SellerRegistrationForm() {
           };
 
       if (!response.ok) {
-        setErrorMessage(payload && "error" in payload && payload.error ? payload.error : "Could not submit application.");
+        setErrorMessage(
+          payload && "error" in payload && payload.error
+            ? payload.error
+            : "Could not submit application.",
+        );
         setIsSubmitting(false);
         return;
       }
@@ -166,7 +170,7 @@ export function SellerRegistrationForm() {
       </label>
 
       <button
-        className="inline-flex w-full items-center justify-center rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white"
+        className="bg-brand-navy inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white"
         disabled={!canSubmit || isSubmitting}
         type="submit"
       >
@@ -180,7 +184,11 @@ export function SellerRegistrationForm() {
       )}
 
       {result && (
-        <div aria-live="polite" className="rounded-lg bg-[#eef8f0] p-3 text-sm text-[#255638]" role="status">
+        <div
+          aria-live="polite"
+          className="rounded-lg bg-[#eef8f0] p-3 text-sm text-[#255638]"
+          role="status"
+        >
           <p className="font-semibold">{result.message}</p>
           <p>Application Reference: {result.applicationId}</p>
         </div>

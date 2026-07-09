@@ -28,13 +28,13 @@ export async function GET(request: Request, ctx: Ctx) {
     }),
   ]);
 
-  const speciesCounts = Object.fromEntries(animalCounts.map(r => [r.species, r._count.id]));
+  const speciesCounts = Object.fromEntries(animalCounts.map((r) => [r.species, r._count.id]));
 
   return NextResponse.json({
     ...user,
-    farmName:    profile?.farmName ?? null,
-    province:    profile?.province ?? null,
-    species:     profile?.species ?? [],
+    farmName: profile?.farmName ?? null,
+    province: profile?.province ?? null,
+    species: profile?.species ?? [],
     speciesCounts,
     status: "active",
   });
@@ -46,7 +46,9 @@ export async function PATCH(request: Request, ctx: Ctx) {
 
   const { id } = await ctx.params;
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 

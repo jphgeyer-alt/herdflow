@@ -11,7 +11,15 @@ export async function GET(_req: Request, { params }: Params) {
     const [session, results] = await Promise.all([
       prisma.auctionSession.findUnique({
         where: { id: sessionId },
-        select: { id: true, title: true, slug: true, scheduledAt: true, closedAt: true, status: true, description: true },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          scheduledAt: true,
+          closedAt: true,
+          status: true,
+          description: true,
+        },
       }),
       prisma.auctionResult.findMany({
         where: { sessionId },

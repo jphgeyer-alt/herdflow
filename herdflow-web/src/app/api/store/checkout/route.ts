@@ -81,23 +81,23 @@ export async function POST(request: Request) {
       },
     });
   } catch {
-    return NextResponse.json(
-      { error: "Failed to create order for checkout." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create order for checkout." }, { status: 500 });
   }
 
-  const payload = buildPayFastInitializePayload({
-    amount: totals.subtotal,
-    itemName: `HerdFlow Store Order (${totals.totalItems} item${totals.totalItems > 1 ? "s" : ""})`,
-    paymentId,
-    returnUrl: `${baseUrl}/api/payfast/return?orderNumber=${encodeURIComponent(paymentId)}`,
-    cancelUrl: `${baseUrl}/api/payfast/cancel?orderNumber=${encodeURIComponent(paymentId)}`,
-    notifyUrl: `${baseUrl}/api/payfast/notify`,
-    customerFirstName: firstName,
-    customerLastName: lastName,
-    customerEmail: email,
-  }, payFastConfig);
+  const payload = buildPayFastInitializePayload(
+    {
+      amount: totals.subtotal,
+      itemName: `HerdFlow Store Order (${totals.totalItems} item${totals.totalItems > 1 ? "s" : ""})`,
+      paymentId,
+      returnUrl: `${baseUrl}/api/payfast/return?orderNumber=${encodeURIComponent(paymentId)}`,
+      cancelUrl: `${baseUrl}/api/payfast/cancel?orderNumber=${encodeURIComponent(paymentId)}`,
+      notifyUrl: `${baseUrl}/api/payfast/notify`,
+      customerFirstName: firstName,
+      customerLastName: lastName,
+      customerEmail: email,
+    },
+    payFastConfig,
+  );
 
   return NextResponse.json({
     processUrl: getPayFastProcessUrl(payFastConfig),

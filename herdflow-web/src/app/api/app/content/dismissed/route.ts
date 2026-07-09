@@ -10,7 +10,9 @@ export async function POST(request: Request) {
   if (!isMobileUser(auth)) return auth;
 
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const { contentId } = body as Record<string, string>;

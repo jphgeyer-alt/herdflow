@@ -5,26 +5,31 @@ Build and download your HerdFlow APK in 5 minutes.
 ## 🎯 5-Minute Quick Start
 
 ### Step 1: Create Expo Account (2 min)
+
 Visit https://expo.io and create a **free account**
 
 ### Step 2: Install EAS CLI (1 min)
+
 ```bash
 npm run eas:install
 # Wait for install to complete
 ```
 
 ### Step 3: Login (1 min)
+
 ```bash
 eas login
 # Enter your Expo email and password
 ```
 
 ### Step 4: Generate Assets (30 sec)
+
 ```bash
 npm run generate:assets
 ```
 
 ### Step 5: Build APK (30 sec to start, ~10 min to complete)
+
 ```bash
 # For testing/beta:
 npm run eas:build:preview
@@ -50,11 +55,11 @@ npm run eas:build:production
 
 ## 🔗 Detailed Guides
 
-| Goal | Reference |
-|------|-----------|
-| Step-by-step instructions | [APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md) |
-| Expo configuration | [expo/EXPO_README.md](expo/EXPO_README.md) |
-| Setup verification | [SETUP_VERIFICATION.md](SETUP_VERIFICATION.md) |
+| Goal                      | Reference                                      |
+| ------------------------- | ---------------------------------------------- |
+| Step-by-step instructions | [APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md)       |
+| Expo configuration        | [expo/EXPO_README.md](expo/EXPO_README.md)     |
+| Setup verification        | [SETUP_VERIFICATION.md](SETUP_VERIFICATION.md) |
 
 ## 🛠️ Common Commands
 
@@ -77,17 +82,21 @@ npm run generate:assets         # Create app icons
 ## ❓ Troubleshooting
 
 ### Build fails after starting
+
 → Check internet connection, go to https://expo.io/builds to see error
 
 ### APK won't install
+
 → Enable "Unknown sources" in Android Settings → Security
 
 ### Can't connect to API
+
 → Ensure backend running: `npm run dev:server`
 
 ## ✨ What's Included
 
 Your downloaded APK includes:
+
 - ✅ Cattle management (add, edit, delete, view)
 - ✅ Camp organization and color coding
 - ✅ Vaccine scheduling and tracking

@@ -42,7 +42,8 @@ export function CheckoutForm({ cart, totalLabel }: CheckoutFormProps) {
 
       if (!response.ok) {
         const errorBody = await response.json().catch(() => ({}));
-        const message = typeof errorBody.error === "string" ? errorBody.error : "Could not initialize payment.";
+        const message =
+          typeof errorBody.error === "string" ? errorBody.error : "Could not initialize payment.";
         setErrorMessage(message);
         setIsSubmitting(false);
         return;
@@ -108,7 +109,7 @@ export function CheckoutForm({ cart, totalLabel }: CheckoutFormProps) {
       </label>
 
       <button
-        className="inline-flex w-full items-center justify-center rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white"
+        className="bg-brand-navy inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white"
         disabled={isSubmitting}
         type="submit"
       >

@@ -34,7 +34,8 @@ export async function POST(request: Request, { params }: RouteContext) {
   const amountCents = b.amountCents;
 
   if (!isString(lotId)) return NextResponse.json({ error: "lotId required" }, { status: 400 });
-  if (!isString(bidderName)) return NextResponse.json({ error: "bidderName required" }, { status: 400 });
+  if (!isString(bidderName))
+    return NextResponse.json({ error: "bidderName required" }, { status: 400 });
   if (!isString(bidderEmail) || !isEmail(bidderEmail))
     return NextResponse.json({ error: "Valid bidderEmail required" }, { status: 400 });
   if (typeof amountCents !== "number" || amountCents < 1)

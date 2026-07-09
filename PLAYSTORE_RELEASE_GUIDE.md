@@ -14,6 +14,7 @@ This guide is the direct path to publish HerdFlow so anyone can download it from
 1. Production Android build type is app-bundle (AAB) in [expo/eas.json](expo/eas.json).
 2. Production profile is configured in [eas.json](eas.json).
 3. App identity is set in [expo/app.json](expo/app.json):
+
 - package: com.herdflow.mobile
 - version and versionCode managed by EAS auto increment
 
@@ -63,12 +64,14 @@ npm run eas:submit:playstore
 1. Run [npm run build] from repo root.
 2. Verify app backend and website backend health endpoints.
 3. Smoke test app flows:
+
 - Dashboard load
 - Marketplace open and item render
 - Cattle create and edit
 - Camp create and edit
 - Vaccine schedule and reminder
 - Count create and delete
+
 4. Confirm offline queue behavior in app health panel.
 
 ## 7) Recommended release cadence

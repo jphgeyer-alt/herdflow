@@ -46,9 +46,10 @@ export default async function AdminSellersPage() {
   return (
     <main className="space-y-4 pb-10">
       <header>
-        <h1 className="text-3xl font-semibold text-brand-navy">Manage Sellers</h1>
+        <h1 className="text-brand-navy text-3xl font-semibold">Manage Sellers</h1>
         <p className="text-sm text-[#38537a]">
-          Review seller registrations, approve or reject applications, and track sales history per seller.
+          Review seller registrations, approve or reject applications, and track sales history per
+          seller.
         </p>
       </header>
       <SellersManager initialSellers={sellers} />

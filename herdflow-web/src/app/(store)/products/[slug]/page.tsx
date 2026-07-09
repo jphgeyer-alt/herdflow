@@ -71,7 +71,7 @@ async function getRelatedProducts(categoryId: string, currentProductId: string) 
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  
+
   let product: Awaited<ReturnType<typeof getProduct>> = null;
   let relatedProducts: Awaited<ReturnType<typeof getRelatedProducts>> = [];
 
@@ -99,7 +99,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <main className="space-y-6 pb-10">
       <nav className="text-sm text-[#38537a]">
-        <Link className="font-semibold text-brand-navy" href="/shop">
+        <Link className="text-brand-navy font-semibold" href="/shop">
           Back to Shop
         </Link>
       </nav>
@@ -122,7 +122,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-brand-navy">Related Products</h2>
+          <h2 className="text-brand-navy text-2xl font-semibold">Related Products</h2>
           <Link className="text-sm font-semibold text-[#38537a]" href="/shop">
             View all
           </Link>
@@ -145,8 +145,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img alt={photo.alt} className="h-36 w-full object-cover" src={photo.src} />
                   <div className="space-y-1 p-3">
-                    <p className="line-clamp-2 text-sm font-semibold text-brand-navy">{item.name}</p>
-                    <p className="text-sm font-semibold text-brand-gold">{toCurrency(item.priceCents)}</p>
+                    <p className="text-brand-navy line-clamp-2 text-sm font-semibold">
+                      {item.name}
+                    </p>
+                    <p className="text-brand-gold text-sm font-semibold">
+                      {toCurrency(item.priceCents)}
+                    </p>
                     <p className="text-xs text-[#5d7497]">
                       {item.stockOnHand > 0 ? `${item.stockOnHand} in stock` : "Out of stock"}
                     </p>

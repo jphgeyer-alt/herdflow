@@ -35,12 +35,7 @@ const PROVINCES = [
   "Mpumalanga",
 ];
 
-const MARKETING_GOALS = [
-  "Brand Awareness",
-  "Lead Generation",
-  "Direct Sales",
-  "Event Promotion",
-];
+const MARKETING_GOALS = ["Brand Awareness", "Lead Generation", "Direct Sales", "Event Promotion"];
 
 type FormData = {
   companyName: string;
@@ -74,7 +69,11 @@ const EMPTY_FORM: FormData = {
 
 export default function MarketingRegisterPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[#5d7497]">Loading…</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center text-[#5d7497]">Loading…</div>
+      }
+    >
       <RegisterForm />
     </Suspense>
   );
@@ -115,7 +114,8 @@ function RegisterForm() {
     if (s === 1) {
       if (!form.companyName.trim()) errs.companyName = "Company name is required";
       if (!form.contactPerson.trim()) errs.contactPerson = "Contact person is required";
-      if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) errs.email = "Valid email is required";
+      if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
+        errs.email = "Valid email is required";
       if (!form.phone.trim() || form.phone.length < 10) errs.phone = "Valid phone is required";
       if (!form.businessType) errs.businessType = "Business type is required";
     }
@@ -149,7 +149,10 @@ function RegisterForm() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) { setSubmitError(data.error || "Submission failed. Please try again."); return; }
+      if (!res.ok) {
+        setSubmitError(data.error || "Submission failed. Please try again.");
+        return;
+      }
       router.push("/marketing/thank-you");
     } catch {
       setSubmitError("Network error. Please try again.");
@@ -164,70 +167,101 @@ function RegisterForm() {
     <div className="min-h-screen bg-[#f5f4ef] py-12">
       <div className="mx-auto max-w-2xl px-4 sm:px-6">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="mb-8 text-center">
           <Link href="/marketing" className="text-sm text-[#2E7D32] hover:underline">
             ← Back to Marketing
           </Link>
-          <h1 className="mt-4 text-3xl font-black text-[#1B3A6B] uppercase">Become a Sponsor</h1>
-          <p className="mt-2 text-[#5d7497] text-sm">Complete your application in 4 simple steps</p>
+          <h1 className="mt-4 text-3xl font-black uppercase text-[#1B3A6B]">Become a Sponsor</h1>
+          <p className="mt-2 text-sm text-[#5d7497]">Complete your application in 4 simple steps</p>
         </div>
 
         {/* Progress */}
-        <div className="flex items-center justify-between mb-8 px-2">
+        <div className="mb-8 flex items-center justify-between px-2">
           {stepLabels.map((label, i) => (
-            <div key={label} className="flex-1 flex flex-col items-center">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm border-2 transition ${
-                step > i + 1 ? "bg-[#2E7D32] border-[#2E7D32] text-white" :
-                step === i + 1 ? "bg-[#1B3A6B] border-[#1B3A6B] text-white" :
-                "bg-white border-[#cdd8e7] text-[#9aabb9]"
-              }`}>
+            <div key={label} className="flex flex-1 flex-col items-center">
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-sm font-bold transition ${
+                  step > i + 1
+                    ? "border-[#2E7D32] bg-[#2E7D32] text-white"
+                    : step === i + 1
+                      ? "border-[#1B3A6B] bg-[#1B3A6B] text-white"
+                      : "border-[#cdd8e7] bg-white text-[#9aabb9]"
+                }`}
+              >
                 {step > i + 1 ? "✓" : i + 1}
               </div>
-              <span className="text-[10px] text-[#5d7497] mt-1 text-center hidden sm:block">{label}</span>
-              {i < stepLabels.length - 1 && (
-                <div className="hidden" />
-              )}
+              <span className="mt-1 hidden text-center text-[10px] text-[#5d7497] sm:block">
+                {label}
+              </span>
+              {i < stepLabels.length - 1 && <div className="hidden" />}
             </div>
           ))}
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] p-6 sm:p-8">
-
+        <div className="rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-lg sm:p-8">
           {/* STEP 1 */}
           {step === 1 && (
             <div className="space-y-5">
               <h2 className="text-xl font-bold text-[#1B3A6B]">Business Details</h2>
               {[
-                { field: "companyName" as const, label: "Company Name *", placeholder: "Agri Feeds SA (Pty) Ltd" },
-                { field: "contactPerson" as const, label: "Contact Person *", placeholder: "Full name" },
-                { field: "email" as const, label: "Email Address *", placeholder: "info@company.co.za" },
-                { field: "phone" as const, label: "Phone Number *", placeholder: "+27 82 000 0000" },
-                { field: "website" as const, label: "Company Website (optional)", placeholder: "https://www.yourcompany.co.za" },
+                {
+                  field: "companyName" as const,
+                  label: "Company Name *",
+                  placeholder: "Agri Feeds SA (Pty) Ltd",
+                },
+                {
+                  field: "contactPerson" as const,
+                  label: "Contact Person *",
+                  placeholder: "Full name",
+                },
+                {
+                  field: "email" as const,
+                  label: "Email Address *",
+                  placeholder: "info@company.co.za",
+                },
+                {
+                  field: "phone" as const,
+                  label: "Phone Number *",
+                  placeholder: "+27 82 000 0000",
+                },
+                {
+                  field: "website" as const,
+                  label: "Company Website (optional)",
+                  placeholder: "https://www.yourcompany.co.za",
+                },
               ].map(({ field, label, placeholder }) => (
                 <div key={field}>
-                  <label className="block text-sm font-semibold text-[#244367] mb-1">{label}</label>
+                  <label className="mb-1 block text-sm font-semibold text-[#244367]">{label}</label>
                   <input
                     type={field === "email" ? "email" : "text"}
                     value={form[field] as string}
                     onChange={(e) => set(field, e.target.value)}
                     placeholder={placeholder}
-                    className={`w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30 ${errors[field] ? "border-red-400" : "border-[#cdd8e7]"}`}
+                    className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30 ${errors[field] ? "border-red-400" : "border-[#cdd8e7]"}`}
                   />
-                  {errors[field] && <p className="text-xs text-red-600 mt-1">{errors[field]}</p>}
+                  {errors[field] && <p className="mt-1 text-xs text-red-600">{errors[field]}</p>}
                 </div>
               ))}
               <div>
-                <label className="block text-sm font-semibold text-[#244367] mb-1">Business Type *</label>
+                <label className="mb-1 block text-sm font-semibold text-[#244367]">
+                  Business Type *
+                </label>
                 <select
                   value={form.businessType}
                   onChange={(e) => set("businessType", e.target.value)}
-                  className={`w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30 ${errors.businessType ? "border-red-400" : "border-[#cdd8e7]"}`}
+                  className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30 ${errors.businessType ? "border-red-400" : "border-[#cdd8e7]"}`}
                 >
                   <option value="">Select business type…</option>
-                  {BUSINESS_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  {BUSINESS_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
                 </select>
-                {errors.businessType && <p className="text-xs text-red-600 mt-1">{errors.businessType}</p>}
+                {errors.businessType && (
+                  <p className="mt-1 text-xs text-red-600">{errors.businessType}</p>
+                )}
               </div>
             </div>
           )}
@@ -241,7 +275,7 @@ function RegisterForm() {
                 {PACKAGES.map((pkg) => (
                   <label
                     key={pkg.id}
-                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition ${
+                    className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition ${
                       form.package === pkg.id
                         ? "border-[#2E7D32] bg-[#f0faf0]"
                         : "border-[#e4ebf5] hover:border-[#cdd8e7]"
@@ -260,7 +294,7 @@ function RegisterForm() {
                       <p className="text-sm text-[#5d7497]">{pkg.price}</p>
                     </div>
                     {form.package === pkg.id && (
-                      <span className="text-[#2E7D32] font-bold text-lg">✓</span>
+                      <span className="text-lg font-bold text-[#2E7D32]">✓</span>
                     )}
                   </label>
                 ))}
@@ -273,22 +307,28 @@ function RegisterForm() {
             <div className="space-y-5">
               <h2 className="text-xl font-bold text-[#1B3A6B]">Marketing Brief</h2>
               <div>
-                <label className="block text-sm font-semibold text-[#244367] mb-1">Products / Services *</label>
+                <label className="mb-1 block text-sm font-semibold text-[#244367]">
+                  Products / Services *
+                </label>
                 <textarea
                   rows={3}
                   value={form.brief}
                   onChange={(e) => set("brief", e.target.value)}
                   placeholder="Describe your products or services and what you want farmers to know…"
-                  className={`w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30 ${errors.brief ? "border-red-400" : "border-[#cdd8e7]"}`}
+                  className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30 ${errors.brief ? "border-red-400" : "border-[#cdd8e7]"}`}
                 />
-                {errors.brief && <p className="text-xs text-red-600 mt-1">{errors.brief}</p>}
+                {errors.brief && <p className="mt-1 text-xs text-red-600">{errors.brief}</p>}
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#244367] mb-2">Target Provinces *</label>
-                {errors.targetProvinces && <p className="text-xs text-red-600 mb-1">{errors.targetProvinces}</p>}
+                <label className="mb-2 block text-sm font-semibold text-[#244367]">
+                  Target Provinces *
+                </label>
+                {errors.targetProvinces && (
+                  <p className="mb-1 text-xs text-red-600">{errors.targetProvinces}</p>
+                )}
                 <div className="grid grid-cols-2 gap-2">
                   {PROVINCES.map((p) => (
-                    <label key={p} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <label key={p} className="flex cursor-pointer items-center gap-2 text-sm">
                       <input
                         type="checkbox"
                         checked={form.targetProvinces.includes(p)}
@@ -301,27 +341,39 @@ function RegisterForm() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#244367] mb-1">Marketing Goal *</label>
+                <label className="mb-1 block text-sm font-semibold text-[#244367]">
+                  Marketing Goal *
+                </label>
                 <select
                   value={form.marketingGoal}
                   onChange={(e) => set("marketingGoal", e.target.value)}
-                  className={`w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30 ${errors.marketingGoal ? "border-red-400" : "border-[#cdd8e7]"}`}
+                  className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30 ${errors.marketingGoal ? "border-red-400" : "border-[#cdd8e7]"}`}
                 >
                   <option value="">Select goal…</option>
-                  {MARKETING_GOALS.map((g) => <option key={g} value={g}>{g}</option>)}
+                  {MARKETING_GOALS.map((g) => (
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
+                  ))}
                 </select>
-                {errors.marketingGoal && <p className="text-xs text-red-600 mt-1">{errors.marketingGoal}</p>}
+                {errors.marketingGoal && (
+                  <p className="mt-1 text-xs text-red-600">{errors.marketingGoal}</p>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#244367] mb-1">Logo URL (optional)</label>
+                <label className="mb-1 block text-sm font-semibold text-[#244367]">
+                  Logo URL (optional)
+                </label>
                 <input
                   type="url"
                   value={form.logoUrl}
                   onChange={(e) => set("logoUrl", e.target.value)}
                   placeholder="https://your-cdn.com/logo.png"
-                  className="w-full px-4 py-2.5 rounded-lg border border-[#cdd8e7] text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+                  className="w-full rounded-lg border border-[#cdd8e7] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
                 />
-                <p className="text-xs text-[#9aabb9] mt-1">Paste a public URL to your logo (PNG, JPG, SVG)</p>
+                <p className="mt-1 text-xs text-[#9aabb9]">
+                  Paste a public URL to your logo (PNG, JPG, SVG)
+                </p>
               </div>
             </div>
           )}
@@ -330,11 +382,23 @@ function RegisterForm() {
           {step === 4 && (
             <div className="space-y-5">
               <h2 className="text-xl font-bold text-[#1B3A6B]">Confirm Your Application</h2>
-              <div className="bg-[#f5f8fd] rounded-xl p-5 space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-[#5d7497]">Company</span><span className="font-semibold text-[#1B3A6B]">{form.companyName}</span></div>
-                <div className="flex justify-between"><span className="text-[#5d7497]">Contact</span><span className="font-semibold text-[#1B3A6B]">{form.contactPerson}</span></div>
-                <div className="flex justify-between"><span className="text-[#5d7497]">Email</span><span className="font-semibold text-[#1B3A6B]">{form.email}</span></div>
-                <div className="flex justify-between"><span className="text-[#5d7497]">Package</span><span className="font-semibold text-[#2E7D32] uppercase">{form.package}</span></div>
+              <div className="space-y-3 rounded-xl bg-[#f5f8fd] p-5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-[#5d7497]">Company</span>
+                  <span className="font-semibold text-[#1B3A6B]">{form.companyName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#5d7497]">Contact</span>
+                  <span className="font-semibold text-[#1B3A6B]">{form.contactPerson}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#5d7497]">Email</span>
+                  <span className="font-semibold text-[#1B3A6B]">{form.email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#5d7497]">Package</span>
+                  <span className="font-semibold uppercase text-[#2E7D32]">{form.package}</span>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-[#5d7497]">Monthly Investment</span>
                   <span className="font-bold text-[#1B3A6B]">
@@ -342,7 +406,7 @@ function RegisterForm() {
                   </span>
                 </div>
               </div>
-              <label className="flex items-start gap-3 cursor-pointer">
+              <label className="flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
                   checked={form.agreeTerms}
@@ -358,7 +422,7 @@ function RegisterForm() {
               </label>
               {errors.agreeTerms && <p className="text-xs text-red-600">{errors.agreeTerms}</p>}
               {submitError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                   {submitError}
                 </div>
               )}
@@ -366,23 +430,26 @@ function RegisterForm() {
           )}
 
           {/* Navigation buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-[#e4ebf5]">
+          <div className="mt-8 flex justify-between border-t border-[#e4ebf5] pt-6">
             {step > 1 ? (
               <button
                 onClick={() => setStep((s) => s - 1)}
-                className="px-6 py-2.5 border border-[#cdd8e7] rounded-lg text-sm font-semibold text-[#5d7497] hover:border-[#1B3A6B] transition"
+                className="rounded-lg border border-[#cdd8e7] px-6 py-2.5 text-sm font-semibold text-[#5d7497] transition hover:border-[#1B3A6B]"
               >
                 ← Back
               </button>
             ) : (
-              <Link href="/marketing" className="px-6 py-2.5 border border-[#cdd8e7] rounded-lg text-sm font-semibold text-[#5d7497] hover:border-[#1B3A6B] transition">
+              <Link
+                href="/marketing"
+                className="rounded-lg border border-[#cdd8e7] px-6 py-2.5 text-sm font-semibold text-[#5d7497] transition hover:border-[#1B3A6B]"
+              >
                 ← Back
               </Link>
             )}
             {step < 4 ? (
               <button
                 onClick={next}
-                className="px-8 py-2.5 bg-[#1B3A6B] hover:bg-[#122844] text-white rounded-lg text-sm font-bold uppercase tracking-wide transition"
+                className="rounded-lg bg-[#1B3A6B] px-8 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#122844]"
               >
                 Continue →
               </button>
@@ -390,7 +457,7 @@ function RegisterForm() {
               <button
                 onClick={submit}
                 disabled={submitting}
-                className="px-8 py-2.5 bg-[#2E7D32] hover:bg-[#1d5e20] disabled:opacity-60 text-white rounded-lg text-sm font-bold uppercase tracking-wide transition"
+                className="rounded-lg bg-[#2E7D32] px-8 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#1d5e20] disabled:opacity-60"
               >
                 {submitting ? "Submitting…" : "Submit Application"}
               </button>

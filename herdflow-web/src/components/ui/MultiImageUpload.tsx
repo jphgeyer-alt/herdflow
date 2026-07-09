@@ -16,19 +16,28 @@ function compressToBase64(file: File): Promise<string> {
       const w = Math.round(img.naturalWidth * scale);
       const h = Math.round(img.naturalHeight * scale);
       const canvas = document.createElement("canvas");
-      canvas.width = w; canvas.height = h;
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext("2d");
       if (!ctx) return reject(new Error("Canvas unavailable"));
       ctx.drawImage(img, 0, 0, w, h);
       resolve(canvas.toDataURL("image/jpeg", JPEG_QUALITY));
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")); };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Image load failed"));
+    };
     img.src = url;
   });
 }
 
 function isValidImage(src: string) {
-  return src.startsWith("data:image/") || src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/");
+  return (
+    src.startsWith("data:image/") ||
+    src.startsWith("http://") ||
+    src.startsWith("https://") ||
+    src.startsWith("/")
+  );
 }
 
 interface MultiImageUploadProps {
@@ -40,7 +49,14 @@ interface MultiImageUploadProps {
   hint?: string;
 }
 
-export function MultiImageUpload({ label, values, onChange, maxImages = 10, required, hint }: MultiImageUploadProps) {
+export function MultiImageUpload({
+  label,
+  values,
+  onChange,
+  maxImages = 10,
+  required,
+  hint,
+}: MultiImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -49,13 +65,21 @@ export function MultiImageUpload({ label, values, onChange, maxImages = 10, requ
   async function processFiles(files: File[]) {
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
     setError("");
-    const toUpload = files.filter((f) => allowed.includes(f.type)).slice(0, maxImages - values.length);
-    if (toUpload.length === 0) { setError("Only JPEG, PNG, WebP, GIF images are accepted."); return; }
+    const toUpload = files
+      .filter((f) => allowed.includes(f.type))
+      .slice(0, maxImages - values.length);
+    if (toUpload.length === 0) {
+      setError("Only JPEG, PNG, WebP, GIF images are accepted.");
+      return;
+    }
     setUploading(true);
     const newUrls: string[] = [];
     for (const file of toUpload) {
-      try { newUrls.push(await compressToBase64(file)); }
-      catch { setError("Failed to process one or more images."); }
+      try {
+        newUrls.push(await compressToBase64(file));
+      } catch {
+        setError("Failed to process one or more images.");
+      }
     }
     setUploading(false);
     if (newUrls.length) onChange([...values, ...newUrls]);
@@ -69,30 +93,37 @@ export function MultiImageUpload({ label, values, onChange, maxImages = 10, requ
     <div className="space-y-2">
       {label && (
         <label className="block text-sm font-semibold text-[#244367]">
-          {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+          {label}
+          {required && <span className="ml-0.5 text-red-500">*</span>}
         </label>
       )}
 
       {/* Image grid */}
       {values.length > 0 && (
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {values.map((src, i) => (
-            <div key={i} className={`relative rounded-lg overflow-hidden border-2 ${i === 0 ? "border-[#2E7D32]" : "border-[#e4ebf5]"} group`} style={{ aspectRatio: "4/3" }}>
+            <div
+              key={i}
+              className={`relative overflow-hidden rounded-lg border-2 ${i === 0 ? "border-[#2E7D32]" : "border-[#e4ebf5]"} group`}
+              style={{ aspectRatio: "4/3" }}
+            >
               {isValidImage(src) ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={src} alt={`Lot image ${i + 1}`} className="w-full h-full object-cover" />
+                <img src={src} alt={`Lot image ${i + 1}`} className="h-full w-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-[#f0f5ff] flex items-center justify-center">
+                <div className="flex h-full w-full items-center justify-center bg-[#f0f5ff]">
                   <ImageIcon size={24} className="text-[#cdd8e7]" />
                 </div>
               )}
               {i === 0 && (
-                <div className="absolute top-1 left-1 bg-[#2E7D32] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">MAIN</div>
+                <div className="absolute left-1 top-1 rounded bg-[#2E7D32] px-1.5 py-0.5 text-[9px] font-bold text-white">
+                  MAIN
+                </div>
               )}
               <button
                 type="button"
                 onClick={() => removeImage(i)}
-                className="absolute top-1 right-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white opacity-0 transition group-hover:opacity-100"
               >
                 <X size={10} />
               </button>
@@ -104,15 +135,15 @@ export function MultiImageUpload({ label, values, onChange, maxImages = 10, requ
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={uploading}
-              className="border-2 border-dashed border-[#cdd8e7] rounded-lg flex flex-col items-center justify-center text-[#9aabb9] hover:border-[#1B3A6B] hover:text-[#1B3A6B] transition disabled:opacity-50"
+              className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#cdd8e7] text-[#9aabb9] transition hover:border-[#1B3A6B] hover:text-[#1B3A6B] disabled:opacity-50"
               style={{ aspectRatio: "4/3" }}
             >
               {uploading ? (
-                <div className="w-5 h-5 border-2 border-[#1B3A6B] border-t-transparent rounded-full animate-spin" />
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#1B3A6B] border-t-transparent" />
               ) : (
                 <>
                   <Upload size={18} />
-                  <span className="text-[10px] mt-1 font-semibold">Add</span>
+                  <span className="mt-1 text-[10px] font-semibold">Add</span>
                 </>
               )}
             </button>
@@ -123,20 +154,26 @@ export function MultiImageUpload({ label, values, onChange, maxImages = 10, requ
       {/* Drop zone — shown when empty */}
       {values.length === 0 && (
         <div
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => {
-            e.preventDefault(); setDragOver(false);
+            e.preventDefault();
+            setDragOver(false);
             processFiles(Array.from(e.dataTransfer.files));
           }}
           onClick={() => inputRef.current?.click()}
           className={`cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition ${
-            dragOver ? "border-[#1B3A6B] bg-[#f0f5ff]" : "border-[#cdd8e7] hover:border-[#1B3A6B] hover:bg-[#f8fafd]"
+            dragOver
+              ? "border-[#1B3A6B] bg-[#f0f5ff]"
+              : "border-[#cdd8e7] hover:border-[#1B3A6B] hover:bg-[#f8fafd]"
           }`}
         >
           {uploading ? (
             <div className="flex flex-col items-center gap-2">
-              <div className="w-8 h-8 border-4 border-[#1B3A6B] border-t-transparent rounded-full animate-spin" />
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1B3A6B] border-t-transparent" />
               <p className="text-sm text-[#5d7497]">Processing images…</p>
             </div>
           ) : (
@@ -144,7 +181,9 @@ export function MultiImageUpload({ label, values, onChange, maxImages = 10, requ
               <Upload size={28} />
               <p className="text-sm font-semibold">Drag & drop images here</p>
               <p className="text-xs">or click to browse</p>
-              <p className="text-xs mt-1">JPEG, PNG, WebP · Up to {maxImages} images · Max 8MB each</p>
+              <p className="mt-1 text-xs">
+                JPEG, PNG, WebP · Up to {maxImages} images · Max 8MB each
+              </p>
             </div>
           )}
         </div>
@@ -161,12 +200,18 @@ export function MultiImageUpload({ label, values, onChange, maxImages = 10, requ
 
       {/* Count + error */}
       <div className="flex items-center justify-between">
-        <p className={`text-xs ${values.length === 0 && required ? "text-amber-600 font-semibold" : "text-[#9aabb9]"}`}>
+        <p
+          className={`text-xs ${values.length === 0 && required ? "font-semibold text-amber-600" : "text-[#9aabb9]"}`}
+        >
           {values.length} of {maxImages} images
           {values.length === 0 && required ? " — at least 1 required" : ""}
         </p>
         {values.length > 0 && values.length < maxImages && (
-          <button type="button" onClick={() => inputRef.current?.click()} className="text-xs text-[#2E7D32] hover:underline font-semibold">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="text-xs font-semibold text-[#2E7D32] hover:underline"
+          >
             + Add more
           </button>
         )}

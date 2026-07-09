@@ -1,0 +1,58 @@
+{
+  "name": "herdflow-desktop",
+  "private": true,
+  "version": "1.0.0",
+  "description": "HerdFlow Desktop — native Windows app for the HerdFlow farm marketplace.",
+  "main": "src/main.js",
+  "author": "HerdFlow",
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env HERDFLOW_DESKTOP_URL=http://localhost:3000 electron .",
+    "build": "electron-builder --win",
+    "release": "electron-builder --win --publish always",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^37.2.5",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.herdflow.desktop",
+    "productName": "HerdFlow",
+    "directories": {
+      "output": "dist",
+      "buildResources": "resources"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "icon": "resources/icon.png",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "HerdFlow-Setup.exe"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "jphgeyer-alt",
+      "repo": "herdflow"
+    }
+  }
+}

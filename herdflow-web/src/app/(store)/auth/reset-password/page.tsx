@@ -22,12 +22,20 @@ function ResetForm() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!token) { setTokenState("invalid"); return; }
+    if (!token) {
+      setTokenState("invalid");
+      return;
+    }
     fetch(`/api/auth/reset-password?token=${encodeURIComponent(token)}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.valid) { setTokenState("valid"); return; }
-        setTokenState(d.reason === "expired" ? "expired" : d.reason === "used" ? "used" : "invalid");
+        if (d.valid) {
+          setTokenState("valid");
+          return;
+        }
+        setTokenState(
+          d.reason === "expired" ? "expired" : d.reason === "used" ? "used" : "invalid",
+        );
       })
       .catch(() => setTokenState("invalid"));
   }, [token]);
@@ -48,7 +56,10 @@ function ResetForm() {
         body: JSON.stringify({ token, password }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "Failed to reset password."); return; }
+      if (!res.ok) {
+        setError(data.error || "Failed to reset password.");
+        return;
+      }
       setDone(true);
     } catch {
       setError("Network error. Please try again.");
@@ -60,9 +71,9 @@ function ResetForm() {
   // ── Checking ──────────────────────────────────────────────────────────────
   if (tokenState === "checking") {
     return (
-      <div className="text-center py-8">
-        <div className="w-8 h-8 border-4 border-[#1B3A6B] border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-sm text-[#5d7497] mt-3">Verifying reset link…</p>
+      <div className="py-8 text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-[#1B3A6B] border-t-transparent" />
+        <p className="mt-3 text-sm text-[#5d7497]">Verifying reset link…</p>
       </div>
     );
   }
@@ -70,13 +81,18 @@ function ResetForm() {
   // ── Expired ───────────────────────────────────────────────────────────────
   if (tokenState === "expired") {
     return (
-      <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
+      <div className="space-y-4 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
           <Clock size={32} className="text-amber-600" />
         </div>
         <h2 className="text-xl font-black text-[#1B3A6B]">Link Has Expired</h2>
-        <p className="text-sm text-[#5d7497]">This password reset link has expired. Reset links are valid for 1 hour only.</p>
-        <Link href="/auth/forgot-password" className="inline-block mt-2 px-6 py-3 bg-[#2E7D32] hover:bg-[#1d5e20] text-white font-bold rounded-lg transition text-sm">
+        <p className="text-sm text-[#5d7497]">
+          This password reset link has expired. Reset links are valid for 1 hour only.
+        </p>
+        <Link
+          href="/auth/forgot-password"
+          className="mt-2 inline-block rounded-lg bg-[#2E7D32] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#1d5e20]"
+        >
           Request New Link
         </Link>
       </div>
@@ -86,8 +102,8 @@ function ResetForm() {
   // ── Used / Invalid ────────────────────────────────────────────────────────
   if (tokenState === "used" || tokenState === "invalid") {
     return (
-      <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+      <div className="space-y-4 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
           <X size={32} className="text-red-600" />
         </div>
         <h2 className="text-xl font-black text-[#1B3A6B]">
@@ -98,7 +114,10 @@ function ResetForm() {
             ? "This password reset link has already been used."
             : "This password reset link is invalid or has already been used."}
         </p>
-        <Link href="/auth/forgot-password" className="inline-block mt-2 px-6 py-3 bg-[#2E7D32] hover:bg-[#1d5e20] text-white font-bold rounded-lg transition text-sm">
+        <Link
+          href="/auth/forgot-password"
+          className="mt-2 inline-block rounded-lg bg-[#2E7D32] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#1d5e20]"
+        >
           Request New Link
         </Link>
       </div>
@@ -108,13 +127,18 @@ function ResetForm() {
   // ── Done ──────────────────────────────────────────────────────────────────
   if (done) {
     return (
-      <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+      <div className="space-y-4 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
           <CheckCircle size={32} className="text-[#2E7D32]" />
         </div>
         <h2 className="text-2xl font-black text-[#1B3A6B]">Password Reset Successful</h2>
-        <p className="text-sm text-[#5d7497]">Your password has been updated. You can now log in with your new password.</p>
-        <Link href="/auth/login" className="inline-block mt-3 px-8 py-3 bg-[#2E7D32] hover:bg-[#1d5e20] text-white font-bold rounded-lg transition text-sm uppercase tracking-wide shadow-lg">
+        <p className="text-sm text-[#5d7497]">
+          Your password has been updated. You can now log in with your new password.
+        </p>
+        <Link
+          href="/auth/login"
+          className="mt-3 inline-block rounded-lg bg-[#2E7D32] px-8 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-lg transition hover:bg-[#1d5e20]"
+        >
           Login Now
         </Link>
       </div>
@@ -124,11 +148,13 @@ function ResetForm() {
   // ── Valid token — show form ────────────────────────────────────────────────
   return (
     <>
-      <h1 className="text-2xl font-black text-[#1B3A6B] mb-1">Create New Password</h1>
-      <p className="text-sm text-[#5d7497] mb-7">Choose a strong password for your HerdFlow account.</p>
+      <h1 className="mb-1 text-2xl font-black text-[#1B3A6B]">Create New Password</h1>
+      <p className="mb-7 text-sm text-[#5d7497]">
+        Choose a strong password for your HerdFlow account.
+      </p>
 
       {error && (
-        <div className="mb-5 flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <div className="mb-5 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           <AlertTriangle size={16} /> {error}
         </div>
       )}
@@ -160,7 +186,7 @@ function ResetForm() {
             error={passwordMismatch ? "Passwords do not match" : undefined}
           />
           {passwordsMatch && (
-            <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+            <p className="mt-1 flex items-center gap-1 text-xs text-green-600">
               <CheckCircle size={12} /> Passwords match
             </p>
           )}
@@ -169,11 +195,11 @@ function ResetForm() {
         <button
           type="submit"
           disabled={!canSubmit}
-          className="w-full bg-[#2E7D32] hover:bg-[#1d5e20] text-white font-bold uppercase tracking-wide py-3.5 rounded-lg shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2E7D32] py-3.5 font-bold uppercase tracking-wide text-white shadow-lg transition hover:bg-[#1d5e20] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? (
             <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               Resetting…
             </>
           ) : (
@@ -187,16 +213,18 @@ function ResetForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen bg-[#f5f4ef] flex items-center justify-center px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-[#f5f4ef] px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl border border-[#e4ebf5] p-8">
+        <div className="rounded-2xl border border-[#e4ebf5] bg-white p-8 shadow-xl">
           {/* Logo */}
-          <div className="text-center mb-6">
-            <div className="w-12 h-12 bg-[#1B3A6B] rounded-xl flex items-center justify-center mx-auto mb-3">
-              <span className="text-white font-black text-sm">HF</span>
+          <div className="mb-6 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B3A6B]">
+              <span className="text-sm font-black text-white">HF</span>
             </div>
           </div>
-          <Suspense fallback={<div className="text-center py-8 text-[#5d7497] text-sm">Loading…</div>}>
+          <Suspense
+            fallback={<div className="py-8 text-center text-sm text-[#5d7497]">Loading…</div>}
+          >
             <ResetForm />
           </Suspense>
         </div>

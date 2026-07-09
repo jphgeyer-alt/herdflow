@@ -19,14 +19,23 @@ export async function GET(request: Request) {
     });
     const staffWithUsers = await Promise.all(
       staffProfiles.map(async (s) => {
-        const u = await prisma.user.findUnique({ where: { id: s.userId }, select: { fullName: true, email: true, createdAt: true } });
-        return { id: s.userId, name: u?.fullName ?? '', email: u?.email ?? '', role: s.mobileRole, joinedAt: u?.createdAt ?? '' };
-      })
+        const u = await prisma.user.findUnique({
+          where: { id: s.userId },
+          select: { fullName: true, email: true, createdAt: true },
+        });
+        return {
+          id: s.userId,
+          name: u?.fullName ?? "",
+          email: u?.email ?? "",
+          role: s.mobileRole,
+          joinedAt: u?.createdAt ?? "",
+        };
+      }),
     );
 
     return NextResponse.json({
-      farmCode:   profile.farmCode,
-      farmName:   profile.farmName,
+      farmCode: profile.farmCode,
+      farmName: profile.farmName,
       mobileRole: profile.mobileRole,
       staff: staffWithUsers,
     });
@@ -35,4 +44,3 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
-

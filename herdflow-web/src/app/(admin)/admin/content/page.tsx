@@ -22,9 +22,10 @@ export default async function AdminContentPage() {
   return (
     <main className="space-y-4 pb-10">
       <header>
-        <h1 className="text-3xl font-semibold text-brand-navy">Site Content Editor</h1>
+        <h1 className="text-brand-navy text-3xl font-semibold">Site Content Editor</h1>
         <p className="text-sm text-[#38537a]">
-          Edit the homepage banner and rename categories without touching code. Changes take effect immediately.
+          Edit the homepage banner and rename categories without touching code. Changes take effect
+          immediately.
         </p>
       </header>
       <ContentEditor initialContent={content} initialCategories={categories} />

@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserIdFromSession } from "@/lib/user-auth";
 
 export interface MobileUser {
-  id: string;               // The authenticated user's own ID
+  id: string; // The authenticated user's own ID
   email: string;
   fullName: string;
   phone: string | null;

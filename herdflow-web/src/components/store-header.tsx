@@ -1,10 +1,21 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ShoppingCart, Search, Menu, X, User, LogOut, Settings, Package, Truck, List } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { useCart } from '@/lib/cart-context';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ShoppingCart,
+  Search,
+  Menu,
+  X,
+  User,
+  LogOut,
+  Settings,
+  Package,
+  Truck,
+  List,
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import { useCart } from "@/lib/cart-context";
 
 type UserData = {
   id: string;
@@ -23,7 +34,7 @@ export function StoreHeader() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    fetch("/api/auth/me")
       .then((r) => r.json())
       .then((data) => {
         setUser(data.user || null);
@@ -32,106 +43,108 @@ export function StoreHeader() {
   }, []);
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
     setUserMenuOpen(false);
-    router.push('/');
+    router.push("/");
   }
 
   const getDashboardLink = () => {
-    if (user?.sellerProfile) return '/dashboard/seller';
-    if (user?.logisticsProfile) return '/dashboard/logistics';
-    return '/dashboard/buyer';
+    if (user?.sellerProfile) return "/dashboard/seller";
+    if (user?.logisticsProfile) return "/dashboard/logistics";
+    return "/dashboard/buyer";
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#1B3A6B] border-b border-[#1B3A6B] shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-[#1B3A6B] bg-[#1B3A6B] shadow-sm">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex h-16 items-center justify-between">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
+          <Link href="/" className="flex shrink-0 items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
               alt="HerdFlow"
               width={32}
               height={32}
-              className="object-contain w-8 h-8"
+              className="h-8 w-8 object-contain"
             />
             <div className="flex flex-col leading-tight">
-              <span className="text-white font-bold text-base">HerdFlow</span>
-              <span className="text-[10px] text-[#A07C3A] font-semibold hidden sm:block">Agricultural Marketplace</span>
+              <span className="text-base font-bold text-white">HerdFlow</span>
+              <span className="hidden text-[10px] font-semibold text-[#A07C3A] sm:block">
+                Agricultural Marketplace
+              </span>
             </div>
           </Link>
 
           {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center gap-4 xl:gap-5 flex-nowrap overflow-x-auto scrollbar-none">
-            <Link 
-              href="/" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
+          <nav className="scrollbar-none hidden flex-nowrap items-center gap-4 overflow-x-auto md:flex xl:gap-5">
+            <Link
+              href="/"
+              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
             >
               Home
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
-            <Link 
-              href="/about" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
+            <Link
+              href="/about"
+              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
             >
               About Us
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
-            <Link 
-              href="/#features" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
+            <Link
+              href="/#features"
+              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
             >
               Features
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
-            <Link 
-              href="/shop" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
+            <Link
+              href="/shop"
+              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
             >
               Products
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
-            <Link 
-              href="/listings" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
+            <Link
+              href="/listings"
+              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
             >
               Livestock
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
-            <Link 
-              href="/auction" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
+            <Link
+              href="/auction"
+              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
             >
               Auctions
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
-            <Link 
-              href="/register/logistics" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
+            <Link
+              href="/register/logistics"
+              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
             >
               Transport
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
-            <Link 
-              href="/marketing" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
+            <Link
+              href="/marketing"
+              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
             >
               Marketing & Ads
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
-            <Link 
-              href="/contact" 
-              className="text-white hover:text-[#A07C3A] font-medium transition relative group text-sm whitespace-nowrap"
+            <Link
+              href="/contact"
+              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
             >
               Contact
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#A07C3A] group-hover:w-full transition-all" />
+              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
             <Link
               href="/download"
-              className="ml-1 rounded-lg bg-[#A07C3A] hover:bg-[#8a6830] text-white text-xs font-bold px-3 py-1.5 transition-colors whitespace-nowrap"
+              className="ml-1 whitespace-nowrap rounded-lg bg-[#A07C3A] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#8a6830]"
             >
               📱 Download App
             </Link>
@@ -139,16 +152,16 @@ export function StoreHeader() {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4">
-            <button className="hidden md:flex p-2 text-white hover:text-[#A07C3A] transition">
+            <button className="hidden p-2 text-white transition hover:text-[#A07C3A] md:flex">
               <Search size={20} />
             </button>
-            <button 
+            <button
               onClick={openDrawer}
-              className="relative p-2 text-white hover:text-[#A07C3A] transition"
+              className="relative p-2 text-white transition hover:text-[#A07C3A]"
             >
               <ShoppingCart size={20} />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#2E7D32] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#2E7D32] text-xs font-bold text-white">
                   {totalItems}
                 </span>
               )}
@@ -161,17 +174,17 @@ export function StoreHeader() {
                   <div className="relative hidden md:block">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="flex items-center justify-center w-9 h-9 rounded-full bg-[#2E7D32] hover:bg-[#1d5e20] text-white text-sm font-bold uppercase transition"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2E7D32] text-sm font-bold uppercase text-white transition hover:bg-[#1d5e20]"
                       title={user.fullName}
                     >
                       {user.fullName.charAt(0)}
                     </button>
 
                     {userMenuOpen && (
-                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-[#e4ebf5] py-2">
+                      <div className="absolute right-0 mt-2 w-56 rounded-lg border border-[#e4ebf5] bg-white py-2 shadow-xl">
                         <Link
                           href={getDashboardLink()}
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-[#244367] hover:bg-[#f5f8fd] transition"
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-[#244367] transition hover:bg-[#f5f8fd]"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           <User size={16} />
@@ -180,7 +193,7 @@ export function StoreHeader() {
                         {!user.sellerProfile && !user.logisticsProfile && (
                           <Link
                             href="/orders"
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-[#244367] hover:bg-[#f5f8fd] transition"
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-[#244367] transition hover:bg-[#f5f8fd]"
                             onClick={() => setUserMenuOpen(false)}
                           >
                             <Package size={16} />
@@ -190,7 +203,7 @@ export function StoreHeader() {
                         {user.sellerProfile && (
                           <Link
                             href="/dashboard/seller"
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-[#244367] hover:bg-[#f5f8fd] transition"
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-[#244367] transition hover:bg-[#f5f8fd]"
                             onClick={() => setUserMenuOpen(false)}
                           >
                             <List size={16} />
@@ -200,7 +213,7 @@ export function StoreHeader() {
                         {user.logisticsProfile && (
                           <Link
                             href="/dashboard/logistics"
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-[#244367] hover:bg-[#f5f8fd] transition"
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-[#244367] transition hover:bg-[#f5f8fd]"
                             onClick={() => setUserMenuOpen(false)}
                           >
                             <Truck size={16} />
@@ -209,16 +222,16 @@ export function StoreHeader() {
                         )}
                         <Link
                           href="/account/settings"
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-[#244367] hover:bg-[#f5f8fd] transition"
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-[#244367] transition hover:bg-[#f5f8fd]"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           <Settings size={16} />
                           Account Settings
                         </Link>
-                        <div className="border-t border-[#e4ebf5] my-2" />
+                        <div className="my-2 border-t border-[#e4ebf5]" />
                         <button
                           onClick={handleLogout}
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition w-full text-left"
+                          className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-red-600 transition hover:bg-red-50"
                         >
                           <LogOut size={16} />
                           Logout
@@ -229,7 +242,7 @@ export function StoreHeader() {
                 ) : (
                   <Link
                     href="/auth/login"
-                    className="hidden md:inline-flex items-center gap-2 px-6 py-2 bg-[#2E7D32] hover:bg-[#1d5e20] rounded-lg text-white text-sm font-bold uppercase tracking-wide transition"
+                    className="hidden items-center gap-2 rounded-lg bg-[#2E7D32] px-6 py-2 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#1d5e20] md:inline-flex"
                   >
                     Login / Sign Up
                   </Link>
@@ -239,7 +252,7 @@ export function StoreHeader() {
 
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 text-white hover:text-[#A07C3A] transition"
+              className="p-2 text-white transition hover:text-[#A07C3A] md:hidden"
             >
               {menuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -248,74 +261,110 @@ export function StoreHeader() {
 
         {/* Mobile Menu */}
         {menuOpen && (
-          <nav className="md:hidden pb-4 space-y-2">
-            <Link href="/" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+          <nav className="space-y-2 pb-4 md:hidden">
+            <Link href="/" className="block rounded px-4 py-2 text-white hover:bg-white/10">
               Home
             </Link>
-            <Link href="/about" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+            <Link href="/about" className="block rounded px-4 py-2 text-white hover:bg-white/10">
               About Us
             </Link>
-            <Link href="/#features" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+            <Link
+              href="/#features"
+              className="block rounded px-4 py-2 text-white hover:bg-white/10"
+            >
               Features
             </Link>
-            <Link href="/shop" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+            <Link href="/shop" className="block rounded px-4 py-2 text-white hover:bg-white/10">
               Products
             </Link>
-            <Link href="/listings" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+            <Link href="/listings" className="block rounded px-4 py-2 text-white hover:bg-white/10">
               Livestock
             </Link>
-            <Link href="/auction" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+            <Link href="/auction" className="block rounded px-4 py-2 text-white hover:bg-white/10">
               Auctions
             </Link>
-            <Link href="/register/logistics" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+            <Link
+              href="/register/logistics"
+              className="block rounded px-4 py-2 text-white hover:bg-white/10"
+            >
               Transport
             </Link>
-            <Link href="/marketing" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+            <Link
+              href="/marketing"
+              className="block rounded px-4 py-2 text-white hover:bg-white/10"
+            >
               Marketing & Ads
             </Link>
-            <Link href="/contact" className="block px-4 py-2 text-white hover:bg-white/10 rounded">
+            <Link href="/contact" className="block rounded px-4 py-2 text-white hover:bg-white/10">
               Contact
             </Link>
-            <Link href="/download" className="block mx-4 py-2 text-center rounded-lg bg-[#A07C3A] text-white font-bold text-sm" onClick={() => setMenuOpen(false)}>
+            <Link
+              href="/download"
+              className="mx-4 block rounded-lg bg-[#A07C3A] py-2 text-center text-sm font-bold text-white"
+              onClick={() => setMenuOpen(false)}
+            >
               📱 Download App
             </Link>
             {!loading && (
               <>
                 {user ? (
                   <>
-                    <div className="border-t border-white/20 my-2" />
-                    <Link href={getDashboardLink()} className="block px-4 py-2 text-white hover:bg-white/10 rounded" onClick={() => setMenuOpen(false)}>
+                    <div className="my-2 border-t border-white/20" />
+                    <Link
+                      href={getDashboardLink()}
+                      className="block rounded px-4 py-2 text-white hover:bg-white/10"
+                      onClick={() => setMenuOpen(false)}
+                    >
                       My Dashboard
                     </Link>
                     {!user.sellerProfile && !user.logisticsProfile && (
-                      <Link href="/orders" className="block px-4 py-2 text-white hover:bg-white/10 rounded" onClick={() => setMenuOpen(false)}>
+                      <Link
+                        href="/orders"
+                        className="block rounded px-4 py-2 text-white hover:bg-white/10"
+                        onClick={() => setMenuOpen(false)}
+                      >
                         My Orders
                       </Link>
                     )}
                     {user.sellerProfile && (
-                      <Link href="/dashboard/seller" className="block px-4 py-2 text-white hover:bg-white/10 rounded" onClick={() => setMenuOpen(false)}>
+                      <Link
+                        href="/dashboard/seller"
+                        className="block rounded px-4 py-2 text-white hover:bg-white/10"
+                        onClick={() => setMenuOpen(false)}
+                      >
                         My Listings
                       </Link>
                     )}
                     {user.logisticsProfile && (
-                      <Link href="/dashboard/logistics" className="block px-4 py-2 text-white hover:bg-white/10 rounded" onClick={() => setMenuOpen(false)}>
+                      <Link
+                        href="/dashboard/logistics"
+                        className="block rounded px-4 py-2 text-white hover:bg-white/10"
+                        onClick={() => setMenuOpen(false)}
+                      >
                         My Fleet
                       </Link>
                     )}
-                    <Link href="/account/settings" className="block px-4 py-2 text-white hover:bg-white/10 rounded" onClick={() => setMenuOpen(false)}>
+                    <Link
+                      href="/account/settings"
+                      className="block rounded px-4 py-2 text-white hover:bg-white/10"
+                      onClick={() => setMenuOpen(false)}
+                    >
                       Account Settings
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-red-300 hover:bg-white/10 rounded"
+                      className="block w-full rounded px-4 py-2 text-left text-red-300 hover:bg-white/10"
                     >
                       Logout
                     </button>
                   </>
                 ) : (
                   <>
-                    <div className="border-t border-white/20 my-2" />
-                    <Link href="/auth/login" className="block px-4 py-2 text-white hover:bg-white/10 rounded font-bold">
+                    <div className="my-2 border-t border-white/20" />
+                    <Link
+                      href="/auth/login"
+                      className="block rounded px-4 py-2 font-bold text-white hover:bg-white/10"
+                    >
                       Login / Sign Up
                     </Link>
                   </>

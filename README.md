@@ -50,6 +50,7 @@ npm run expo:clean-start  # preflight + Expo Metro
 ```
 
 The app will be available at:
+
 - Frontend: http://localhost:4173
 - Backend API: http://localhost:4174
 
@@ -66,27 +67,32 @@ npm run preview
 ## Usage
 
 ### Dashboard
+
 - View summary statistics and recent activity
 - See upcoming vaccine schedules
 - Check latest camp counts
 
 ### Cattle Management
+
 - Add new cattle with tag ID, breed, color, gender, birth date, weight
 - Assign cattle to camps
 - Update status (Active, Sold, Quarantined, Veterinary)
 - Edit or delete records
 
 ### Camp Management
+
 - Create camps with names, colors, and descriptions
 - Assign cattle to camps for organization
 - Track inventory by camp
 
 ### Vaccine Records
+
 - Schedule vaccines for individual cattle
 - Mark vaccines as completed with dates
 - Track upcoming and overdue vaccinations
 
 ### Count Logs
+
 - Record periodic inventory counts per camp
 - Track bulls, cows, and calves separately
 - Add notes for each count
@@ -94,6 +100,7 @@ npm run preview
 ## Offline Usage
 
 The app works offline using browser localStorage:
+
 - All data is saved locally when offline
 - Changes sync to server when connection is restored
 - Service worker caches app assets for offline access
@@ -149,9 +156,9 @@ HerdFlow/
 1. Web + split backends: run `npm run dev:clean-start`
 2. Expo mobile: run `npm run expo:clean-start` in a separate terminal
 3. Optional single services:
-	- `npm run dev:client`
-	- `npm run dev:server:website`
-	- `npm run dev:server:app`
+   - `npm run dev:client`
+   - `npm run dev:server:website`
+   - `npm run dev:server:app`
 
 ### Kilo Code + Cline Delivery Workflow
 
@@ -200,6 +207,7 @@ You can build a native Android APK using Expo Application Services (EAS) and dow
 ### Detailed Guide
 
 👉 **[See APK_BUILD_GUIDE.md](APK_BUILD_GUIDE.md)** for complete step-by-step instructions including:
+
 - Prerequisites and setup
 - Build options (preview vs production)
 - Downloading and installing on Android devices
@@ -212,6 +220,7 @@ Use [PLAYSTORE_RELEASE_GUIDE.md](PLAYSTORE_RELEASE_GUIDE.md) for the full produc
 ### Expo Setup Guide
 
 👉 **[See expo/EXPO_README.md](expo/EXPO_README.md)** for detailed Expo configuration including:
+
 - Development workflow
 - Configuration options
 - Building from scratch

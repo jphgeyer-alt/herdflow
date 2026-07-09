@@ -33,9 +33,10 @@ export default async function AdminOrdersPage() {
   return (
     <main className="space-y-4 pb-10">
       <header>
-        <h1 className="text-3xl font-semibold text-brand-navy">Store Orders</h1>
+        <h1 className="text-brand-navy text-3xl font-semibold">Store Orders</h1>
         <p className="text-sm text-[#38537a]">
-          View and manage all customer orders. Update order status, review items, and track payment references.
+          View and manage all customer orders. Update order status, review items, and track payment
+          references.
         </p>
       </header>
 
@@ -43,4 +44,3 @@ export default async function AdminOrdersPage() {
     </main>
   );
 }
-

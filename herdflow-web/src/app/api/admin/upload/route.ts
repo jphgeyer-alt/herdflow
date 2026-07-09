@@ -27,7 +27,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json({ error: "Only JPEG, PNG, and WebP images are allowed" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Only JPEG, PNG, and WebP images are allowed" },
+      { status: 400 },
+    );
   }
 
   if (file.size > MAX_SIZE_BYTES) {

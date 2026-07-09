@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     where: { ownerUserId: farmOwnerId },
     select: { userId: true },
   });
-  const userIds = [farmOwnerId, ...staffProfiles.map(s => s.userId)];
+  const userIds = [farmOwnerId, ...staffProfiles.map((s) => s.userId)];
 
   // Fetch activity logs from FarmerActivityLog table
   try {
@@ -45,27 +45,29 @@ export async function POST(request: Request) {
   if (!isMobileUser(auth)) return auth;
 
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const b = body as Record<string, unknown>;
 
   const profile = await prisma.farmerProfile.findUnique({ where: { userId: auth.id } });
-  const farmId  = profile?.ownerUserId ?? auth.id;
+  const farmId = profile?.ownerUserId ?? auth.id;
 
   try {
     const log = await (prisma as any).farmerActivityLog.create({
       data: {
-        userId:       auth.id,
-        userName:     auth.fullName,
-        userRole:     profile?.mobileRole ?? "FARMER",
+        userId: auth.id,
+        userName: auth.fullName,
+        userRole: profile?.mobileRole ?? "FARMER",
         farmId,
         activityType: String(b.activityType ?? "UNKNOWN"),
-        description:  String(b.description ?? ""),
-        entityId:     (b.entityId as string | undefined) ?? null,
-        entityType:   (b.entityType as string | undefined) ?? null,
-        entityName:   (b.entityName as string | undefined) ?? null,
-        metadata:     b.metadata ? JSON.stringify(b.metadata) : null,
+        description: String(b.description ?? ""),
+        entityId: (b.entityId as string | undefined) ?? null,
+        entityType: (b.entityType as string | undefined) ?? null,
+        entityName: (b.entityName as string | undefined) ?? null,
+        metadata: b.metadata ? JSON.stringify(b.metadata) : null,
       },
     });
     return NextResponse.json(log, { status: 201 });

@@ -50,12 +50,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!body || typeof body !== "object") return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  if (!body || typeof body !== "object")
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
 
   const b = body as Record<string, unknown>;
 
   if (!isString(b.title)) return NextResponse.json({ error: "title required" }, { status: 400 });
-  if (!isString(b.scheduledAt)) return NextResponse.json({ error: "scheduledAt required" }, { status: 400 });
+  if (!isString(b.scheduledAt))
+    return NextResponse.json({ error: "scheduledAt required" }, { status: 400 });
 
   const scheduledAt = new Date(b.scheduledAt as string);
   if (Number.isNaN(scheduledAt.getTime())) {
@@ -97,7 +99,8 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!body || typeof body !== "object") return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  if (!body || typeof body !== "object")
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
 
   const b = body as Record<string, unknown>;
 
@@ -109,7 +112,9 @@ export async function PATCH(request: Request) {
         data: {
           ...(isString(b.title) && { title: (b.title as string).trim() }),
           ...(b.description !== undefined && { description: String(b.description).trim() }),
-          ...(b.bannerImage !== undefined && { bannerImage: b.bannerImage ? String(b.bannerImage) : null }),
+          ...(b.bannerImage !== undefined && {
+            bannerImage: b.bannerImage ? String(b.bannerImage) : null,
+          }),
           ...(b.thumbnail !== undefined && { thumbnail: b.thumbnail ? String(b.thumbnail) : null }),
           ...(b.videoUrl !== undefined && { videoUrl: b.videoUrl ? String(b.videoUrl) : null }),
           ...(b.videoType !== undefined && { videoType: b.videoType ? String(b.videoType) : null }),

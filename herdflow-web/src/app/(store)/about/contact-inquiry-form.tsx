@@ -45,7 +45,11 @@ export function ContactInquiryForm() {
           };
 
       if (!response.ok) {
-        setErrorMessage(payload && "error" in payload && payload.error ? payload.error : "Could not send your message.");
+        setErrorMessage(
+          payload && "error" in payload && payload.error
+            ? payload.error
+            : "Could not send your message.",
+        );
         setIsSubmitting(false);
         return;
       }
@@ -122,7 +126,7 @@ export function ContactInquiryForm() {
       </label>
 
       <button
-        className="inline-flex w-full items-center justify-center rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white"
+        className="bg-brand-navy inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white"
         disabled={isSubmitting}
         type="submit"
       >
@@ -136,7 +140,11 @@ export function ContactInquiryForm() {
       )}
 
       {result && (
-        <div aria-live="polite" className="rounded-lg bg-[#eef8f0] p-3 text-sm text-[#255638]" role="status">
+        <div
+          aria-live="polite"
+          className="rounded-lg bg-[#eef8f0] p-3 text-sm text-[#255638]"
+          role="status"
+        >
           <p className="font-semibold">{result.message}</p>
           <p>Reference: {result.inquiryId}</p>
         </div>

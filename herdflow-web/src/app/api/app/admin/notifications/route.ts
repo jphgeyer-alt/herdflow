@@ -25,68 +25,78 @@ export async function POST(request: Request) {
   if (!isMobileUser(auth)) return auth;
 
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const b = body as Record<string, unknown>;
 
-  if (!b.title   || String(b.title).trim().length   === 0)
+  if (!b.title || String(b.title).trim().length === 0)
     return NextResponse.json({ error: "title is required" }, { status: 400 });
   if (!b.message || String(b.message).trim().length === 0)
     return NextResponse.json({ error: "message is required" }, { status: 400 });
 
-  const target      = (b.target      as string | undefined) ?? "ALL";
+  const target = (b.target as string | undefined) ?? "ALL";
   const targetValue = (b.targetValue as string | undefined) ?? null;
 
   // Get device tokens based on target
   let tokens: string[] = [];
   if (target === "ALL") {
     const records = await prisma.deviceToken.findMany({ where: { isActive: true } });
-    tokens = records.map(r => r.token);
+    tokens = records.map((r) => r.token);
   } else if (target === "SPECIFIC" && targetValue) {
     // Find user by email, then get their tokens
-    const user = await prisma.user.findFirst({ where: { email: { equals: targetValue, mode: "insensitive" } } });
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: targetValue, mode: "insensitive" } },
+    });
     if (user) {
-      const records = await prisma.deviceToken.findMany({ where: { userId: user.id, isActive: true } });
-      tokens = records.map(r => r.token);
+      const records = await prisma.deviceToken.findMany({
+        where: { userId: user.id, isActive: true },
+      });
+      tokens = records.map((r) => r.token);
     }
   } else if (target === "PROVINCE" && targetValue) {
     // Get all farmers in this province via FarmerProfile
-    const profiles = await prisma.farmerProfile.findMany({ where: { province: { contains: targetValue, mode: "insensitive" } } });
-    const userIds  = profiles.map(p => p.userId);
-    const records  = await prisma.deviceToken.findMany({ where: { userId: { in: userIds }, isActive: true } });
-    tokens = records.map(r => r.token);
+    const profiles = await prisma.farmerProfile.findMany({
+      where: { province: { contains: targetValue, mode: "insensitive" } },
+    });
+    const userIds = profiles.map((p) => p.userId);
+    const records = await prisma.deviceToken.findMany({
+      where: { userId: { in: userIds }, isActive: true },
+    });
+    tokens = records.map((r) => r.token);
   }
 
   let sentCount = 0;
-  const validTokens = tokens.filter(t => Expo.isExpoPushToken(t));
+  const validTokens = tokens.filter((t) => Expo.isExpoPushToken(t));
 
   if (validTokens.length > 0) {
-    const messages = validTokens.map(token => ({
-      to:    token,
+    const messages = validTokens.map((token) => ({
+      to: token,
       sound: "default" as const,
       title: String(b.title),
-      body:  String(b.message),
+      body: String(b.message),
       badge: 1,
     }));
 
     const chunks = expo.chunkPushNotifications(messages);
     for (const chunk of chunks) {
       const receipts = await expo.sendPushNotificationsAsync(chunk);
-      sentCount += receipts.filter(r => r.status === "ok").length;
+      sentCount += receipts.filter((r) => r.status === "ok").length;
     }
   }
 
   // Log the notification
   await prisma.pushNotificationLog.create({
     data: {
-      title:       String(b.title),
-      message:     String(b.message),
+      title: String(b.title),
+      message: String(b.message),
       target,
       targetValue,
       sentCount,
-      sentBy:      auth.id,
-      sentAt:      new Date(),
+      sentBy: auth.id,
+      sentAt: new Date(),
     },
   });
 

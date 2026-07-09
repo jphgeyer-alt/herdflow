@@ -108,8 +108,8 @@ export default function AccountSettingsPage() {
 
   if (loadingUser) {
     return (
-      <div className="min-h-screen bg-[#f5f4ef] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#2E7D32] border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f4ef]">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#2E7D32] border-t-transparent" />
       </div>
     );
   }
@@ -119,28 +119,28 @@ export default function AccountSettingsPage() {
   return (
     <div className="min-h-screen bg-[#f5f4ef]">
       {/* Header */}
-      <div className="bg-[#1B3A6B] text-white py-12 px-4 md:px-8">
+      <div className="bg-[#1B3A6B] px-4 py-12 text-white md:px-8">
         <div className="mx-auto max-w-3xl">
           <Link
             href={`/dashboard/buyer`}
-            className="inline-flex items-center gap-2 text-white/70 hover:text-white text-sm mb-4 transition"
+            className="mb-4 inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white"
           >
             <ArrowLeft size={16} /> Back to Dashboard
           </Link>
-          <h1 className="text-4xl font-black mb-2">Account Settings</h1>
+          <h1 className="mb-2 text-4xl font-black">Account Settings</h1>
           <p className="text-white/80">Manage your profile and security settings</p>
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl px-4 md:px-8 py-12 space-y-8">
+      <div className="mx-auto max-w-3xl space-y-8 px-4 py-12 md:px-8">
         {/* Profile Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-[#2E7D32] flex items-center justify-center text-white font-bold text-lg">
+        <div className="rounded-2xl border border-[#e4ebf5] bg-white p-8 shadow-lg">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2E7D32] text-lg font-bold text-white">
               {user.fullName.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h2 className="text-xl font-black text-[#1B3A6B] flex items-center gap-2">
+              <h2 className="flex items-center gap-2 text-xl font-black text-[#1B3A6B]">
                 <User size={20} /> Profile Information
               </h2>
               <p className="text-sm text-[#5d7497]">{user.email}</p>
@@ -148,53 +148,56 @@ export default function AccountSettingsPage() {
           </div>
 
           {profileSuccess && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800 flex items-center gap-2">
+            <div className="mb-6 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
               <CheckCircle2 size={16} /> Profile updated successfully.
             </div>
           )}
           {profileError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
               {profileError}
             </div>
           )}
 
           <form onSubmit={handleProfileSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-[#244367] mb-2">Full Name</label>
+              <label className="mb-2 block text-sm font-semibold text-[#244367]">Full Name</label>
               <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
+                className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                 placeholder="Your full name"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-[#244367] mb-2">
-                Email Address <span className="text-[#5d7497] font-normal">(cannot be changed)</span>
+              <label className="mb-2 block text-sm font-semibold text-[#244367]">
+                Email Address{" "}
+                <span className="font-normal text-[#5d7497]">(cannot be changed)</span>
               </label>
               <input
                 type="email"
                 value={user.email}
                 disabled
-                className="w-full px-4 py-3 rounded-lg border border-[#e4ebf5] bg-[#f5f8fd] text-[#5d7497] cursor-not-allowed"
+                className="w-full cursor-not-allowed rounded-lg border border-[#e4ebf5] bg-[#f5f8fd] px-4 py-3 text-[#5d7497]"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-[#244367] mb-2">Phone Number</label>
+              <label className="mb-2 block text-sm font-semibold text-[#244367]">
+                Phone Number
+              </label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
+                className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                 placeholder="+27 82 123 4567"
               />
             </div>
             <button
               type="submit"
               disabled={profileLoading}
-              className="bg-[#2E7D32] hover:bg-[#1d5e20] text-white font-bold uppercase tracking-wide py-3 px-8 rounded-lg shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-lg bg-[#2E7D32] px-8 py-3 font-bold uppercase tracking-wide text-white shadow transition hover:bg-[#1d5e20] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {profileLoading ? "Saving..." : "Save Changes"}
             </button>
@@ -202,61 +205,67 @@ export default function AccountSettingsPage() {
         </div>
 
         {/* Password Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-[#e4ebf5] p-8">
-          <h2 className="text-xl font-black text-[#1B3A6B] flex items-center gap-2 mb-6">
+        <div className="rounded-2xl border border-[#e4ebf5] bg-white p-8 shadow-lg">
+          <h2 className="mb-6 flex items-center gap-2 text-xl font-black text-[#1B3A6B]">
             <Lock size={20} /> Change Password
           </h2>
 
           {passwordSuccess && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800 flex items-center gap-2">
+            <div className="mb-6 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
               <CheckCircle2 size={16} /> Password changed successfully.
             </div>
           )}
           {passwordError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
               {passwordError}
             </div>
           )}
 
           <form onSubmit={handlePasswordSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-[#244367] mb-2">Current Password</label>
+              <label className="mb-2 block text-sm font-semibold text-[#244367]">
+                Current Password
+              </label>
               <input
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
+                className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                 placeholder="Enter your current password"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-[#244367] mb-2">New Password</label>
+              <label className="mb-2 block text-sm font-semibold text-[#244367]">
+                New Password
+              </label>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 minLength={8}
-                className="w-full px-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
+                className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                 placeholder="At least 8 characters"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-[#244367] mb-2">Confirm New Password</label>
+              <label className="mb-2 block text-sm font-semibold text-[#244367]">
+                Confirm New Password
+              </label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-lg border border-[#cdd8e7] focus:outline-none focus:border-[#1B3A6B] focus:ring-2 focus:ring-[#1B3A6B]/20"
+                className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
                 placeholder="Re-enter new password"
               />
             </div>
             <button
               type="submit"
               disabled={passwordLoading}
-              className="bg-[#1B3A6B] hover:bg-[#244367] text-white font-bold uppercase tracking-wide py-3 px-8 rounded-lg shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-lg bg-[#1B3A6B] px-8 py-3 font-bold uppercase tracking-wide text-white shadow transition hover:bg-[#244367] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {passwordLoading ? "Updating..." : "Update Password"}
             </button>

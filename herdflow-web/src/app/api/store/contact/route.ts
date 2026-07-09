@@ -34,7 +34,10 @@ export async function POST(request: Request) {
   }
 
   if (message.length < 15) {
-    return NextResponse.json({ error: "Please provide more details in your message." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Please provide more details in your message." },
+      { status: 400 },
+    );
   }
 
   const inquiryId = `INQ-${Date.now()}`;
@@ -53,7 +56,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       inquiryId,
-      message: "Your enquiry has been submitted. The HerdFlow team will respond during business hours.",
+      message:
+        "Your enquiry has been submitted. The HerdFlow team will respond during business hours.",
       received: {
         fullName,
         email,
@@ -62,9 +66,6 @@ export async function POST(request: Request) {
       },
     });
   } catch {
-    return NextResponse.json(
-      { error: "Unable to save enquiry at the moment." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Unable to save enquiry at the moment." }, { status: 500 });
   }
 }

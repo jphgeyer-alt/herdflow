@@ -104,7 +104,11 @@ export function AuctionsManager({ initialSessions }: Props) {
       const res = await fetch("/api/admin/auctions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTitle.trim(), description: newDesc.trim(), scheduledAt: newScheduledAt }),
+        body: JSON.stringify({
+          title: newTitle.trim(),
+          description: newDesc.trim(),
+          scheduledAt: newScheduledAt,
+        }),
       });
       const data = await res.json();
       if (res.ok && data.session) {
@@ -141,7 +145,12 @@ export function AuctionsManager({ initialSessions }: Props) {
               if (status === "CLOSED" && l.status === "OPEN") return { ...l, status: "PASSED" };
               return l;
             });
-            return { ...s, status: data.session.status, closedAt: data.session.closedAt, lots: updatedLots };
+            return {
+              ...s,
+              status: data.session.status,
+              closedAt: data.session.closedAt,
+              lots: updatedLots,
+            };
           }),
         );
         toast(`Auction set to ${status}.`);
@@ -196,7 +205,11 @@ export function AuctionsManager({ initialSessions }: Props) {
       const data = await res.json();
       if (res.ok && data.lot) {
         setSessions((prev) =>
-          prev.map((s) => (s.id === sessionId ? { ...s, lots: [...s.lots, { ...data.lot, _count: { bids: 0 } }] } : s)),
+          prev.map((s) =>
+            s.id === sessionId
+              ? { ...s, lots: [...s.lots, { ...data.lot, _count: { bids: 0 } }] }
+              : s,
+          ),
         );
         setAddLotFor(null);
         setLotTitle("");
@@ -229,7 +242,10 @@ export function AuctionsManager({ initialSessions }: Props) {
         setSessions((prev) =>
           prev.map((s) =>
             s.id === sessionId
-              ? { ...s, lots: s.lots.map((l) => (l.id === lotId ? { ...l, status: data.lot.status } : l)) }
+              ? {
+                  ...s,
+                  lots: s.lots.map((l) => (l.id === lotId ? { ...l, status: data.lot.status } : l)),
+                }
               : s,
           ),
         );
@@ -248,7 +264,9 @@ export function AuctionsManager({ initialSessions }: Props) {
       const res = await fetch(`/api/admin/auctions?lotId=${lotId}`, { method: "DELETE" });
       if (res.ok) {
         setSessions((prev) =>
-          prev.map((s) => (s.id === sessionId ? { ...s, lots: s.lots.filter((l) => l.id !== lotId) } : s)),
+          prev.map((s) =>
+            s.id === sessionId ? { ...s, lots: s.lots.filter((l) => l.id !== lotId) } : s,
+          ),
         );
         toast("Lot deleted.");
       } else {
@@ -262,7 +280,10 @@ export function AuctionsManager({ initialSessions }: Props) {
   return (
     <div className="space-y-4">
       {toastMsg && (
-        <div role="alert" className="rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-800">
+        <div
+          role="alert"
+          className="rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-800"
+        >
           {toastMsg}
         </div>
       )}
@@ -271,7 +292,7 @@ export function AuctionsManager({ initialSessions }: Props) {
       <div className="flex gap-3">
         <button
           onClick={() => setShowCreate((v) => !v)}
-          className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white"
+          className="bg-brand-navy rounded-lg px-4 py-2 text-sm font-semibold text-white"
         >
           {showCreate ? "Cancel" : "+ New Auction"}
         </button>
@@ -279,12 +300,15 @@ export function AuctionsManager({ initialSessions }: Props) {
 
       {/* Create session form */}
       {showCreate && (
-        <form onSubmit={createSession} className="max-w-lg space-y-3 rounded-xl border border-[#d8e0ec] bg-white p-5 shadow-sm">
-          <h2 className="text-base font-semibold text-brand-navy">New Auction Session</h2>
+        <form
+          onSubmit={createSession}
+          className="max-w-lg space-y-3 rounded-xl border border-[#d8e0ec] bg-white p-5 shadow-sm"
+        >
+          <h2 className="text-brand-navy text-base font-semibold">New Auction Session</h2>
           <div className="space-y-1">
             <label className="block text-xs font-medium text-[#244367]">Title *</label>
             <input
-              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm outline-none focus:border-brand-navy"
+              className="focus:border-brand-navy w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm outline-none"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Spring Cattle Auction"
@@ -294,27 +318,29 @@ export function AuctionsManager({ initialSessions }: Props) {
           <div className="space-y-1">
             <label className="block text-xs font-medium text-[#244367]">Description</label>
             <input
-              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm outline-none focus:border-brand-navy"
+              className="focus:border-brand-navy w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm outline-none"
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
               placeholder="Optional description"
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-[#244367]">Scheduled Date & Time *</label>
+            <label className="block text-xs font-medium text-[#244367]">
+              Scheduled Date & Time *
+            </label>
             <input
               type="datetime-local"
-              className="w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm outline-none focus:border-brand-navy"
+              className="focus:border-brand-navy w-full rounded-lg border border-[#cdd8e7] px-3 py-2 text-sm outline-none"
               value={newScheduledAt}
               onChange={(e) => setNewScheduledAt(e.target.value)}
-                            title="Scheduled Date & Time"
+              title="Scheduled Date & Time"
               required
             />
           </div>
           <button
             type="submit"
             disabled={creating}
-            className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className="bg-brand-navy rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           >
             {creating ? "Creating…" : "Create Auction"}
           </button>
@@ -334,13 +360,16 @@ export function AuctionsManager({ initialSessions }: Props) {
               <div className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h2 className="truncate font-semibold text-brand-navy">{s.title}</h2>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_BADGE[s.status] ?? ""}`}>
+                    <h2 className="text-brand-navy truncate font-semibold">{s.title}</h2>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_BADGE[s.status] ?? ""}`}
+                    >
                       {s.status}
                     </span>
                   </div>
                   <p className="text-xs text-[#5d7497]">
-                    {fmtDate(s.scheduledAt)} · {s.lots.length} lot{s.lots.length !== 1 ? "s" : ""} · /auction/live/{s.slug}
+                    {fmtDate(s.scheduledAt)} · {s.lots.length} lot{s.lots.length !== 1 ? "s" : ""} ·
+                    /auction/live/{s.slug}
                   </p>
                 </div>
 
@@ -357,7 +386,7 @@ export function AuctionsManager({ initialSessions }: Props) {
                     <>
                       <Link
                         href={`/admin/auctions/${s.id}/control`}
-                        className="rounded-lg bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 text-xs font-bold"
+                        className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-700"
                       >
                         🎙 Control Room
                       </Link>
@@ -377,7 +406,7 @@ export function AuctionsManager({ initialSessions }: Props) {
                   </Link>
                   <Link
                     href={`/admin/auctions/${s.id}/lots`}
-                    className="rounded-lg bg-[#1B3A6B] hover:bg-[#122844] text-white px-3 py-1.5 text-xs font-bold"
+                    className="rounded-lg bg-[#1B3A6B] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#122844]"
                   >
                     📦 Manage Lots
                   </Link>
@@ -400,16 +429,21 @@ export function AuctionsManager({ initialSessions }: Props) {
 
               {/* Lots panel */}
               {expandedId === s.id && (
-                <div className="border-t border-[#e4ebf5] px-4 pb-4 pt-3 space-y-3">
+                <div className="space-y-3 border-t border-[#e4ebf5] px-4 pb-4 pt-3">
                   {/* Add lot form */}
                   {addLotFor === s.id ? (
-                    <form onSubmit={(e) => addLot(e, s.id)} className="space-y-3 rounded-lg border border-[#d8e0ec] bg-[#f8fafd] p-4">
-                      <h3 className="text-sm font-semibold text-brand-navy">Add Lot</h3>
+                    <form
+                      onSubmit={(e) => addLot(e, s.id)}
+                      className="space-y-3 rounded-lg border border-[#d8e0ec] bg-[#f8fafd] p-4"
+                    >
+                      <h3 className="text-brand-navy text-sm font-semibold">Add Lot</h3>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
-                          <label className="block text-xs font-medium text-[#244367]">Title *</label>
+                          <label className="block text-xs font-medium text-[#244367]">
+                            Title *
+                          </label>
                           <input
-                            className="w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none focus:border-brand-navy"
+                            className="focus:border-brand-navy w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none"
                             value={lotTitle}
                             onChange={(e) => setLotTitle(e.target.value)}
                             placeholder="3x Angus Heifers"
@@ -419,17 +453,19 @@ export function AuctionsManager({ initialSessions }: Props) {
                         <div className="space-y-1">
                           <label className="block text-xs font-medium text-[#244367]">Breed</label>
                           <input
-                            className="w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none focus:border-brand-navy"
+                            className="focus:border-brand-navy w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none"
                             value={lotBreed}
                             onChange={(e) => setLotBreed(e.target.value)}
                             placeholder="Angus"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-medium text-[#244367]">Weight (kg)</label>
+                          <label className="block text-xs font-medium text-[#244367]">
+                            Weight (kg)
+                          </label>
                           <input
                             type="number"
-                            className="w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none focus:border-brand-navy"
+                            className="focus:border-brand-navy w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none"
                             value={lotWeight}
                             onChange={(e) => setLotWeight(e.target.value)}
                             placeholder="320"
@@ -438,19 +474,21 @@ export function AuctionsManager({ initialSessions }: Props) {
                         <div className="space-y-1">
                           <label className="block text-xs font-medium text-[#244367]">Region</label>
                           <input
-                            className="w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none focus:border-brand-navy"
+                            className="focus:border-brand-navy w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none"
                             value={lotRegion}
                             onChange={(e) => setLotRegion(e.target.value)}
                             placeholder="Limpopo"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-medium text-[#244367]">Starting Price (ZAR) *</label>
+                          <label className="block text-xs font-medium text-[#244367]">
+                            Starting Price (ZAR) *
+                          </label>
                           <input
                             type="number"
                             step="0.01"
                             min="0.01"
-                            className="w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none focus:border-brand-navy"
+                            className="focus:border-brand-navy w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none"
                             value={lotStart}
                             onChange={(e) => setLotStart(e.target.value)}
                             placeholder="5000"
@@ -458,12 +496,14 @@ export function AuctionsManager({ initialSessions }: Props) {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-medium text-[#244367]">Reserve Price (ZAR)</label>
+                          <label className="block text-xs font-medium text-[#244367]">
+                            Reserve Price (ZAR)
+                          </label>
                           <input
                             type="number"
                             step="0.01"
                             min="0"
-                            className="w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none focus:border-brand-navy"
+                            className="focus:border-brand-navy w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none"
                             value={lotReserve}
                             onChange={(e) => setLotReserve(e.target.value)}
                             placeholder="Optional"
@@ -471,9 +511,11 @@ export function AuctionsManager({ initialSessions }: Props) {
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="block text-xs font-medium text-[#244367]">Description</label>
+                        <label className="block text-xs font-medium text-[#244367]">
+                          Description
+                        </label>
                         <input
-                          className="w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none focus:border-brand-navy"
+                          className="focus:border-brand-navy w-full rounded border border-[#cdd8e7] px-2 py-1.5 text-sm outline-none"
                           value={lotDesc}
                           onChange={(e) => setLotDesc(e.target.value)}
                           placeholder="Optional lot description"
@@ -483,7 +525,7 @@ export function AuctionsManager({ initialSessions }: Props) {
                         <button
                           type="submit"
                           disabled={addingLot}
-                          className="rounded-lg bg-brand-navy px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                          className="bg-brand-navy rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                         >
                           {addingLot ? "Adding…" : "Add Lot"}
                         </button>
@@ -532,14 +574,18 @@ export function AuctionsManager({ initialSessions }: Props) {
                               <td className="py-2 pr-4">{zar(lot.startingPriceCents)}</td>
                               <td className="py-2 pr-4">
                                 {lot.currentBidCents > 0 ? (
-                                  <span className="font-semibold text-brand-gold">{zar(lot.currentBidCents)}</span>
+                                  <span className="text-brand-gold font-semibold">
+                                    {zar(lot.currentBidCents)}
+                                  </span>
                                 ) : (
                                   <span className="text-[#9aabb9]">—</span>
                                 )}
                               </td>
                               <td className="py-2 pr-4">{lot._count.bids}</td>
                               <td className="py-2 pr-4">
-                                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${LOT_STATUS_BADGE[lot.status] ?? ""}`}>
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-xs font-semibold ${LOT_STATUS_BADGE[lot.status] ?? ""}`}
+                                >
                                   {lot.status}
                                 </span>
                               </td>

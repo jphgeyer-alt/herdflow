@@ -37,7 +37,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
   try {
     const listing = await prisma.listing.update({
@@ -47,10 +47,16 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         ...(body.description !== undefined && { description: String(body.description) }),
         ...(body.breed !== undefined && { breed: String(body.breed) }),
         ...(body.region !== undefined && { region: String(body.region) }),
-        ...(body.status !== undefined && { status: body.status as "ACTIVE" | "DRAFT" | "SOLD" | "ARCHIVED" }),
+        ...(body.status !== undefined && {
+          status: body.status as "ACTIVE" | "DRAFT" | "SOLD" | "ARCHIVED",
+        }),
         ...(body.priceCents !== undefined && { priceCents: Number(body.priceCents) }),
-        ...(body.weightKg !== undefined && { weightKg: body.weightKg !== null ? Number(body.weightKg) : null }),
-        ...(body.ageMonths !== undefined && { ageMonths: body.ageMonths !== null ? Number(body.ageMonths) : null }),
+        ...(body.weightKg !== undefined && {
+          weightKg: body.weightKg !== null ? Number(body.weightKg) : null,
+        }),
+        ...(body.ageMonths !== undefined && {
+          ageMonths: body.ageMonths !== null ? Number(body.ageMonths) : null,
+        }),
         ...(body.isFeatured !== undefined && { isFeatured: Boolean(body.isFeatured) }),
         ...(body.photos !== undefined && { photos: body.photos as string[] }),
       },
@@ -72,13 +78,17 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const body = await request.json().catch(() => ({})) as { reason?: string; notes?: string };
+  const body = (await request.json().catch(() => ({}))) as { reason?: string; notes?: string };
 
   try {
-    const listing = await prisma.listing.findUnique({ where: { id }, select: { id: true, isDeleted: true } });
+    const listing = await prisma.listing.findUnique({
+      where: { id },
+      select: { id: true, isDeleted: true },
+    });
 
     if (!listing) return NextResponse.json({ error: "Listing not found" }, { status: 404 });
-    if (listing.isDeleted) return NextResponse.json({ error: "Listing is already removed" }, { status: 400 });
+    if (listing.isDeleted)
+      return NextResponse.json({ error: "Listing is already removed" }, { status: 400 });
 
     // SOFT DELETE — record stays in DB, all history preserved
     await prisma.listing.update({
@@ -110,9 +120,13 @@ export async function POST(request: NextRequest, { params }: Params) {
   const { id } = await params;
 
   try {
-    const listing = await prisma.listing.findUnique({ where: { id }, select: { id: true, isDeleted: true } });
+    const listing = await prisma.listing.findUnique({
+      where: { id },
+      select: { id: true, isDeleted: true },
+    });
     if (!listing) return NextResponse.json({ error: "Listing not found" }, { status: 404 });
-    if (!listing.isDeleted) return NextResponse.json({ error: "Listing is not removed" }, { status: 400 });
+    if (!listing.isDeleted)
+      return NextResponse.json({ error: "Listing is not removed" }, { status: 400 });
 
     await prisma.listing.update({
       where: { id },

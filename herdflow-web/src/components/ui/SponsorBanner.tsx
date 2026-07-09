@@ -28,10 +28,10 @@ export function SponsorBanner() {
   if (!loaded || sponsors.length === 0) return null;
 
   return (
-    <section className="bg-white border-y border-[#e4ebf5] py-4">
+    <section className="border-y border-[#e4ebf5] bg-white py-4">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-6 overflow-x-auto scrollbar-none">
-          <span className="shrink-0 text-xs font-bold uppercase tracking-widest text-[#5d7497] whitespace-nowrap">
+        <div className="scrollbar-none flex items-center gap-6 overflow-x-auto">
+          <span className="shrink-0 whitespace-nowrap text-xs font-bold uppercase tracking-widest text-[#5d7497]">
             HerdFlow Trusted Sponsors
           </span>
           {sponsors.map((s) => (
@@ -40,7 +40,7 @@ export function SponsorBanner() {
               href={s.website || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 flex items-center justify-center h-10 px-4 rounded-lg border border-[#e4ebf5] hover:border-[#A07C3A] transition"
+              className="flex h-10 shrink-0 items-center justify-center rounded-lg border border-[#e4ebf5] px-4 transition hover:border-[#A07C3A]"
               title={s.companyName}
             >
               {s.logoUrl ? (
@@ -51,13 +51,15 @@ export function SponsorBanner() {
                   className="max-h-8 max-w-28 object-contain"
                 />
               ) : (
-                <span className="text-xs font-semibold text-[#5d7497] whitespace-nowrap">{s.companyName}</span>
+                <span className="whitespace-nowrap text-xs font-semibold text-[#5d7497]">
+                  {s.companyName}
+                </span>
               )}
             </a>
           ))}
           <Link
             href="/marketing"
-            className="shrink-0 text-xs font-bold text-[#2E7D32] hover:underline whitespace-nowrap ml-auto"
+            className="ml-auto shrink-0 whitespace-nowrap text-xs font-bold text-[#2E7D32] hover:underline"
           >
             Become a Sponsor →
           </Link>

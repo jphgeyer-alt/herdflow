@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
 
     if (!record) return NextResponse.json({ valid: false, reason: "invalid" });
     if (record.usedAt) return NextResponse.json({ valid: false, reason: "used" });
-    if (record.expiresAt < new Date()) return NextResponse.json({ valid: false, reason: "expired" });
+    if (record.expiresAt < new Date())
+      return NextResponse.json({ valid: false, reason: "expired" });
 
     return NextResponse.json({ valid: true, email: record.user.email });
   } catch {
@@ -50,13 +51,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
   }
   if (password.length > 128) {
-    return NextResponse.json({ error: "Password is too long (max 128 characters)." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Password is too long (max 128 characters)." },
+      { status: 400 },
+    );
   }
   if (!/[A-Z]/.test(password)) {
-    return NextResponse.json({ error: "Password must contain at least one uppercase letter." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Password must contain at least one uppercase letter." },
+      { status: 400 },
+    );
   }
   if (!/[0-9]/.test(password)) {
-    return NextResponse.json({ error: "Password must contain at least one number." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Password must contain at least one number." },
+      { status: 400 },
+    );
   }
 
   try {
@@ -65,9 +75,18 @@ export async function POST(request: NextRequest) {
       include: { user: true },
     });
 
-    if (!record) return NextResponse.json({ error: "Invalid or expired reset link." }, { status: 400 });
-    if (record.usedAt) return NextResponse.json({ error: "This reset link has already been used." }, { status: 400 });
-    if (record.expiresAt < new Date()) return NextResponse.json({ error: "This reset link has expired. Please request a new one." }, { status: 400 });
+    if (!record)
+      return NextResponse.json({ error: "Invalid or expired reset link." }, { status: 400 });
+    if (record.usedAt)
+      return NextResponse.json(
+        { error: "This reset link has already been used." },
+        { status: 400 },
+      );
+    if (record.expiresAt < new Date())
+      return NextResponse.json(
+        { error: "This reset link has expired. Please request a new one." },
+        { status: 400 },
+      );
 
     const passwordHash = await hashPassword(password);
 
@@ -80,6 +99,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, message: "Password updated successfully." });
   } catch (err) {
     console.error("Reset password error:", err);
-    return NextResponse.json({ error: "Failed to reset password. Please try again." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to reset password. Please try again." },
+      { status: 500 },
+    );
   }
 }

@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { getUserIdFromSession, USER_SESSION_COOKIE, verifyPassword, hashPassword } from "@/lib/user-auth";
+import {
+  getUserIdFromSession,
+  USER_SESSION_COOKIE,
+  verifyPassword,
+  hashPassword,
+} from "@/lib/user-auth";
 
 export async function POST(request: Request) {
   const jar = await cookies();
@@ -28,7 +33,10 @@ export async function POST(request: Request) {
   }
 
   if (newPassword.length < 8) {
-    return NextResponse.json({ error: "New password must be at least 8 characters" }, { status: 400 });
+    return NextResponse.json(
+      { error: "New password must be at least 8 characters" },
+      { status: 400 },
+    );
   }
 
   const user = await prisma.user.findUnique({ where: { id: userId } });

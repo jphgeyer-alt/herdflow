@@ -30,7 +30,10 @@ export async function POST(request: Request) {
 
   const fieldsForSignature = { ...payload };
   delete fieldsForSignature.signature;
-  const expectedSignature = createPayFastSignature(fieldsForSignature, payFastConfig.passphrase).toLowerCase();
+  const expectedSignature = createPayFastSignature(
+    fieldsForSignature,
+    payFastConfig.passphrase,
+  ).toLowerCase();
 
   if (expectedSignature !== providedSignature) {
     return NextResponse.json({ error: "Invalid ITN signature." }, { status: 400 });

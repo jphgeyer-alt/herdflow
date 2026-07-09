@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
-const FALLBACK = "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&h=600&fit=crop";
+const FALLBACK =
+  "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&h=600&fit=crop";
 
 interface SafeImgProps {
   src: string;
@@ -53,5 +54,3 @@ export function SafeImg({ src, alt, className }: SafeImgProps) {
     />
   );
 }
-
-

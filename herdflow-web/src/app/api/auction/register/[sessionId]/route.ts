@@ -17,7 +17,14 @@ export async function GET(request: NextRequest, { params }: Params) {
   try {
     const session = await prisma.auctionSession.findUnique({
       where: { id: sessionId },
-      select: { id: true, title: true, scheduledAt: true, status: true, description: true, maxBidders: true },
+      select: {
+        id: true,
+        title: true,
+        scheduledAt: true,
+        status: true,
+        description: true,
+        maxBidders: true,
+      },
     });
     if (!session) return NextResponse.json({ error: "Session not found" }, { status: 404 });
 
@@ -33,10 +40,12 @@ export async function GET(request: NextRequest, { params }: Params) {
 export async function POST(request: NextRequest, { params }: Params) {
   const { sessionId } = await params;
 
-  const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
   const fullName = String(body.fullName || "").trim();
-  const email = String(body.email || "").trim().toLowerCase();
+  const email = String(body.email || "")
+    .trim()
+    .toLowerCase();
   const phone = String(body.phone || "").trim();
   const idNumber = String(body.idNumber || "").trim();
   const physicalAddress = String(body.physicalAddress || "").trim();
@@ -45,22 +54,33 @@ export async function POST(request: NextRequest, { params }: Params) {
   const postalCode = String(body.postalCode || "").trim();
 
   if (!fullName) return NextResponse.json({ error: "Full name is required" }, { status: 400 });
-  if (!email || !/\S+@\S+\.\S+/.test(email)) return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
+  if (!email || !/\S+@\S+\.\S+/.test(email))
+    return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
   if (!phone) return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
   if (!idNumber) return NextResponse.json({ error: "SA ID number is required" }, { status: 400 });
-  if (!physicalAddress || !city || !province || !postalCode) return NextResponse.json({ error: "Full address is required" }, { status: 400 });
+  if (!physicalAddress || !city || !province || !postalCode)
+    return NextResponse.json({ error: "Full address is required" }, { status: 400 });
 
   try {
-    const session = await prisma.auctionSession.findUnique({ where: { id: sessionId }, select: { id: true, status: true } });
+    const session = await prisma.auctionSession.findUnique({
+      where: { id: sessionId },
+      select: { id: true, status: true },
+    });
     if (!session) return NextResponse.json({ error: "Auction not found" }, { status: 404 });
     if (session.status === "CLOSED" || session.status === "CANCELLED") {
-      return NextResponse.json({ error: "Registration is closed for this auction" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Registration is closed for this auction" },
+        { status: 400 },
+      );
     }
 
     // Check duplicate
     const existing = await prisma.auctionRegistration.findFirst({ where: { sessionId, email } });
     if (existing) {
-      return NextResponse.json({ error: "You are already registered for this auction", registration: existing }, { status: 409 });
+      return NextResponse.json(
+        { error: "You are already registered for this auction", registration: existing },
+        { status: 409 },
+      );
     }
 
     const biddingNumber = await generateBiddingNumber(sessionId);

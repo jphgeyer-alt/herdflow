@@ -12,47 +12,58 @@ Use this as the fast daily runbook for admin operations.
 6. Verify app backend health: http://localhost:4175/health
 
 Expected health response:
+
 - {"status":"ok"}
 
 ## Top 10 daily actions
 
 1. Check server is alive
+
 - Open: /health
 - If not ok, restart backend and check terminal errors.
 
 2. Review new orders
+
 - Open /app, go to Marketplace Admin section.
 - Confirm new orders and move status from Pending to Confirmed.
 
 3. Mark delivered orders
+
 - For completed deliveries, set status to Fulfilled.
 - Use Cancelled for failed/unserviceable orders.
 
 4. Check low stock items
+
 - In Marketplace Admin, review stock badges.
 - Increase stock on low/out-of-stock items to keep checkout active.
 
 5. Add or edit catalog items
+
 - Required fields: name, price, unit, description.
 - Optional: image URL or upload image.
 
 6. Review partner registrations
+
 - Open Submitted Registrations panel.
 - Set each to Approved, Rejected, or Pending.
 
 7. Check herd operations data
+
 - Verify cattle, camp, vaccine, and count logs are updating.
 - Fix missing or stale records from their respective tabs.
 
 8. Export backup
+
 - In Data Backup panel, click Export Backup.
 - Save file with date in your secure backup folder.
 
 9. Validate customer lead flow
+
 - Submit a test signup from homepage if needed.
 - Confirm it appears under Recent website signups.
 
 10. Verify storefront and tracking links
+
 - Storefront route: /marketplace
 - Order tracking route: /track
 - Confirm both open and return expected data.
@@ -70,26 +81,29 @@ Create marketplace item:
 $body = @{
   name = "Hay Bale"
   price = "$12"
-  unit = "per bale"
-  description = "Dry season reserve"
-  stock = 20
-  imageUrl = ""
+unit = "per bale"
+description = "Dry season reserve"
+stock = 20
+imageUrl = ""
 } | ConvertTo-Json
 Invoke-RestMethod -Method Post -Uri "http://localhost:4174/api/marketplace/items" -ContentType "application/json" -Body $body
 
 ## Fast troubleshooting
 
 Backend down:
+
 1. Restart website API: npm run dev:server:website
 2. Restart app API: npm run dev:server:app
-2. Re-check: http://localhost:4174/health
+3. Re-check: http://localhost:4174/health
 
 Admin page loads but no data:
+
 1. Confirm backend is running on 4174.
 2. Confirm frontend is running on 4173.
 3. Check browser console/network for failing /api calls.
 
 Orders fail with stock error:
+
 1. Open Marketplace Admin.
 2. Increase item stock.
 3. Retry checkout.

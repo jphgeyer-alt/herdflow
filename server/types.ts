@@ -3,9 +3,9 @@ export interface CattleRecord {
   tag: string;
   breed: string;
   colorId: string;
-  gender: 'Female' | 'Male' | 'Other';
+  gender: "Female" | "Male" | "Other";
   birthDate: string;
-  status: 'Active' | 'Sold' | 'Quarantined' | 'Dead' | 'Veterinary';
+  status: "Active" | "Sold" | "Quarantined" | "Dead" | "Veterinary";
   weight: number;
   campId: number | null;
   soldPrice?: number | null;
@@ -30,7 +30,7 @@ export interface VaccineRecord {
   cattleId: number | null;
   vaccineName: string;
   medicineName?: string;
-  treatmentType?: 'Vaccine' | 'Medicine' | 'Sick Treatment';
+  treatmentType?: "Vaccine" | "Medicine" | "Sick Treatment";
   applicationMethod?: string;
   scheduledDate: string;
   nextDueAt?: string;
@@ -66,8 +66,8 @@ export interface MarketplaceItem {
 
 export interface MarketplaceRegistration {
   id: number;
-  certificationType: 'Logistics Certified Client' | 'Certified Livestock Seller';
-  status: 'Pending' | 'Approved' | 'Rejected';
+  certificationType: "Logistics Certified Client" | "Certified Livestock Seller";
+  status: "Pending" | "Approved" | "Rejected";
   name: string;
   companyName: string;
   phone: string;
@@ -103,9 +103,9 @@ export interface MarketplaceOrder {
   customerPhone: string;
   deliveryAddress: string;
   notes: string;
-  status: 'Pending' | 'Confirmed' | 'Fulfilled' | 'Cancelled';
-  paymentMethod: 'PayOnDelivery' | 'Stripe' | 'PayFast';
-  paymentStatus: 'Pending' | 'Initiated' | 'Paid' | 'Failed';
+  status: "Pending" | "Confirmed" | "Fulfilled" | "Cancelled";
+  paymentMethod: "PayOnDelivery" | "Stripe" | "PayFast";
+  paymentStatus: "Pending" | "Initiated" | "Paid" | "Failed";
   paymentReference: string;
   lines: MarketplaceOrderLine[];
   totalAmount: string;
@@ -113,11 +113,7 @@ export interface MarketplaceOrder {
 }
 
 export type CommerceEventName =
-  | 'product_view'
-  | 'add_to_cart'
-  | 'checkout_click'
-  | 'place_order_attempt'
-  | 'place_order_success';
+  "product_view" | "add_to_cart" | "checkout_click" | "place_order_attempt" | "place_order_success";
 
 export interface CommerceAnalyticsEvent {
   id: number;

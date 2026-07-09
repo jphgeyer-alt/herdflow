@@ -7,10 +7,10 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        port: "",
+        pathname: "/**",
       },
     ],
   },
@@ -18,11 +18,11 @@ const nextConfig: NextConfig = {
     return [
       {
         // CORS for mobile app API endpoints
-        source: '/api/app/:path*',
+        source: "/api/app/:path*",
         headers: [
-          { key: 'Access-Control-Allow-Origin',  value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PATCH,DELETE,OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Authorization,Content-Type' },
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Methods", value: "GET,POST,PATCH,DELETE,OPTIONS" },
+          { key: "Access-Control-Allow-Headers", value: "Authorization,Content-Type" },
         ],
       },
     ];

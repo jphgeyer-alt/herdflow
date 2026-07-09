@@ -63,7 +63,7 @@ export function AdminLoginForm() {
       </label>
 
       <button
-        className="inline-flex w-full items-center justify-center rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white"
+        className="bg-brand-navy inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white"
         disabled={isLoading}
         type="submit"
       >

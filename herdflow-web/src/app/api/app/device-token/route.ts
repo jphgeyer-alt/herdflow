@@ -10,17 +10,19 @@ export async function POST(request: Request) {
   if (!isMobileUser(auth)) return auth;
 
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const b = body as Record<string, unknown>;
-  const token    = b.token    as string | undefined;
+  const token = b.token as string | undefined;
   const platform = b.platform as string | undefined;
 
   if (!token) return NextResponse.json({ error: "token is required" }, { status: 400 });
 
   await prisma.deviceToken.upsert({
-    where:  { token },
+    where: { token },
     update: { userId: auth.id, platform: platform ?? "unknown", isActive: true },
     create: { userId: auth.id, token, platform: platform ?? "unknown", isActive: true },
   });
@@ -33,7 +35,9 @@ export async function DELETE(request: Request) {
   if (!isMobileUser(auth)) return auth;
 
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const { token } = body as { token?: string };
@@ -41,7 +45,7 @@ export async function DELETE(request: Request) {
 
   await prisma.deviceToken.updateMany({
     where: { token, userId: auth.id },
-    data:  { isActive: false },
+    data: { isActive: false },
   });
 
   return NextResponse.json({ success: true });

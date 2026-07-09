@@ -32,7 +32,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 export async function POST(request: NextRequest, { params }: Params) {
   if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id: sessionId } = await params;
-  const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
   const title = String(body.title || "").trim();
   if (!title) return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -61,9 +61,13 @@ export async function POST(request: NextRequest, { params }: Params) {
         location: String(body.location || "").trim() || null,
         healthStatus: String(body.healthStatus || "").trim() || null,
         images: Array.isArray(body.images) ? (body.images as string[]).filter(Boolean) : [],
-        documents: Array.isArray(body.documents) ? (body.documents as string[]).filter(Boolean) : [],
+        documents: Array.isArray(body.documents)
+          ? (body.documents as string[]).filter(Boolean)
+          : [],
         startingPriceCents,
-        reservePriceCents: body.reservePriceCents ? Math.round(Number(body.reservePriceCents)) : null,
+        reservePriceCents: body.reservePriceCents
+          ? Math.round(Number(body.reservePriceCents))
+          : null,
         status: "PENDING",
       },
     });

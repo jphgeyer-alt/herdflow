@@ -40,7 +40,7 @@ export default async function LiveAuctionPage({ params }: PageProps) {
     region: l.region,
     species: l.species ?? null,
     quantity: l.quantity ?? 1,
-    images: Array.isArray(l.images) ? l.images as string[] : [],
+    images: Array.isArray(l.images) ? (l.images as string[]) : [],
     startingPriceCents: l.startingPriceCents,
     reservePriceCents: l.reservePriceCents,
     currentBidCents: l.currentBidCents,
@@ -52,12 +52,12 @@ export default async function LiveAuctionPage({ params }: PageProps) {
   return (
     <main className="space-y-5 pb-10">
       <nav className="text-sm text-[#38537a]">
-        <Link className="font-semibold text-brand-navy" href="/auction">
+        <Link className="text-brand-navy font-semibold" href="/auction">
           ← All Auctions
         </Link>
       </nav>
 
-      <header className="rounded-2xl bg-gradient-to-r from-brand-navy to-[#254f8e] p-6 text-white shadow-sm">
+      <header className="from-brand-navy rounded-2xl bg-gradient-to-r to-[#254f8e] p-6 text-white shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d9c08f]">
           {session.status === "LIVE" ? "🟢 Live Now" : session.status}
         </p>

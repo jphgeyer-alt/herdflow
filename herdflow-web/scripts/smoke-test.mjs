@@ -15,7 +15,9 @@
 //
 import { PrismaClient } from "@prisma/client";
 
-const base = (process.argv.find((a) => a.startsWith("--base=")) ?? "--base=http://localhost:3000").slice(7);
+const base = (
+  process.argv.find((a) => a.startsWith("--base=")) ?? "--base=http://localhost:3000"
+).slice(7);
 const stamp = Date.now();
 const prisma = new PrismaClient();
 
@@ -37,7 +39,11 @@ async function api(path, { method = "GET", token, body } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
   let json = null;
-  try { json = await res.json(); } catch { /* no body */ }
+  try {
+    json = await res.json();
+  } catch {
+    /* no body */
+  }
   return { status: res.status, json };
 }
 
@@ -87,7 +93,10 @@ async function main() {
   const ownerA = await registerFarmer("owner-a");
   const managerB = await registerManager("manager-b", ownerA.farmCode);
   const ownerC = await registerFarmer("owner-c");
-  log(true, `Registered owner A (${ownerA.id}), manager B linked to A (${managerB.id}), unrelated owner C (${ownerC.id})`);
+  log(
+    true,
+    `Registered owner A (${ownerA.id}), manager B linked to A (${managerB.id}), unrelated owner C (${ownerC.id})`,
+  );
 
   const tagNumber = `QA-SMOKE-${stamp}`;
   const create = await api("/api/app/animals", {
@@ -99,7 +108,10 @@ async function main() {
 
   const asOwnerA = await api("/api/app/animals", { token: ownerA.token });
   const visibleToOwnerA = (asOwnerA.json ?? []).some((a) => a.tagNumber === tagNumber);
-  log(visibleToOwnerA, "Owner A can see the animal manager B created (fix: effectiveFarmerId on writes)");
+  log(
+    visibleToOwnerA,
+    "Owner A can see the animal manager B created (fix: effectiveFarmerId on writes)",
+  );
 
   const asOwnerC = await api("/api/app/animals", { token: ownerC.token });
   const leakedToOwnerC = (asOwnerC.json ?? []).some((a) => a.tagNumber === tagNumber);
@@ -124,6 +136,10 @@ try {
   console.error("ERROR:", err.message);
 } finally {
   await cleanup();
-  console.log(pass ? "\nAll smoke tests passed. Test data cleaned up.\n" : "\nSMOKE TEST FAILURE. Test data cleaned up.\n");
+  console.log(
+    pass
+      ? "\nAll smoke tests passed. Test data cleaned up.\n"
+      : "\nSMOKE TEST FAILURE. Test data cleaned up.\n",
+  );
   process.exit(pass ? 0 : 1);
 }

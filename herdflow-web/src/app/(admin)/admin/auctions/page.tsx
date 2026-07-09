@@ -25,10 +25,10 @@ export default async function AdminAuctionsPage() {
   return (
     <main className="space-y-4 pb-10">
       <header>
-        <h1 className="text-3xl font-semibold text-brand-navy">Live Auctions</h1>
+        <h1 className="text-brand-navy text-3xl font-semibold">Live Auctions</h1>
         <p className="text-sm text-[#38537a]">
-          Create auction sessions, add lots, and control live bidding. Auction inventory is separate from the
-          storefront.
+          Create auction sessions, add lots, and control live bidding. Auction inventory is separate
+          from the storefront.
         </p>
       </header>
       <AuctionsManager initialSessions={sessions} />

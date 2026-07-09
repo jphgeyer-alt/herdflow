@@ -12,7 +12,9 @@ export async function GET(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const animal = await prisma.farmerAnimal.findFirst({ where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false } });
+  const animal = await prisma.farmerAnimal.findFirst({
+    where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
+  });
   if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   const records = await prisma.farmerWeightRecord.findMany({
@@ -28,11 +30,15 @@ export async function POST(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const animal = await prisma.farmerAnimal.findFirst({ where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false } });
+  const animal = await prisma.farmerAnimal.findFirst({
+    where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
+  });
   if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   let body: unknown;
-  try { body = await request.json(); } catch {
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const b = body as Record<string, unknown>;
@@ -42,12 +48,12 @@ export async function POST(request: Request, ctx: Ctx) {
   const [record] = await Promise.all([
     prisma.farmerWeightRecord.create({
       data: {
-        animalId:          id,
-        farmerId:          auth.effectiveFarmerId,
-        weight:            Number(b.weight),
-        bodyConditionScore:b.bodyConditionScore != null ? Number(b.bodyConditionScore) : null,
-        notes:             (b.notes as string | undefined) ?? null,
-        recordedDate:      b.recordedDate ? new Date(b.recordedDate as string) : new Date(),
+        animalId: id,
+        farmerId: auth.effectiveFarmerId,
+        weight: Number(b.weight),
+        bodyConditionScore: b.bodyConditionScore != null ? Number(b.bodyConditionScore) : null,
+        notes: (b.notes as string | undefined) ?? null,
+        recordedDate: b.recordedDate ? new Date(b.recordedDate as string) : new Date(),
       },
     }),
     // Update the animal's current weight
