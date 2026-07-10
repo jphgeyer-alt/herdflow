@@ -10,12 +10,24 @@ import { getPlatformStats } from "@/lib/platform-stats";
 // business (see src/lib/platform-stats.ts).
 export const revalidate = 86400;
 
-const featureCards = [
+type FeatureCard = {
+  title: string;
+  description: string;
+  image: string;
+  /** Simple cards link the whole tile to one destination. */
+  href?: string;
+  /** Cards serving two different audiences (e.g. Transport) show two
+   *  separate CTAs instead of one whole-card link. */
+  ctas?: Array<{ label: string; href: string }>;
+};
+
+const featureCards: FeatureCard[] = [
   {
     title: "HERD MANAGEMENT",
-    description: "Manage your herd on the go with powerful tools",
-    image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=600&q=80",
-    href: "/shop",
+    description:
+      "Track animals, health records, vaccinations, camps and finances from your phone. Works fully offline on remote farms — free to download.",
+    image: "https://images.unsplash.com/photo-1694673761978-9de993018e0f?w=600&q=80",
+    href: "/download",
   },
   {
     title: "TRUSTED PRODUCTS",
@@ -25,9 +37,13 @@ const featureCards = [
   },
   {
     title: "TRANSPORT SOLUTIONS",
-    description: "Reliable livestock transport services",
+    description:
+      "A verified network of livestock transport partners, matched to your route with transparent payouts.",
     image: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=600&q=80",
-    href: "/shop",
+    ctas: [
+      { label: "Become a Partner", href: "/register/logistics" },
+      { label: "Request Transport", href: "/contact" },
+    ],
   },
   {
     title: "AUCTIONS",
@@ -140,40 +156,77 @@ export default async function Home() {
       <section id="features" className="w-full overflow-hidden bg-white py-12 md:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-5">
-            {featureCards.map((card) => (
-              <Link
-                key={card.title}
-                href={card.href}
-                className="group relative w-full overflow-hidden rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
-              >
-                <div className="relative aspect-[4/3] w-full">
-                  {/* Background Image */}
-                  <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url('${card.image}')` }}
-                  />
-                  {/* Dark Overlay */}
-                  <div className="absolute inset-0 bg-black/50 transition group-hover:bg-black/40" />
+            {featureCards.map((card) =>
+              card.ctas ? (
+                <div
+                  key={card.title}
+                  className="group relative w-full overflow-hidden rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                >
+                  <div className="relative aspect-4/3 w-full">
+                    <div
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: `url('${card.image}')` }}
+                    />
+                    <div className="absolute inset-0 bg-black/50 transition group-hover:bg-black/40" />
 
-                  {/* Content */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
-                    <div className="space-y-1 md:space-y-2">
-                      <h3 className="text-base font-black uppercase tracking-wide text-white md:text-xl">
-                        {card.title}
-                      </h3>
-                      <p className="text-xs leading-relaxed text-white/90 md:text-sm">
-                        {card.description}
-                      </p>
-                      <div className="pt-1 md:pt-2">
-                        <span className="text-green inline-flex items-center gap-2 text-xs font-bold uppercase md:text-sm">
-                          Learn More →
-                        </span>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
+                      <div className="space-y-1 md:space-y-2">
+                        <h3 className="text-base font-black uppercase tracking-wide text-white md:text-xl">
+                          {card.title}
+                        </h3>
+                        <p className="text-xs leading-relaxed text-white/90 md:text-sm">
+                          {card.description}
+                        </p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 md:pt-2">
+                          {card.ctas.map((cta) => (
+                            <Link
+                              key={cta.label}
+                              href={cta.href}
+                              className="text-green inline-flex items-center gap-1.5 text-xs font-bold uppercase hover:underline md:text-sm"
+                            >
+                              {cta.label} →
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </Link>
-            ))}
+              ) : (
+                <Link
+                  key={card.title}
+                  href={card.href!}
+                  className="group relative w-full overflow-hidden rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                >
+                  <div className="relative aspect-4/3 w-full">
+                    {/* Background Image */}
+                    <div
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: `url('${card.image}')` }}
+                    />
+                    {/* Dark Overlay */}
+                    <div className="absolute inset-0 bg-black/50 transition group-hover:bg-black/40" />
+
+                    {/* Content */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
+                      <div className="space-y-1 md:space-y-2">
+                        <h3 className="text-base font-black uppercase tracking-wide text-white md:text-xl">
+                          {card.title}
+                        </h3>
+                        <p className="text-xs leading-relaxed text-white/90 md:text-sm">
+                          {card.description}
+                        </p>
+                        <div className="pt-1 md:pt-2">
+                          <span className="text-green inline-flex items-center gap-2 text-xs font-bold uppercase md:text-sm">
+                            Learn More →
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ),
+            )}
           </div>
         </div>
       </section>
