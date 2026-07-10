@@ -58,6 +58,7 @@ describe("POST /api/store/register/logistics", () => {
     form.set("companyName", "RouteShift Logistics");
     form.set("contactPhone", "+27879991111");
     form.set("contactEmail", "routes@example.com");
+    form.set("password", "StrongPassword123");
     form.set("fleetSize", "12");
     form.set("routesCovered", "North West, Gauteng");
     form.set("vehicleDocuments", new File(["png-content"], "fleet.png", { type: "image/png" }));
