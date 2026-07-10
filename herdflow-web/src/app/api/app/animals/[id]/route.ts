@@ -8,10 +8,19 @@ export const dynamic = "force-dynamic";
 
 type Ctx = { params: Promise<{ id: string }> };
 
+// The mobile app's local animal id (a per-device SQLite autoincrement
+// integer) is never learned back after sync creates the real cuid `id` —
+// every later PATCH/DELETE/GET still targets the local id. Fall back to
+// matching on `localId` (stored at create time) so those requests resolve
+// instead of 404ing. NOTE: FarmerHealthRecord/FarmerWeightRecord/
+// FarmerVaccination.animalId are populated by mobile using that SAME local
+// id (mobile has no way to send the real cuid there either), so those child
+// lookups must keep using the raw path param, not the resolved record's
+// real id — only the FarmerAnimal row's own primary key has this problem.
 async function getAnimalForFarmer(tx: Prisma.TransactionClient, id: string, farmerId: string) {
-  return tx.farmerAnimal.findFirst({
-    where: { id, farmerId, isDeleted: false },
-  });
+  const byId = await tx.farmerAnimal.findFirst({ where: { id, farmerId, isDeleted: false } });
+  if (byId) return byId;
+  return tx.farmerAnimal.findFirst({ where: { localId: id, farmerId, isDeleted: false } });
 }
 
 export async function GET(request: Request, ctx: Ctx) {
@@ -60,7 +69,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
 
   const updated = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
     tx.farmerAnimal.update({
-      where: { id },
+      where: { id: existing.id },
       data: {
         ...(b.tag != null && { tagNumber: String(b.tag) }),
         ...(b.name != null && { name: String(b.name) }),
@@ -70,9 +79,17 @@ export async function PATCH(request: Request, ctx: Ctx) {
         ...(b.birthDate != null && { dateOfBirth: new Date(b.birthDate as string) }),
         ...(b.weight != null && { weight: Number(b.weight) }),
         ...(b.campId != null && { camp: String(b.campId) }),
+        ...(b.campId == null &&
+          b.assignedCampId != null && { camp: String(b.assignedCampId) }),
         ...(b.note != null && { notes: String(b.note) }),
         ...(b.status != null && { status: String(b.status) }),
         ...(b.healthStatus != null && { healthStatus: String(b.healthStatus) }),
+        ...(b.source != null && { source: String(b.source) }),
+        ...(b.purchasePrice != null && { purchasePrice: Number(b.purchasePrice) }),
+        ...(b.dateAcquired != null && { dateAcquired: new Date(b.dateAcquired as string) }),
+        ...(b.auctionHouse != null && { auctionHouse: String(b.auctionHouse) }),
+        ...(b.sellerName != null && { sellerName: String(b.sellerName) }),
+        ...(b.prevFarm != null && { prevFarm: String(b.prevFarm) }),
       },
     }),
   );
@@ -90,7 +107,7 @@ export async function DELETE(request: Request, ctx: Ctx) {
     if (!existing) return false;
 
     // Soft delete — all health records preserved
-    await tx.farmerAnimal.update({ where: { id }, data: { isDeleted: true } });
+    await tx.farmerAnimal.update({ where: { id: existing.id }, data: { isDeleted: true } });
     return true;
   });
   if (!deleted) return NextResponse.json({ error: "Animal not found" }, { status: 404 });

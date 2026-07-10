@@ -794,6 +794,7 @@ model DeviceToken {
 
 model FarmerAnimal {
   id                 String    @id @default(cuid())
+  localId            String?   @unique
   farmerId           String
   tagNumber          String?
   name               String?
@@ -808,6 +809,9 @@ model FarmerAnimal {
   source             String?
   purchasePrice      Decimal?
   dateAcquired       DateTime?
+  auctionHouse       String?
+  sellerName         String?
+  prevFarm           String?
   camp               String?
   notes              String?
   status             String    @default("ACTIVE")
@@ -951,6 +955,10 @@ model FarmerCampCount {
   variance        Int?
   varianceNotes   String?
   countMethod     String   @default("MANUAL")
+  bullsCount      Int?
+  cowsCount       Int?
+  heifersCount    Int?
+  calvesCount     Int?
   isDeleted       Boolean  @default(false)
   createdAt       DateTime @default(now())
 
@@ -979,6 +987,33 @@ model FarmerCampMovement {
 
   @@index([farmerId])
   @@index([toCampId])
+}
+
+// Bull turn-in/turnout — which breeding male(s) were put with a camp's
+// females and when they were put in/removed, for calving-window and likely-
+// sire tracking. Multi-sire camps are normal practice, so bullIds is a JSON
+// array like FarmerCampMovement.animalIds.
+model FarmerBullTurnout {
+  id                    String    @id @default(cuid())
+  localId               String?   @unique
+  farmerId              String
+  campId                String
+  campName              String
+  bullIds               String // JSON array of animal IDs
+  bullTags              String // JSON array of tags, for display without a join
+  dateIn                DateTime
+  dateOut               DateTime?
+  expectedCalvingStart  DateTime?
+  expectedCalvingEnd    DateTime?
+  recordedByUserId      String
+  recordedByName        String
+  recordedByRole        String
+  notes                 String?
+  isDeleted             Boolean   @default(false)
+  createdAt             DateTime  @default(now())
+
+  @@index([farmerId])
+  @@index([campId])
 }
 
 model FarmerMedicine {

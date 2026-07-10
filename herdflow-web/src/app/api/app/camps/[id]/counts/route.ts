@@ -53,6 +53,10 @@ export async function POST(request: Request, ctx: Ctx) {
         variance: b.variance != null ? Number(b.variance) : null,
         varianceNotes: (b.varianceNotes as string | undefined) ?? null,
         countMethod: (b.countMethod as string | undefined) ?? "MANUAL",
+        bullsCount: b.bullsCount != null ? Number(b.bullsCount) : null,
+        cowsCount: b.cowsCount != null ? Number(b.cowsCount) : null,
+        heifersCount: b.heifersCount != null ? Number(b.heifersCount) : null,
+        calvesCount: b.calvesCount != null ? Number(b.calvesCount) : null,
       },
     }),
   );
