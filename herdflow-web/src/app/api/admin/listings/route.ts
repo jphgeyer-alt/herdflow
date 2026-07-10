@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
 import { withAdminContext } from "@/lib/tenant-prisma";
 
@@ -41,11 +42,6 @@ type ListingCreateBody = {
     sellerPhone?: string;
   };
 };
-
-function ensureAdmin(request: NextRequest) {
-  const session = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
-  return isValidAdminSession(session);
-}
 
 function toSlug(value: string) {
   return value
@@ -102,7 +98,8 @@ async function findOrCreateSeller(
 }
 
 export async function GET(request: NextRequest) {
-  if (!ensureAdmin(request)) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -131,7 +128,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  if (!ensureAdmin(request)) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -148,26 +146,40 @@ export async function PATCH(request: NextRequest) {
     if (kind === "livestock") {
       if (action === "delete") {
         // Livestock listings have no FK dependents that would block deletion
-        await withAdminContext((tx) => tx.listing.delete({ where: { id } }));
+        const deleted = await withAdminContext((tx) => tx.listing.delete({ where: { id } }));
+        logAdminActivity(admin, "listing.delete", "Listing", {
+          entityId: deleted.id,
+          entityLabel: deleted.title,
+        });
       }
 
       if (action === "approve") {
-        await withAdminContext((tx) =>
+        const updated = await withAdminContext((tx) =>
           tx.listing.update({ where: { id }, data: { status: "ACTIVE" } }),
         );
+        logAdminActivity(admin, "listing.approve", "Listing", {
+          entityId: updated.id,
+          entityLabel: updated.title,
+          metadata: { status: updated.status },
+        });
       }
 
       if (action === "feature") {
-        await withAdminContext((tx) =>
+        const updated = await withAdminContext((tx) =>
           tx.listing.update({
             where: { id },
             data: { isFeatured: Boolean(body.data?.isFeatured) },
           }),
         );
+        logAdminActivity(admin, "listing.feature", "Listing", {
+          entityId: updated.id,
+          entityLabel: updated.title,
+          metadata: { isFeatured: updated.isFeatured },
+        });
       }
 
       if (action === "update") {
-        await withAdminContext((tx) =>
+        const updated = await withAdminContext((tx) =>
           tx.listing.update({
             where: { id },
             data: {
@@ -178,6 +190,11 @@ export async function PATCH(request: NextRequest) {
             },
           }),
         );
+        logAdminActivity(admin, "listing.update", "Listing", {
+          entityId: updated.id,
+          entityLabel: updated.title,
+          metadata: { status: updated.status },
+        });
       }
     }
 
@@ -185,29 +202,43 @@ export async function PATCH(request: NextRequest) {
       if (action === "delete") {
         // OrderItem has a hard FK to Product with no onDelete cascade.
         // Delete related OrderItems first inside a transaction, then the product.
-        await withAdminContext(async (tx) => {
+        const deleted = await withAdminContext(async (tx) => {
           await tx.orderItem.deleteMany({ where: { productId: id } });
-          await tx.product.delete({ where: { id } });
+          return tx.product.delete({ where: { id } });
+        });
+        logAdminActivity(admin, "listing.delete", "Product", {
+          entityId: deleted.id,
+          entityLabel: deleted.name,
         });
       }
 
       if (action === "approve") {
-        await withAdminContext((tx) =>
+        const updated = await withAdminContext((tx) =>
           tx.product.update({ where: { id }, data: { status: "ACTIVE" } }),
         );
+        logAdminActivity(admin, "listing.approve", "Product", {
+          entityId: updated.id,
+          entityLabel: updated.name,
+          metadata: { status: updated.status },
+        });
       }
 
       if (action === "feature") {
-        await withAdminContext((tx) =>
+        const updated = await withAdminContext((tx) =>
           tx.product.update({
             where: { id },
             data: { isFeatured: Boolean(body.data?.isFeatured) },
           }),
         );
+        logAdminActivity(admin, "listing.feature", "Product", {
+          entityId: updated.id,
+          entityLabel: updated.name,
+          metadata: { isFeatured: updated.isFeatured },
+        });
       }
 
       if (action === "update") {
-        await withAdminContext((tx) =>
+        const updated = await withAdminContext((tx) =>
           tx.product.update({
             where: { id },
             data: {
@@ -220,6 +251,11 @@ export async function PATCH(request: NextRequest) {
             },
           }),
         );
+        logAdminActivity(admin, "listing.update", "Product", {
+          entityId: updated.id,
+          entityLabel: updated.name,
+          metadata: { status: updated.status },
+        });
       }
     }
 
@@ -232,7 +268,8 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!ensureAdmin(request)) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

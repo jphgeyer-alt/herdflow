@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { sendQuoteEmail } from "@/lib/email";
 import { formatRand } from "@/lib/marketing/format";
@@ -8,12 +8,9 @@ import { getBaseUrl } from "@/lib/marketing/base-url";
 
 type Params = { params: Promise<{ id: string }> };
 
-function ensureAdmin(request: NextRequest) {
-  return isValidAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
-
 export async function POST(request: NextRequest, { params }: Params) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
 

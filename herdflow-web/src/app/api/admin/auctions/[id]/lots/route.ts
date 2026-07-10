@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 type Params = { params: Promise<{ id: string }> };
 
-function ensureAdmin(req: NextRequest) {
-  return isValidAdminSession(req.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
-
 // ── GET all lots for session ──────────────────────────────────────────────────
 export async function GET(request: NextRequest, { params }: Params) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
 
   try {
@@ -30,7 +28,8 @@ export async function GET(request: NextRequest, { params }: Params) {
 
 // ── POST create new lot ───────────────────────────────────────────────────────
 export async function POST(request: NextRequest, { params }: Params) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id: sessionId } = await params;
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
@@ -70,6 +69,10 @@ export async function POST(request: NextRequest, { params }: Params) {
           : null,
         status: "PENDING",
       },
+    });
+    logAdminActivity(admin, "auction_lot.create", "AuctionLot", {
+      entityId: lot.id,
+      entityLabel: lot.title,
     });
     return NextResponse.json({ lot }, { status: 201 });
   } catch (err) {

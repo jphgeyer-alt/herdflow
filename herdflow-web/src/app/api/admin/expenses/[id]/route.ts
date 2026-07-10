@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
 
-function ensureAdmin(request: NextRequest) {
-  return isValidAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
-
 export async function PATCH(request: NextRequest, { params }: Params) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
@@ -36,12 +34,17 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 // Hard delete — nothing else references an Expense row, so a simple
 // correction path is enough (no soft-delete audit trail needed).
 export async function DELETE(request: NextRequest, { params }: Params) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
 
   try {
-    await prisma.expense.delete({ where: { id } });
+    const deleted = await prisma.expense.delete({ where: { id } });
+    logAdminActivity(admin, "expense.delete", "Expense", {
+      entityId: deleted.id,
+      entityLabel: deleted.description,
+    });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Delete expense error:", err);

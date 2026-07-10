@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
 
 const VALID_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
@@ -10,30 +11,34 @@ function isValidStatus(s: string): s is VerificationStatus {
   return (VALID_STATUSES as readonly string[]).includes(s);
 }
 
-function ensureAdmin(request: NextRequest) {
-  const session = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
-  return isValidAdminSession(session);
-}
-
 export async function GET(request: NextRequest) {
-  if (!ensureAdmin(request)) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = request.nextUrl;
   const statusFilter = searchParams.get("status");
+  const pageParam = searchParams.get("page");
+  const page = pageParam ? Math.max(1, Number.parseInt(pageParam, 10) || 1) : 1;
+  const pageSize = 25;
 
   const where = statusFilter && isValidStatus(statusFilter) ? { status: statusFilter } : undefined;
 
   try {
-    const sellers = await prisma.seller.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: { select: { fullName: true, email: true } },
-        _count: { select: { livestockListings: true, products: true } },
-      },
-    });
+    const [total, sellers] = await Promise.all([
+      prisma.seller.count({ where }),
+      prisma.seller.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          user: { select: { fullName: true, email: true } },
+          _count: { select: { livestockListings: true, products: true } },
+        },
+      }),
+    ]);
 
     // Attach total sales per seller from completed orders
     const sellerIds = sellers.map((s) => s.id);
@@ -71,14 +76,15 @@ export async function GET(request: NextRequest) {
       totalSalesCents: sellerSales.get(s.id) ?? 0,
     }));
 
-    return NextResponse.json({ sellers: enriched });
+    return NextResponse.json({ sellers: enriched, total, page, pageSize });
   } catch {
     return NextResponse.json({ error: "Failed to load sellers." }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
-  if (!ensureAdmin(request)) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -147,7 +153,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  if (!ensureAdmin(request)) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -160,13 +167,19 @@ export async function PATCH(request: NextRequest) {
 
   const id = (body.id as string | undefined)?.trim();
   const status = body.status as string | undefined;
+  const reason = (body.reason as string | undefined)?.trim();
 
   if (!id) return NextResponse.json({ error: "id is required." }, { status: 400 });
   if (!status || !isValidStatus(status))
     return NextResponse.json({ error: "Valid status is required." }, { status: 400 });
 
   try {
-    await prisma.seller.update({ where: { id }, data: { status } });
+    const updated = await prisma.seller.update({ where: { id }, data: { status } });
+    logAdminActivity(admin, "seller.status_update", "Seller", {
+      entityId: updated.id,
+      entityLabel: updated.farmName,
+      metadata: reason ? { status, reason } : { status },
+    });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Failed to update seller." }, { status: 500 });

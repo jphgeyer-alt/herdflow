@@ -1,38 +1,40 @@
 import { NextResponse } from "next/server";
 import {
   ADMIN_SESSION_COOKIE,
-  createAdminSessionValue,
+  SESSION_COOKIE_OPTIONS,
+  createAdminSession,
   validateAdminCredentials,
 } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 
 type LoginBody = {
-  username?: string;
+  email?: string;
   password?: string;
 };
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as LoginBody;
 
-  const username = (body.username || "").trim();
+  const email = (body.email || "").trim();
   const password = body.password || "";
 
-  if (!username || !password) {
-    return NextResponse.json({ error: "Username and password are required." }, { status: 400 });
+  if (!email || !password) {
+    return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   }
 
-  if (!validateAdminCredentials(username, password)) {
-    return NextResponse.json({ error: "Invalid admin credentials." }, { status: 401 });
+  const admin = await validateAdminCredentials(email, password);
+  if (!admin) {
+    return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
+
+  const sessionValue = await createAdminSession(admin.id, request.headers.get("user-agent") ?? undefined);
+  logAdminActivity(admin, "admin.login", "AdminUser", { entityId: admin.id, entityLabel: admin.email });
 
   const response = NextResponse.json({ ok: true });
   response.cookies.set({
     name: ADMIN_SESSION_COOKIE,
-    value: createAdminSessionValue(),
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 12,
+    value: sessionValue,
+    ...SESSION_COOKIE_OPTIONS,
   });
 
   return response;

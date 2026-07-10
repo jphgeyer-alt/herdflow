@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, getAdminUsername, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
 import { withAdminContext } from "@/lib/tenant-prisma";
 import { getNextDocumentNumber } from "@/lib/document-number";
 
-function ensureAdmin(request: NextRequest) {
-  return isValidAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
-
 const PAID_STATUSES = ["PAID", "PROCESSING", "SHIPPED", "COMPLETED"] as const;
 
 export async function GET(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const payouts = await withAdminContext((tx) =>
@@ -32,7 +30,8 @@ export async function GET(request: NextRequest) {
 // transaction — locks the batch so later sales don't leak into it while
 // it's being settled.
 export async function POST(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await request.json().catch(() => ({}))) as { sellerId?: string };
   if (!body.sellerId) return NextResponse.json({ error: "sellerId is required." }, { status: 400 });
@@ -59,7 +58,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "This seller has no unpaid balance." }, { status: 400 });
     }
 
-    const createdBy = getAdminUsername(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+    const createdBy = admin.fullName;
 
     const payout = await withAdminContext(async (tx) => {
       const number = await getNextDocumentNumber(tx, "payout");
@@ -76,6 +75,12 @@ export async function POST(request: NextRequest) {
         data: { payoutId: created.id },
       });
       return created;
+    });
+
+    logAdminActivity(admin, "seller_payout.create", "SellerPayout", {
+      entityId: payout.id,
+      entityLabel: payout.number,
+      metadata: { sellerId: body.sellerId, amountCents },
     });
 
     return NextResponse.json({ ok: true, payout });

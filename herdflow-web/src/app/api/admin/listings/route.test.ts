@@ -1,15 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { createAdminSessionValue } from "@/lib/admin-auth";
 
-const { mockListingUpdate, mockListingDelete, mockProductUpdate, mockProductDelete } = vi.hoisted(
-  () => ({
-    mockListingUpdate: vi.fn(),
-    mockListingDelete: vi.fn(),
-    mockProductUpdate: vi.fn(),
-    mockProductDelete: vi.fn(),
-  }),
-);
+const {
+  mockListingUpdate,
+  mockListingDelete,
+  mockProductUpdate,
+  mockProductDelete,
+  mockGetAdminFromRequest,
+} = vi.hoisted(() => ({
+  mockListingUpdate: vi.fn(),
+  mockListingDelete: vi.fn(),
+  mockProductUpdate: vi.fn(),
+  mockProductDelete: vi.fn(),
+  mockGetAdminFromRequest: vi.fn(),
+}));
+
+vi.mock("@/lib/admin-auth", () => ({
+  getAdminFromRequest: mockGetAdminFromRequest,
+}));
+
+vi.mock("@/lib/admin-activity", () => ({
+  logAdminActivity: vi.fn(),
+}));
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -26,17 +38,32 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+vi.mock("@/lib/tenant-prisma", () => ({
+  withAdminContext: (fn: (tx: unknown) => unknown) =>
+    fn({
+      listing: { update: mockListingUpdate, delete: mockListingDelete },
+      product: { update: mockProductUpdate, delete: mockProductDelete },
+      orderItem: { deleteMany: vi.fn() },
+    }),
+}));
+
 import { PATCH } from "./route";
+
+const FAKE_ADMIN = {
+  id: "admin-1",
+  email: "admin@herdflow.co.za",
+  fullName: "Test Admin",
+  role: "SUPER_ADMIN" as const,
+};
 
 describe("PATCH /api/admin/listings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.ADMIN_USERNAME = "admin";
-    process.env.ADMIN_PASSWORD = "secret";
-    process.env.ADMIN_SESSION_SECRET = "test-secret";
   });
 
   it("returns 401 without admin cookie", async () => {
+    mockGetAdminFromRequest.mockResolvedValueOnce(null);
+
     const request = new NextRequest("http://localhost/api/admin/listings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -48,14 +75,13 @@ describe("PATCH /api/admin/listings", () => {
   });
 
   it("approves livestock when authorized", async () => {
-    mockListingUpdate.mockResolvedValueOnce({ id: "listing-1" });
-    const session = createAdminSessionValue();
+    mockGetAdminFromRequest.mockResolvedValueOnce(FAKE_ADMIN);
+    mockListingUpdate.mockResolvedValueOnce({ id: "listing-1", title: "Test Listing", status: "ACTIVE" });
 
     const request = new NextRequest("http://localhost/api/admin/listings", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Cookie: `hf_admin_session=${session}`,
       },
       body: JSON.stringify({ kind: "livestock", id: "listing-1", action: "approve" }),
     });

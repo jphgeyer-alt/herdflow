@@ -24,6 +24,7 @@ img {
   --gold: #a07c3a;
   --gold-light: #c9a55a;
   --green-light: #4caf50;
+  --green-dark: #1d5e20;
   --cream: #f9f6ee;
 
   /* Backward-compatible aliases used by existing utility classes */
@@ -31,6 +32,37 @@ img {
   --brand-green: var(--green);
   --brand-gold: var(--gold);
   --accent-blue: #1e4068;
+
+  /*
+   * Extended navy/slate scale — this formalizes ~15 hex literals that were
+   * already in de-facto use hundreds of times across the app as arbitrary
+   * Tailwind values (text-[#5d7497] etc.) with no central definition. The
+   * numbering follows Tailwind's 50 (lightest) → 900 (darkest) convention.
+   */
+  --navy-900: #0f2544;
+  --navy-800: #13263f;
+  --navy-700: #1a2c42;
+  --navy-600: #1b3a6b;
+  --navy-500: #244367;
+  --navy-400: #38537a;
+  --navy-300: #5d7497;
+  --navy-200: #9aabb9;
+  --navy-100: #cdd8e7;
+  --navy-50: #e4ebf5;
+  --navy-25: #f5f8fd;
+
+  /* Semantic status colors — one source of truth for badges, replacing ~6
+     independently-invented STATUS_COLORS maps scattered across admin pages. */
+  --status-success-bg: #dcfce7;
+  --status-success-text: #15803d;
+  --status-warning-bg: #fef3c7;
+  --status-warning-text: #b45309;
+  --status-danger-bg: #fee2e2;
+  --status-danger-text: #b91c1c;
+  --status-info-bg: #dbeafe;
+  --status-info-text: #1d4ed8;
+  --status-neutral-bg: #f1f5f9;
+  --status-neutral-text: #475569;
 }
 
 @theme inline {
@@ -41,11 +73,23 @@ img {
   --color-gold: var(--gold);
   --color-gold-light: var(--gold-light);
   --color-green-light: var(--green-light);
+  --color-green-dark: var(--green-dark);
   --color-cream: var(--cream);
   --color-brand-navy: var(--brand-navy);
   --color-brand-green: var(--brand-green);
   --color-brand-gold: var(--brand-gold);
   --color-accent-blue: var(--accent-blue);
+  --color-navy-900: var(--navy-900);
+  --color-navy-800: var(--navy-800);
+  --color-navy-700: var(--navy-700);
+  --color-navy-600: var(--navy-600);
+  --color-navy-500: var(--navy-500);
+  --color-navy-400: var(--navy-400);
+  --color-navy-300: var(--navy-300);
+  --color-navy-200: var(--navy-200);
+  --color-navy-100: var(--navy-100);
+  --color-navy-50: var(--navy-50);
+  --color-navy-25: var(--navy-25);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

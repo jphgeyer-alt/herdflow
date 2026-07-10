@@ -1,48 +1,68 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { mockValidateAdminCredentials, mockCreateAdminSession } = vi.hoisted(() => ({
+  mockValidateAdminCredentials: vi.fn(),
+  mockCreateAdminSession: vi.fn(),
+}));
+
+vi.mock("@/lib/admin-auth", () => ({
+  ADMIN_SESSION_COOKIE: "hf_admin_session",
+  SESSION_COOKIE_OPTIONS: {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax" as const,
+    maxAge: 60 * 60 * 12,
+    path: "/",
+  },
+  validateAdminCredentials: mockValidateAdminCredentials,
+  createAdminSession: mockCreateAdminSession,
+}));
+
+vi.mock("@/lib/admin-activity", () => ({
+  logAdminActivity: vi.fn(),
+}));
+
 import { POST } from "./route";
 
-const originalUsername = process.env.ADMIN_USERNAME;
-const originalPassword = process.env.ADMIN_PASSWORD;
-const originalSecret = process.env.ADMIN_SESSION_SECRET;
-
 describe("POST /api/admin/login", () => {
-  afterEach(() => {
-    process.env.ADMIN_USERNAME = originalUsername;
-    process.env.ADMIN_PASSWORD = originalPassword;
-    process.env.ADMIN_SESSION_SECRET = originalSecret;
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
   it("rejects invalid credentials", async () => {
-    process.env.ADMIN_USERNAME = "admin";
-    process.env.ADMIN_PASSWORD = "strong-pass";
-    process.env.ADMIN_SESSION_SECRET = "test-secret";
+    mockValidateAdminCredentials.mockResolvedValueOnce(null);
 
     const request = new Request("http://localhost/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "admin", password: "wrong" }),
+      body: JSON.stringify({ email: "admin@herdflow.co.za", password: "wrong" }),
     });
 
     const response = await POST(request);
     expect(response.status).toBe(401);
+    expect(mockCreateAdminSession).not.toHaveBeenCalled();
   });
 
   it("sets admin session cookie for valid credentials", async () => {
-    process.env.ADMIN_USERNAME = "admin";
-    process.env.ADMIN_PASSWORD = "strong-pass";
-    process.env.ADMIN_SESSION_SECRET = "test-secret";
+    mockValidateAdminCredentials.mockResolvedValueOnce({
+      id: "admin-1",
+      email: "admin@herdflow.co.za",
+      fullName: "Test Admin",
+      role: "SUPER_ADMIN",
+    });
+    mockCreateAdminSession.mockResolvedValueOnce("raw-session-token");
 
     const request = new Request("http://localhost/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "admin", password: "strong-pass" }),
+      body: JSON.stringify({ email: "admin@herdflow.co.za", password: "strong-pass" }),
     });
 
     const response = await POST(request);
     expect(response.status).toBe(200);
 
     const setCookie = response.headers.get("set-cookie") || "";
-    expect(setCookie).toContain("hf_admin_session=");
+    expect(setCookie).toContain("hf_admin_session=raw-session-token");
     expect(setCookie).toContain("HttpOnly");
   });
 });

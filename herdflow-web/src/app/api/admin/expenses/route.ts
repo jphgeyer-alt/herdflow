@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, getAdminUsername, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
 
-function ensureAdmin(request: NextRequest) {
-  return isValidAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
-
 export async function GET(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = request.nextUrl;
   const from = searchParams.get("from");
@@ -33,7 +31,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await request.json().catch(() => ({}))) as {
     category?: string;
@@ -60,7 +59,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "A valid date is required." }, { status: 400 });
 
   try {
-    const createdBy = getAdminUsername(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+    const createdBy = admin.fullName;
     const expense = await prisma.expense.create({
       data: {
         category,
@@ -70,6 +69,11 @@ export async function POST(request: NextRequest) {
         notes: body.notes?.trim() || null,
         createdBy,
       },
+    });
+    logAdminActivity(admin, "expense.create", "Expense", {
+      entityId: expense.id,
+      entityLabel: expense.description,
+      metadata: { amountCents, category },
     });
     return NextResponse.json({ ok: true, expense });
   } catch (err) {

@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 
 export const dynamic = "force-dynamic";
-
-async function assertAdmin() {
-  const jar = await cookies();
-  return isValidAdminSession(jar.get(ADMIN_SESSION_COOKIE)?.value);
-}
 
 function slugify(s: string) {
   return s
@@ -22,8 +18,9 @@ function isString(v: unknown, min = 1): v is string {
 }
 
 // ─── GET: list all auction sessions ─────────────────────────────────────────
-export async function GET() {
-  if (!(await assertAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(request: NextRequest) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const sessions = await prisma.auctionSession.findMany({
@@ -40,8 +37,9 @@ export async function GET() {
 }
 
 // ─── POST: create a new auction session ─────────────────────────────────────
-export async function POST(request: Request) {
-  if (!(await assertAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function POST(request: NextRequest) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let body: unknown;
   try {
@@ -81,6 +79,10 @@ export async function POST(request: Request) {
         videoType: isString(b.videoType) ? (b.videoType as string) : undefined,
       },
     });
+    logAdminActivity(admin, "auction_session.create", "AuctionSession", {
+      entityId: session.id,
+      entityLabel: session.title,
+    });
     return NextResponse.json({ session }, { status: 201 });
   } catch (err) {
     console.error("[admin/auctions POST]", err);
@@ -89,8 +91,9 @@ export async function POST(request: Request) {
 }
 
 // ─── PATCH: update session status or add/update a lot ───────────────────────
-export async function PATCH(request: Request) {
-  if (!(await assertAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function PATCH(request: NextRequest) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let body: unknown;
   try {
@@ -222,8 +225,9 @@ export async function PATCH(request: Request) {
 }
 
 // ─── DELETE: remove a session or a lot ──────────────────────────────────────
-export async function DELETE(request: Request) {
-  if (!(await assertAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function DELETE(request: NextRequest) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get("sessionId");
@@ -235,7 +239,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ ok: true });
     }
     if (sessionId) {
-      await prisma.auctionSession.delete({ where: { id: sessionId } });
+      const deleted = await prisma.auctionSession.delete({ where: { id: sessionId } });
+      logAdminActivity(admin, "auction_session.delete", "AuctionSession", {
+        entityId: deleted.id,
+        entityLabel: deleted.title,
+      });
       return NextResponse.json({ ok: true });
     }
     return NextResponse.json({ error: "sessionId or lotId required" }, { status: 400 });
