@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatRand } from "@/lib/marketing/format";
+import { getPlatformStats } from "@/lib/platform-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -111,6 +112,18 @@ const FAQS = [
 export default async function MarketingPage() {
   const sponsors = await getActiveSponsors();
   const PACKAGES = await getPackages();
+  const platformStats = await getPlatformStats();
+
+  const heroStats = [
+    { value: platformStats.activeFarmers.toLocaleString(), label: "Active Farmers Reached" },
+    { value: platformStats.registeredUsers.toLocaleString(), label: "Registered Users" },
+    { value: platformStats.registeredBusinesses.toLocaleString(), label: "Registered Agricultural Businesses" },
+    { value: platformStats.provincesCovered.toString(), label: "Provinces Covered and Growing" },
+    {
+      value: formatRand(platformStats.livestockTradedLast30DaysCents / 100),
+      label: "Livestock Traded (Last 30 Days)",
+    },
+  ];
 
   return (
     <div className="bg-white">
@@ -164,13 +177,7 @@ export default async function MarketingPage() {
       <section className="bg-[#1B3A6B] py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-6 text-center text-white sm:grid-cols-3 lg:grid-cols-5">
-            {[
-              { value: "10 000+", label: "Active Farmers Reached" },
-              { value: "250 000+", label: "Monthly Platform Views" },
-              { value: "50+", label: "Registered Agricultural Businesses" },
-              { value: "5", label: "Provinces Covered and Growing" },
-              { value: "R2.5M+", label: "Livestock Traded Monthly" },
-            ].map((s) => (
+            {heroStats.map((s) => (
               <div key={s.label}>
                 <p className="text-2xl font-black text-[#A07C3A] sm:text-3xl">{s.value}</p>
                 <p className="mt-1 text-xs text-white/70">{s.label}</p>
