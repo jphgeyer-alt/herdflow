@@ -1,7 +1,7 @@
 // WEBSITE — herdflow-web/src/app/api/app/camps/[id]/counts/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
+import { withFarmerContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -12,11 +12,13 @@ export async function GET(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
   const { id } = await ctx.params;
 
-  const counts = await prisma.farmerCampCount.findMany({
-    where: { campId: id, farmerId: auth.effectiveFarmerId, isDeleted: false },
-    orderBy: { countDate: "desc" },
-    take: 50,
-  });
+  const counts = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    tx.farmerCampCount.findMany({
+      where: { campId: id, farmerId: auth.effectiveFarmerId, isDeleted: false },
+      orderBy: { countDate: "desc" },
+      take: 50,
+    }),
+  );
   return NextResponse.json(counts);
 }
 
@@ -36,21 +38,23 @@ export async function POST(request: Request, ctx: Ctx) {
   if (b.actualCount == null)
     return NextResponse.json({ error: "actualCount required" }, { status: 400 });
 
-  const count = await prisma.farmerCampCount.create({
-    data: {
-      localId: (b.localId as string | undefined) ?? null,
-      campId: id,
-      farmerId: auth.effectiveFarmerId,
-      countedByUserId: (b.countedByUserId as string | undefined) ?? auth.id,
-      countedByName: (b.countedByName as string | undefined) ?? "Unknown",
-      countedByRole: (b.countedByRole as string | undefined) ?? "FARMER",
-      countDate: b.countDate ? new Date(b.countDate as string) : new Date(),
-      expectedCount: b.expectedCount != null ? Number(b.expectedCount) : null,
-      actualCount: Number(b.actualCount),
-      variance: b.variance != null ? Number(b.variance) : null,
-      varianceNotes: (b.varianceNotes as string | undefined) ?? null,
-      countMethod: (b.countMethod as string | undefined) ?? "MANUAL",
-    },
-  });
+  const count = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    tx.farmerCampCount.create({
+      data: {
+        localId: (b.localId as string | undefined) ?? null,
+        campId: id,
+        farmerId: auth.effectiveFarmerId,
+        countedByUserId: (b.countedByUserId as string | undefined) ?? auth.id,
+        countedByName: (b.countedByName as string | undefined) ?? "Unknown",
+        countedByRole: (b.countedByRole as string | undefined) ?? "FARMER",
+        countDate: b.countDate ? new Date(b.countDate as string) : new Date(),
+        expectedCount: b.expectedCount != null ? Number(b.expectedCount) : null,
+        actualCount: Number(b.actualCount),
+        variance: b.variance != null ? Number(b.variance) : null,
+        varianceNotes: (b.varianceNotes as string | undefined) ?? null,
+        countMethod: (b.countMethod as string | undefined) ?? "MANUAL",
+      },
+    }),
+  );
   return NextResponse.json(count, { status: 201 });
 }

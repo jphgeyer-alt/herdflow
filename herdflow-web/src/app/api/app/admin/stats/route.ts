@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminToken, isMobileUser } from "@/lib/mobile-auth";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +17,10 @@ export async function GET(request: Request) {
   const [totalFarmers, totalAnimals, contentPublished, newFarmersThisMonth, totalHealthRecords] =
     await Promise.all([
       prisma.user.count({ where: { role: "FARMER" } }),
-      prisma.farmerAnimal.count({ where: { isDeleted: false } }),
+      withAdminContext((tx) => tx.farmerAnimal.count({ where: { isDeleted: false } })),
       prisma.appContent.count({ where: { status: "ACTIVE", isDeleted: false } }),
       prisma.user.count({ where: { role: "FARMER", createdAt: { gte: thisMonthStart } } }),
-      prisma.farmerHealthRecord.count(),
+      withAdminContext((tx) => tx.farmerHealthRecord.count()),
     ]);
 
   return NextResponse.json({
@@ -28,8 +29,10 @@ export async function GET(request: Request) {
     contentPublished,
     newFarmersThisMonth,
     totalHealthRecords,
-    activeUsers7d: await prisma.deviceToken.count({
-      where: { isActive: true, updatedAt: { gte: sevenDaysAgo } },
-    }),
+    activeUsers7d: await withAdminContext((tx) =>
+      tx.deviceToken.count({
+        where: { isActive: true, updatedAt: { gte: sevenDaysAgo } },
+      }),
+    ),
   });
 }

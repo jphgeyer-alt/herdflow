@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, getAdminUsername, isValidAdminSession } from "@/lib/admin-auth";
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { getNextDocumentNumber } from "@/lib/document-number";
 import { getLogisticsCommissionRate } from "@/lib/marketplace/commission";
 
@@ -17,14 +17,16 @@ export async function GET(request: NextRequest) {
   const status = request.nextUrl.searchParams.get("status");
 
   try {
-    const requests = await prisma.deliveryRequest.findMany({
-      where: status && VALID_STATUSES.includes(status) ? { status: status as never } : undefined,
-      include: {
-        logisticsPartner: { select: { companyName: true } },
-        order: { select: { orderNumber: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const requests = await withAdminContext((tx) =>
+      tx.deliveryRequest.findMany({
+        where: status && VALID_STATUSES.includes(status) ? { status: status as never } : undefined,
+        include: {
+          logisticsPartner: { select: { companyName: true } },
+          order: { select: { orderNumber: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+    );
     return NextResponse.json({ requests });
   } catch (err) {
     console.error("[admin/logistics/requests GET]", err);
@@ -75,11 +77,14 @@ export async function POST(request: NextRequest) {
 
   try {
     if (body.orderId) {
-      const order = await prisma.order.findUnique({ where: { id: body.orderId } });
-      if (!order) return NextResponse.json({ error: "Order not found." }, { status: 404 });
-      const existing = await prisma.deliveryRequest.findUnique({
-        where: { orderId: body.orderId },
+      const { order, existing } = await withAdminContext(async (tx) => {
+        const order = await tx.order.findUnique({ where: { id: body.orderId } });
+        const existing = order
+          ? await tx.deliveryRequest.findUnique({ where: { orderId: body.orderId } })
+          : null;
+        return { order, existing };
       });
+      if (!order) return NextResponse.json({ error: "Order not found." }, { status: 404 });
       if (existing) {
         return NextResponse.json(
           { error: "This order already has a delivery request." },
@@ -92,7 +97,7 @@ export async function POST(request: NextRequest) {
     const commissionCents = Math.round(priceCents * commissionRate);
     const createdBy = getAdminUsername(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
 
-    const deliveryRequest = await prisma.$transaction(async (tx) => {
+    const deliveryRequest = await withAdminContext(async (tx) => {
       const number = await getNextDocumentNumber(tx, "delivery");
       return tx.deliveryRequest.create({
         data: {

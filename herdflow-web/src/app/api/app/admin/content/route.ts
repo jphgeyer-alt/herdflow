@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminToken, isMobileUser } from "@/lib/mobile-auth";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import Expo from "expo-server-sdk";
 
 export const dynamic = "force-dynamic";
@@ -89,7 +90,9 @@ export async function POST(request: Request) {
   // Send push notification if requested
   if (b.sendPush) {
     try {
-      const tokens = await prisma.deviceToken.findMany({ where: { isActive: true } });
+      const tokens = await withAdminContext((tx) =>
+        tx.deviceToken.findMany({ where: { isActive: true } }),
+      );
       const messages = tokens
         .filter((t) => Expo.isExpoPushToken(t.token))
         .map((t) => ({

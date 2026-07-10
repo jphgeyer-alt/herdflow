@@ -13,6 +13,7 @@ type Customer = {
   fullName: string;
   phone: string | null;
   role: string;
+  marketingConsent: boolean;
   createdAt: Date | string;
   _count: { orders: number };
   sellerProfile: SellerProfile | null;
@@ -46,6 +47,7 @@ export function CustomersManager({ initialCustomers, initialTotal }: CustomersMa
   const [customers] = useState<Customer[]>(initialCustomers);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
+  const [marketingOnly, setMarketingOnly] = useState(false);
   const total = initialTotal;
 
   const filtered = useMemo(() => {
@@ -54,6 +56,10 @@ export function CustomersManager({ initialCustomers, initialTotal }: CustomersMa
     return customers.filter((customer) => {
       const matchesRole = roleFilter === "ALL" || customer.role === roleFilter;
       if (!matchesRole) {
+        return false;
+      }
+
+      if (marketingOnly && !customer.marketingConsent) {
         return false;
       }
 
@@ -68,7 +74,7 @@ export function CustomersManager({ initialCustomers, initialTotal }: CustomersMa
         (customer.sellerProfile?.farmName ?? "").toLowerCase().includes(q)
       );
     });
-  }, [customers, search, roleFilter]);
+  }, [customers, search, roleFilter, marketingOnly]);
 
   return (
     <div className="space-y-4">
@@ -90,6 +96,29 @@ export function CustomersManager({ initialCustomers, initialTotal }: CustomersMa
           <option value="CUSTOMER">Customer</option>
           <option value="ADMIN">Admin</option>
         </select>
+        <label className="flex cursor-pointer items-center gap-2 self-center text-sm text-gray-600">
+          <input
+            type="checkbox"
+            checked={marketingOnly}
+            onChange={(e) => setMarketingOnly(e.target.checked)}
+            className="focus:ring-brand-navy/40 h-4 w-4 rounded border-gray-300 focus:ring-2"
+          />
+          Marketing opt-in only
+        </label>
+        <div className="flex gap-2">
+          <a
+            href="/api/admin/customers/export"
+            className="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Export CSV
+          </a>
+          <a
+            href="/api/admin/customers/export?consentOnly=true"
+            className="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Export Marketing List
+          </a>
+        </div>
         <span className="ml-auto self-center text-xs text-gray-500">
           {filtered.length} of {total} users
         </span>
@@ -104,6 +133,7 @@ export function CustomersManager({ initialCustomers, initialTotal }: CustomersMa
               <th className="px-4 py-3 text-left">Email</th>
               <th className="px-4 py-3 text-left">Phone</th>
               <th className="px-4 py-3 text-left">Role</th>
+              <th className="px-4 py-3 text-left">Marketing</th>
               <th className="px-4 py-3 text-right">Orders</th>
               <th className="px-4 py-3 text-left">Seller</th>
               <th className="px-4 py-3 text-left">Joined</th>
@@ -112,7 +142,7 @@ export function CustomersManager({ initialCustomers, initialTotal }: CustomersMa
           <tbody className="divide-y divide-gray-100">
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
                   No customers found.
                 </td>
               </tr>
@@ -127,6 +157,17 @@ export function CustomersManager({ initialCustomers, initialTotal }: CustomersMa
                     className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${ROLE_COLORS[customer.role] ?? "bg-gray-100 text-gray-700"}`}
                   >
                     {customer.role}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${
+                      customer.marketingConsent
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {customer.marketingConsent ? "Yes" : "No"}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right text-gray-700">{customer._count.orders}</td>

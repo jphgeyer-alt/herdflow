@@ -2,8 +2,21 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const ADMIN_SESSION_COOKIE = "hf_admin_session";
 
+const INSECURE_DEFAULT_SECRET = "change-this-admin-secret";
+const INSECURE_DEFAULT_PASSWORD = "admin1234";
+
+function failFastInProduction(value: string, insecureDefault: string, envVarName: string) {
+  if (process.env.NODE_ENV === "production" && value === insecureDefault) {
+    throw new Error(
+      `${envVarName} must be set to a strong, non-default value in production. Refusing to start with the insecure fallback.`,
+    );
+  }
+}
+
 function getSecret() {
-  return process.env.ADMIN_SESSION_SECRET || "change-this-admin-secret";
+  const secret = process.env.ADMIN_SESSION_SECRET || INSECURE_DEFAULT_SECRET;
+  failFastInProduction(secret, INSECURE_DEFAULT_SECRET, "ADMIN_SESSION_SECRET");
+  return secret;
 }
 
 function getConfiguredUsername() {
@@ -11,7 +24,9 @@ function getConfiguredUsername() {
 }
 
 function getConfiguredPassword() {
-  return process.env.ADMIN_PASSWORD || "admin1234";
+  const password = process.env.ADMIN_PASSWORD || INSECURE_DEFAULT_PASSWORD;
+  failFastInProduction(password, INSECURE_DEFAULT_PASSWORD, "ADMIN_PASSWORD");
+  return password;
 }
 
 function sign(value: string) {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { getUserIdFromSession, USER_SESSION_COOKIE } from "@/lib/user-auth";
+import { withUserContext } from "@/lib/tenant-prisma";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -40,42 +40,51 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Check if user is logged in
+    // Require a signed-in user — no guest checkout
     const jar = await cookies();
     const sessionValue = jar.get(USER_SESSION_COOKIE)?.value;
-    const userId = getUserIdFromSession(sessionValue);
+    const userId = await getUserIdFromSession(sessionValue);
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Please sign in to complete your purchase." },
+        { status: 401 },
+      );
+    }
 
     // Generate unique order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
     // Create order
-    const order = await prisma.order.create({
-      data: {
-        orderNumber,
-        userId: userId || null,
-        guestEmail: userId ? null : customerInfo.email,
-        status: "PENDING",
-        totalCents,
-        currency: "ZAR",
-        paymentMethod: "PayFast",
-        deliveryMethod,
-        shippingAddress: customerInfo.address || null,
-        shippingCity: customerInfo.city || null,
-        shippingProvince: customerInfo.province || null,
-        shippingPostalCode: customerInfo.postalCode || null,
-        items: {
-          create: items.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPriceCents: item.priceCents,
-            lineTotalCents: item.priceCents * item.quantity,
-          })),
+    const order = await withUserContext(userId, (tx) =>
+      tx.order.create({
+        data: {
+          orderNumber,
+          userId,
+          guestEmail: null,
+          status: "PENDING",
+          totalCents,
+          currency: "ZAR",
+          paymentMethod: "PayFast",
+          deliveryMethod,
+          shippingAddress: customerInfo.address || null,
+          shippingCity: customerInfo.city || null,
+          shippingProvince: customerInfo.province || null,
+          shippingPostalCode: customerInfo.postalCode || null,
+          items: {
+            create: items.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPriceCents: item.priceCents,
+              lineTotalCents: item.priceCents * item.quantity,
+            })),
+          },
         },
-      },
-      include: {
-        items: true,
-      },
-    });
+        include: {
+          items: true,
+        },
+      }),
+    );
 
     // TODO: Initialize PayFast payment
     // In production, redirect to PayFast payment page with order details

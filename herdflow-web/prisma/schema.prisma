@@ -9,19 +9,36 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  fullName     String
-  phone        String?
-  passwordHash String?
-  role         UserRole @default(CUSTOMER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id               String   @id @default(cuid())
+  email            String   @unique
+  fullName         String
+  phone            String?
+  passwordHash     String?
+  role             UserRole @default(CUSTOMER)
+  marketingConsent Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   sellerProfile    Seller?
   logisticsProfile LogisticsPartner?
   orders           Order[]
   passwordResets   PasswordResetToken[]
+  sessions         UserSession[]
+}
+
+model UserSession {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  lastUsedAt DateTime  @default(now())
+  userAgent  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Seller {

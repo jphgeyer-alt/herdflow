@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, getAdminUsername, isValidAdminSession } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { getNextDocumentNumber } from "@/lib/document-number";
 
 function ensureAdmin(request: NextRequest) {
@@ -14,10 +15,12 @@ export async function GET(request: NextRequest) {
   if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const payouts = await prisma.sellerPayout.findMany({
-      include: { seller: { select: { farmName: true } } },
-      orderBy: { createdAt: "desc" },
-    });
+    const payouts = await withAdminContext((tx) =>
+      tx.sellerPayout.findMany({
+        include: { seller: { select: { farmName: true } } },
+        orderBy: { createdAt: "desc" },
+      }),
+    );
     return NextResponse.json({ payouts });
   } catch {
     return NextResponse.json({ error: "Failed to load payouts." }, { status: 500 });
@@ -58,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     const createdBy = getAdminUsername(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
 
-    const payout = await prisma.$transaction(async (tx) => {
+    const payout = await withAdminContext(async (tx) => {
       const number = await getNextDocumentNumber(tx, "payout");
       const created = await tx.sellerPayout.create({
         data: {

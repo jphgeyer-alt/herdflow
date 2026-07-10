@@ -1,7 +1,7 @@
 // WEBSITE — herdflow-web/src/app/api/app/device-token/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
+import { withUserContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -21,11 +21,13 @@ export async function POST(request: Request) {
 
   if (!token) return NextResponse.json({ error: "token is required" }, { status: 400 });
 
-  await prisma.deviceToken.upsert({
-    where: { token },
-    update: { userId: auth.id, platform: platform ?? "unknown", isActive: true },
-    create: { userId: auth.id, token, platform: platform ?? "unknown", isActive: true },
-  });
+  await withUserContext(auth.id, (tx) =>
+    tx.deviceToken.upsert({
+      where: { token },
+      update: { userId: auth.id, platform: platform ?? "unknown", isActive: true },
+      create: { userId: auth.id, token, platform: platform ?? "unknown", isActive: true },
+    }),
+  );
 
   return NextResponse.json({ success: true });
 }
@@ -43,10 +45,12 @@ export async function DELETE(request: Request) {
   const { token } = body as { token?: string };
   if (!token) return NextResponse.json({ error: "token is required" }, { status: 400 });
 
-  await prisma.deviceToken.updateMany({
-    where: { token, userId: auth.id },
-    data: { isActive: false },
-  });
+  await withUserContext(auth.id, (tx) =>
+    tx.deviceToken.updateMany({
+      where: { token, userId: auth.id },
+      data: { isActive: false },
+    }),
+  );
 
   return NextResponse.json({ success: true });
 }

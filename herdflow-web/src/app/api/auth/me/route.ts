@@ -6,7 +6,7 @@ import { getUserIdFromSession, USER_SESSION_COOKIE } from "@/lib/user-auth";
 export async function PATCH(request: Request) {
   const jar = await cookies();
   const sessionValue = jar.get(USER_SESSION_COOKIE)?.value;
-  const userId = getUserIdFromSession(sessionValue);
+  const userId = await getUserIdFromSession(sessionValue);
 
   if (!userId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -40,7 +40,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const jar = await cookies();
   const sessionValue = jar.get(USER_SESSION_COOKIE)?.value;
-  const userId = getUserIdFromSession(sessionValue);
+  const userId = await getUserIdFromSession(sessionValue);
 
   if (!userId) {
     return NextResponse.json({ user: null });

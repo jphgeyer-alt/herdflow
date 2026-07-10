@@ -1,7 +1,7 @@
 // WEBSITE — herdflow-web/src/app/api/app/animals/[id]/health/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
+import { withFarmerContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -12,15 +12,19 @@ export async function GET(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const animal = await prisma.farmerAnimal.findFirst({
-    where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
-  });
-  if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
+  const records = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+    const animal = await tx.farmerAnimal.findFirst({
+      where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
+    });
+    if (!animal) return null;
 
-  const records = await prisma.farmerHealthRecord.findMany({
-    where: { animalId: id },
-    orderBy: { eventDate: "desc" },
+    return tx.farmerHealthRecord.findMany({
+      where: { animalId: id },
+      orderBy: { eventDate: "desc" },
+    });
   });
+
+  if (!records) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   return NextResponse.json(records);
 }
@@ -30,9 +34,11 @@ export async function POST(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const animal = await prisma.farmerAnimal.findFirst({
-    where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
-  });
+  const animal = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    tx.farmerAnimal.findFirst({
+      where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
+    }),
+  );
   if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   let body: unknown;
@@ -45,22 +51,24 @@ export async function POST(request: Request, ctx: Ctx) {
 
   if (!b.eventType) return NextResponse.json({ error: "eventType is required" }, { status: 400 });
 
-  const record = await prisma.farmerHealthRecord.create({
-    data: {
-      animalId: id,
-      farmerId: auth.effectiveFarmerId,
-      eventType: b.eventType as string,
-      description: (b.description as string | undefined) ?? null,
-      diagnosis: (b.diagnosis as string | undefined) ?? null,
-      treatment: (b.treatment as string | undefined) ?? null,
-      vetName: (b.vetName as string | undefined) ?? null,
-      severity: (b.severity as string | undefined) ?? null,
-      cost: b.cost != null ? Number(b.cost) : null,
-      followUpDate: b.followUpDate ? new Date(b.followUpDate as string) : null,
-      documents: Array.isArray(b.documents) ? (b.documents as string[]) : [],
-      eventDate: b.eventDate ? new Date(b.eventDate as string) : new Date(),
-    },
-  });
+  const record = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    tx.farmerHealthRecord.create({
+      data: {
+        animalId: id,
+        farmerId: auth.effectiveFarmerId,
+        eventType: b.eventType as string,
+        description: (b.description as string | undefined) ?? null,
+        diagnosis: (b.diagnosis as string | undefined) ?? null,
+        treatment: (b.treatment as string | undefined) ?? null,
+        vetName: (b.vetName as string | undefined) ?? null,
+        severity: (b.severity as string | undefined) ?? null,
+        cost: b.cost != null ? Number(b.cost) : null,
+        followUpDate: b.followUpDate ? new Date(b.followUpDate as string) : null,
+        documents: Array.isArray(b.documents) ? (b.documents as string[]) : [],
+        eventDate: b.eventDate ? new Date(b.eventDate as string) : new Date(),
+      },
+    }),
+  );
 
   return NextResponse.json(record, { status: 201 });
 }

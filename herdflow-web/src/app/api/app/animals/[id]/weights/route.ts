@@ -1,7 +1,7 @@
 // WEBSITE — herdflow-web/src/app/api/app/animals/[id]/weights/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
+import { withFarmerContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -12,15 +12,19 @@ export async function GET(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const animal = await prisma.farmerAnimal.findFirst({
-    where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
-  });
-  if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
+  const records = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+    const animal = await tx.farmerAnimal.findFirst({
+      where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
+    });
+    if (!animal) return null;
 
-  const records = await prisma.farmerWeightRecord.findMany({
-    where: { animalId: id },
-    orderBy: { recordedDate: "desc" },
+    return tx.farmerWeightRecord.findMany({
+      where: { animalId: id },
+      orderBy: { recordedDate: "desc" },
+    });
   });
+
+  if (!records) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   return NextResponse.json(records);
 }
@@ -30,9 +34,11 @@ export async function POST(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const animal = await prisma.farmerAnimal.findFirst({
-    where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
-  });
+  const animal = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    tx.farmerAnimal.findFirst({
+      where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
+    }),
+  );
   if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   let body: unknown;
@@ -45,23 +51,25 @@ export async function POST(request: Request, ctx: Ctx) {
 
   if (b.weight == null) return NextResponse.json({ error: "weight is required" }, { status: 400 });
 
-  const [record] = await Promise.all([
-    prisma.farmerWeightRecord.create({
-      data: {
-        animalId: id,
-        farmerId: auth.effectiveFarmerId,
-        weight: Number(b.weight),
-        bodyConditionScore: b.bodyConditionScore != null ? Number(b.bodyConditionScore) : null,
-        notes: (b.notes as string | undefined) ?? null,
-        recordedDate: b.recordedDate ? new Date(b.recordedDate as string) : new Date(),
-      },
-    }),
-    // Update the animal's current weight
-    prisma.farmerAnimal.update({
-      where: { id },
-      data: { weight: Number(b.weight) },
-    }),
-  ]);
+  const [record] = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    Promise.all([
+      tx.farmerWeightRecord.create({
+        data: {
+          animalId: id,
+          farmerId: auth.effectiveFarmerId,
+          weight: Number(b.weight),
+          bodyConditionScore: b.bodyConditionScore != null ? Number(b.bodyConditionScore) : null,
+          notes: (b.notes as string | undefined) ?? null,
+          recordedDate: b.recordedDate ? new Date(b.recordedDate as string) : new Date(),
+        },
+      }),
+      // Update the animal's current weight
+      tx.farmerAnimal.update({
+        where: { id },
+        data: { weight: Number(b.weight) },
+      }),
+    ]),
+  );
 
   return NextResponse.json(record, { status: 201 });
 }

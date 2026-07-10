@@ -5,13 +5,14 @@ import { Truck, DollarSign, MapPin, Wallet, Clock, Eye, CheckCircle2 } from "luc
 import { prisma } from "@/lib/prisma";
 import { getUserIdFromSession, USER_SESSION_COOKIE } from "@/lib/user-auth";
 import { formatRand } from "@/lib/marketing/format";
+import { withLogisticsContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function LogisticsDashboard() {
   const jar = await cookies();
   const sessionValue = jar.get(USER_SESSION_COOKIE)?.value;
-  const userId = getUserIdFromSession(sessionValue);
+  const userId = await getUserIdFromSession(sessionValue);
 
   if (!userId) {
     redirect("/auth/login");
@@ -40,21 +41,23 @@ export default async function LogisticsDashboard() {
   let deliveredJobs: Job[] = [];
 
   try {
-    [assignedJobs, inTransitJobs, deliveredJobs] = await Promise.all([
-      prisma.deliveryRequest.findMany({
-        where: { logisticsPartnerId: partnerId, status: "ASSIGNED" },
-        orderBy: { assignedAt: "desc" },
-      }),
-      prisma.deliveryRequest.findMany({
-        where: { logisticsPartnerId: partnerId, status: "IN_TRANSIT" },
-        orderBy: { pickedUpAt: "desc" },
-      }),
-      prisma.deliveryRequest.findMany({
-        where: { logisticsPartnerId: partnerId, status: "DELIVERED" },
-        orderBy: { deliveredAt: "desc" },
-        take: 20,
-      }),
-    ]);
+    [assignedJobs, inTransitJobs, deliveredJobs] = await withLogisticsContext(partnerId, (tx) =>
+      Promise.all([
+        tx.deliveryRequest.findMany({
+          where: { logisticsPartnerId: partnerId, status: "ASSIGNED" },
+          orderBy: { assignedAt: "desc" },
+        }),
+        tx.deliveryRequest.findMany({
+          where: { logisticsPartnerId: partnerId, status: "IN_TRANSIT" },
+          orderBy: { pickedUpAt: "desc" },
+        }),
+        tx.deliveryRequest.findMany({
+          where: { logisticsPartnerId: partnerId, status: "DELIVERED" },
+          orderBy: { deliveredAt: "desc" },
+          take: 20,
+        }),
+      ]),
+    );
   } catch {
     // DB error — show empty lists
   }
@@ -84,18 +87,20 @@ export default async function LogisticsDashboard() {
   }> = [];
   let totalPaidOutCents = 0;
   try {
-    const [payouts, paidAggregate] = await Promise.all([
-      prisma.logisticsPayout.findMany({
-        where: { logisticsPartnerId: partnerId },
-        orderBy: { createdAt: "desc" },
-        take: 10,
-        select: { id: true, number: true, amountCents: true, status: true, createdAt: true },
-      }),
-      prisma.logisticsPayout.aggregate({
-        where: { logisticsPartnerId: partnerId, status: "PAID" },
-        _sum: { amountCents: true },
-      }),
-    ]);
+    const [payouts, paidAggregate] = await withLogisticsContext(partnerId, (tx) =>
+      Promise.all([
+        tx.logisticsPayout.findMany({
+          where: { logisticsPartnerId: partnerId },
+          orderBy: { createdAt: "desc" },
+          take: 10,
+          select: { id: true, number: true, amountCents: true, status: true, createdAt: true },
+        }),
+        tx.logisticsPayout.aggregate({
+          where: { logisticsPartnerId: partnerId, status: "PAID" },
+          _sum: { amountCents: true },
+        }),
+      ]),
+    );
     recentPayouts = payouts;
     totalPaidOutCents = paidAggregate._sum.amountCents ?? 0;
   } catch {

@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { Suspense, useState, FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { PasswordStrength } from "@/components/ui/PasswordStrength";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -15,6 +17,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [accountType, setAccountType] = useState<"buyer" | "seller" | "logistics" | "">("");
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -38,11 +41,22 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, phone, password, accountType }),
+        body: JSON.stringify({
+          fullName,
+          email,
+          phone,
+          password,
+          accountType,
+          marketingConsent,
+        }),
       });
       const data = await res.json();
       if (res.ok && data.redirect) {
-        router.push(data.redirect);
+        if (accountType === "buyer" && redirectTo) {
+          router.push(redirectTo);
+        } else {
+          router.push(data.redirect);
+        }
       } else {
         setError(data.error || "Registration failed");
       }
@@ -189,6 +203,18 @@ export default function RegisterPage() {
               </span>
             </label>
 
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={marketingConsent}
+                onChange={(e) => setMarketingConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-[#cdd8e7] text-[#2E7D32] focus:ring-[#2E7D32]"
+              />
+              <span className="text-xs text-[#5d7497]">
+                I'd like to receive marketing emails and offers from HerdFlow
+              </span>
+            </label>
+
             <button
               type="submit"
               disabled={loading}
@@ -209,5 +235,19 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#f5f4ef] px-4 py-12 text-sm text-[#5d7497]">
+          Loading…
+        </div>
+      }
+    >
+      <RegisterForm />
+    </Suspense>
   );
 }

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function BuyerDashboard() {
   const jar = await cookies();
   const sessionValue = jar.get(USER_SESSION_COOKIE)?.value;
-  const userId = getUserIdFromSession(sessionValue);
+  const userId = await getUserIdFromSession(sessionValue);
 
   if (!userId) {
     redirect("/auth/login");

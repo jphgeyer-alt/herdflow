@@ -6,12 +6,13 @@ import {
   USER_SESSION_COOKIE,
   verifyPassword,
   hashPassword,
+  revokeAllOtherSessions,
 } from "@/lib/user-auth";
 
 export async function POST(request: Request) {
   const jar = await cookies();
   const sessionValue = jar.get(USER_SESSION_COOKIE)?.value;
-  const userId = getUserIdFromSession(sessionValue);
+  const userId = await getUserIdFromSession(sessionValue);
 
   if (!userId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
 
   const newHash = await hashPassword(newPassword);
   await prisma.user.update({ where: { id: userId }, data: { passwordHash: newHash } });
+  await revokeAllOtherSessions(userId, sessionValue);
 
   return NextResponse.json({ ok: true });
 }

@@ -1,7 +1,7 @@
 // WEBSITE — herdflow-web/src/app/api/app/health/[id]/status/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
+import { withFarmerContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -12,9 +12,11 @@ export async function PATCH(request: Request, ctx: Ctx) {
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
-  const existing = await prisma.farmerHealthRecord.findFirst({
-    where: { id, farmerId: auth.effectiveFarmerId },
-  });
+  const existing = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    tx.farmerHealthRecord.findFirst({
+      where: { id, farmerId: auth.effectiveFarmerId },
+    }),
+  );
   if (!existing) return NextResponse.json({ error: "Health record not found" }, { status: 404 });
 
   let body: unknown;
@@ -27,10 +29,12 @@ export async function PATCH(request: Request, ctx: Ctx) {
 
   if (!b.status) return NextResponse.json({ error: "status is required" }, { status: 400 });
 
-  const updated = await prisma.farmerHealthRecord.update({
-    where: { id },
-    data: { status: String(b.status) },
-  });
+  const updated = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    tx.farmerHealthRecord.update({
+      where: { id },
+      data: { status: String(b.status) },
+    }),
+  );
 
   return NextResponse.json(updated);
 }

@@ -1,7 +1,7 @@
 // WEBSITE — herdflow-web/src/app/api/app/transactions/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
+import { withFarmerContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -14,19 +14,21 @@ export async function GET(request: Request) {
   const endDate = searchParams.get("endDate");
   const type = searchParams.get("type");
 
-  const transactions = await prisma.farmerTransaction.findMany({
-    where: {
-      farmerId: auth.effectiveFarmerId,
-      ...(type != null && { type }),
-      ...((startDate != null || endDate != null) && {
-        date: {
-          ...(startDate != null && { gte: new Date(startDate) }),
-          ...(endDate != null && { lte: new Date(endDate) }),
-        },
-      }),
-    },
-    orderBy: { date: "desc" },
-  });
+  const transactions = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    tx.farmerTransaction.findMany({
+      where: {
+        farmerId: auth.effectiveFarmerId,
+        ...(type != null && { type }),
+        ...((startDate != null || endDate != null) && {
+          date: {
+            ...(startDate != null && { gte: new Date(startDate) }),
+            ...(endDate != null && { lte: new Date(endDate) }),
+          },
+        }),
+      },
+      orderBy: { date: "desc" },
+    }),
+  );
 
   return NextResponse.json(transactions);
 }
@@ -50,20 +52,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const transaction = await prisma.farmerTransaction.create({
-    data: {
-      farmerId: auth.effectiveFarmerId,
-      type: String(b.type),
-      category: String(b.category),
-      amount: Number(b.amount),
-      vatAmount: b.vatAmount != null ? Number(b.vatAmount) : 0,
-      description: (b.description as string | undefined) ?? null,
-      animalId: (b.animalId as string | undefined) ?? null,
-      supplier: (b.supplier as string | undefined) ?? null,
-      invoiceNumber: (b.invoiceNumber as string | undefined) ?? null,
-      date: new Date(b.date as string),
-    },
-  });
+  const transaction = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    tx.farmerTransaction.create({
+      data: {
+        farmerId: auth.effectiveFarmerId,
+        type: String(b.type),
+        category: String(b.category),
+        amount: Number(b.amount),
+        vatAmount: b.vatAmount != null ? Number(b.vatAmount) : 0,
+        description: (b.description as string | undefined) ?? null,
+        animalId: (b.animalId as string | undefined) ?? null,
+        supplier: (b.supplier as string | undefined) ?? null,
+        invoiceNumber: (b.invoiceNumber as string | undefined) ?? null,
+        date: new Date(b.date as string),
+      },
+    }),
+  );
 
   return NextResponse.json(transaction, { status: 201 });
 }

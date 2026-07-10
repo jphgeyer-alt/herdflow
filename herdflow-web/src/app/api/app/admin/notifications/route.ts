@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminToken, isMobileUser } from "@/lib/mobile-auth";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import Expo from "expo-server-sdk";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +44,9 @@ export async function POST(request: Request) {
   // Get device tokens based on target
   let tokens: string[] = [];
   if (target === "ALL") {
-    const records = await prisma.deviceToken.findMany({ where: { isActive: true } });
+    const records = await withAdminContext((tx) =>
+      tx.deviceToken.findMany({ where: { isActive: true } }),
+    );
     tokens = records.map((r) => r.token);
   } else if (target === "SPECIFIC" && targetValue) {
     // Find user by email, then get their tokens
@@ -51,9 +54,11 @@ export async function POST(request: Request) {
       where: { email: { equals: targetValue, mode: "insensitive" } },
     });
     if (user) {
-      const records = await prisma.deviceToken.findMany({
-        where: { userId: user.id, isActive: true },
-      });
+      const records = await withAdminContext((tx) =>
+        tx.deviceToken.findMany({
+          where: { userId: user.id, isActive: true },
+        }),
+      );
       tokens = records.map((r) => r.token);
     }
   } else if (target === "PROVINCE" && targetValue) {
@@ -62,9 +67,11 @@ export async function POST(request: Request) {
       where: { province: { contains: targetValue, mode: "insensitive" } },
     });
     const userIds = profiles.map((p) => p.userId);
-    const records = await prisma.deviceToken.findMany({
-      where: { userId: { in: userIds }, isActive: true },
-    });
+    const records = await withAdminContext((tx) =>
+      tx.deviceToken.findMany({
+        where: { userId: { in: userIds }, isActive: true },
+      }),
+    );
     tokens = records.map((r) => r.token);
   }
 
