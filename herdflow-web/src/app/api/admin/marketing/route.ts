@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
-
-function ensureAdmin(req: NextRequest) {
-  return isValidAdminSession(req.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const sponsors = await prisma.sponsor.findMany({
@@ -23,7 +21,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await request.json().catch(() => ({}))) as { id?: string; status?: string };
   if (!body.id || !body.status)
@@ -38,9 +37,14 @@ export async function PATCH(request: NextRequest) {
       where: { id: body.id },
       data: {
         status: body.status,
-        approvedBy: body.status === "ACTIVE" ? "admin" : undefined,
+        approvedBy: body.status === "ACTIVE" ? admin.fullName : undefined,
         approvedAt: body.status === "ACTIVE" ? new Date() : undefined,
       },
+    });
+    logAdminActivity(admin, "sponsor.status_update", "Sponsor", {
+      entityId: sponsor.id,
+      entityLabel: sponsor.companyName,
+      metadata: { status: body.status },
     });
     return NextResponse.json({ ok: true, sponsor });
   } catch {

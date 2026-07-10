@@ -3,14 +3,14 @@ import type { NextRequest } from "next/server";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomBytes } from "node:crypto";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export async function POST(request: NextRequest) {
-  const session = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
-  if (!isValidAdminSession(session)) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

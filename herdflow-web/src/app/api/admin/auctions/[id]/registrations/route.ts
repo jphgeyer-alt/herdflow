@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ id: string }> };
 
-function ensureAdmin(req: NextRequest) {
-  return isValidAdminSession(req.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
-
 export async function GET(request: NextRequest, { params }: Params) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
 
   try {
@@ -27,7 +25,8 @@ export async function GET(request: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(request: NextRequest, { params }: Params) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id: sessionId } = await params;
 
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
@@ -47,9 +46,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       data: {
         status,
         adminNotes: adminNotes || undefined,
-        approvedBy: status === "APPROVED" ? "admin" : undefined,
+        approvedBy: status === "APPROVED" ? admin.fullName : undefined,
         approvedAt: status === "APPROVED" ? new Date() : undefined,
       },
+    });
+    logAdminActivity(admin, "auction_registration.status_update", "AuctionRegistration", {
+      entityId: updated.id,
+      entityLabel: updated.fullName,
+      metadata: { status },
     });
     return NextResponse.json({ ok: true, registration: updated });
   } catch {

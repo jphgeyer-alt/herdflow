@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, getAdminUsername, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
 import { withAdminContext } from "@/lib/tenant-prisma";
 import { getNextDocumentNumber } from "@/lib/document-number";
 import { getLogisticsCommissionRate } from "@/lib/marketplace/commission";
 
-function ensureAdmin(request: NextRequest) {
-  return isValidAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
-
 const VALID_STATUSES = ["OPEN", "ASSIGNED", "IN_TRANSIT", "DELIVERED", "CANCELLED"];
 
 export async function GET(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const status = request.nextUrl.searchParams.get("status");
 
@@ -35,7 +32,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await request.json().catch(() => ({}))) as {
     pickupAddress?: string;
@@ -95,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     const commissionRate = await getLogisticsCommissionRate();
     const commissionCents = Math.round(priceCents * commissionRate);
-    const createdBy = getAdminUsername(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+    const createdBy = admin.fullName;
 
     const deliveryRequest = await withAdminContext(async (tx) => {
       const number = await getNextDocumentNumber(tx, "delivery");

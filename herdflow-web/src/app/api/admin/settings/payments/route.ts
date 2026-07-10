@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
-
-async function assertAdmin() {
-  const jar = await cookies();
-  const session = jar.get(ADMIN_SESSION_COOKIE)?.value;
-  return isValidAdminSession(session);
-}
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 
 const KEYS = [
   "payfast_merchant_id",
@@ -17,8 +12,9 @@ const KEYS = [
   "logistics_commission_rate",
 ] as const;
 
-export async function GET() {
-  if (!(await assertAdmin())) {
+export async function GET(request: NextRequest) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -35,8 +31,9 @@ export async function GET() {
   }
 }
 
-export async function PATCH(request: Request) {
-  if (!(await assertAdmin())) {
+export async function PATCH(request: NextRequest) {
+  const admin = await getAdminFromRequest(request);
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -74,6 +71,10 @@ export async function PATCH(request: Request) {
         }),
       ),
     );
+    logAdminActivity(admin, "settings.update", "SiteConfig", {
+      entityLabel: "Payment Settings",
+      metadata: { keys: updates.map((u) => u.key) },
+    });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[admin/settings/payments PATCH]", err);

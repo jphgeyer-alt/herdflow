@@ -1,4 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/headers", () => ({
+  cookies: vi.fn(async () => ({
+    get: () => undefined,
+  })),
+}));
+
+vi.mock("@/lib/admin-auth", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/admin-auth")>("@/lib/admin-auth");
+  return {
+    ...actual,
+    revokeAdminSession: vi.fn(async () => {}),
+  };
+});
+
 import { POST } from "./route";
 
 describe("POST /api/admin/logout", () => {

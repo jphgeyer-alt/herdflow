@@ -1,17 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 type Params = { params: Promise<{ id: string; lotId: string }> };
 
-function ensureAdmin(req: NextRequest) {
-  return isValidAdminSession(req.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
-
 export async function GET(request: NextRequest, { params }: Params) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { lotId } = await params;
   try {
     const lot = await prisma.auctionLot.findUnique({
@@ -26,7 +24,8 @@ export async function GET(request: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(request: NextRequest, { params }: Params) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { lotId } = await params;
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
@@ -65,6 +64,11 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         }),
       },
     });
+    logAdminActivity(admin, "auction_lot.update", "AuctionLot", {
+      entityId: lot.id,
+      entityLabel: lot.title,
+      metadata: { status: lot.status },
+    });
     return NextResponse.json({ lot });
   } catch (err) {
     console.error("PATCH lot error:", err);
@@ -73,10 +77,15 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(request: NextRequest, { params }: Params) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { lotId } = await params;
   try {
-    await prisma.auctionLot.delete({ where: { id: lotId } });
+    const deleted = await prisma.auctionLot.delete({ where: { id: lotId } });
+    logAdminActivity(admin, "auction_lot.delete", "AuctionLot", {
+      entityId: deleted.id,
+      entityLabel: deleted.title,
+    });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Failed to delete lot" }, { status: 500 });

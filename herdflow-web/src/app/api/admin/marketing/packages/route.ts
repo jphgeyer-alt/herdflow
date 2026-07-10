@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-
-function ensureAdmin(request: NextRequest) {
-  return isValidAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
 
 function toSlug(value: string) {
   return value
@@ -17,7 +13,8 @@ function toSlug(value: string) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const packages = await prisma.marketingPackage.findMany({ orderBy: { sortOrder: "asc" } });
@@ -28,7 +25,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await request.json().catch(() => ({}))) as {
     name?: string;

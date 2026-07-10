@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, getAdminUsername, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
+import { logAdminActivity } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
 import { withAdminContext } from "@/lib/tenant-prisma";
 import { getNextDocumentNumber } from "@/lib/document-number";
 
-function ensureAdmin(request: NextRequest) {
-  return isValidAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
-
 export async function GET(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const payouts = await withAdminContext((tx) =>
@@ -30,7 +28,8 @@ export async function GET(request: NextRequest) {
 // DeliveryRequest with the new payoutId in the same transaction — mirrors
 // the seller payout flow so the same double-payment protection applies.
 export async function POST(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await request.json().catch(() => ({}))) as { logisticsPartnerId?: string };
   if (!body.logisticsPartnerId)
@@ -42,7 +41,7 @@ export async function POST(request: NextRequest) {
     });
     if (!partner) return NextResponse.json({ error: "Partner not found." }, { status: 404 });
 
-    const createdBy = getAdminUsername(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+    const createdBy = admin.fullName;
 
     const payout = await withAdminContext(async (tx) => {
       const unpaidDeliveries = await tx.deliveryRequest.findMany({
@@ -82,6 +81,12 @@ export async function POST(request: NextRequest) {
     if (!payout) {
       return NextResponse.json({ error: "This partner has no unpaid balance." }, { status: 400 });
     }
+
+    logAdminActivity(admin, "logistics_payout.create", "LogisticsPayout", {
+      entityId: payout.id,
+      entityLabel: payout.number,
+      metadata: { logisticsPartnerId: body.logisticsPartnerId },
+    });
 
     return NextResponse.json({ ok: true, payout });
   } catch (err) {

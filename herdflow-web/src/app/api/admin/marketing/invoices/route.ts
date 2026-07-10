@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_SESSION_COOKIE, getAdminUsername, isValidAdminSession } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { getNextDocumentNumber } from "@/lib/document-number";
 
-function ensureAdmin(request: NextRequest) {
-  return isValidAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
-}
-
 export async function GET(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const status = request.nextUrl.searchParams.get("status");
 
@@ -28,7 +25,8 @@ export async function GET(request: NextRequest) {
 // Standalone invoice creation — for recurring monthly billing where a
 // sponsor is invoiced again without re-issuing a quote each time.
 export async function POST(request: NextRequest) {
-  if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminFromRequest(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await request.json().catch(() => ({}))) as {
     sponsorId?: string;
@@ -59,7 +57,7 @@ export async function POST(request: NextRequest) {
       ? new Date(body.dueDate)
       : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    const createdBy = getAdminUsername(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+    const createdBy = admin.fullName;
 
     const invoice = await prisma.$transaction(async (tx) => {
       const number = await getNextDocumentNumber(tx, "invoice");
