@@ -10,12 +10,12 @@ export const metadata: Metadata = {
 // Direct .apk artifact link (downloads the file immediately, no expo.dev
 // build-details page in between). Get this via:
 //   eas build:view <build-id> --json   ->  .artifacts.applicationArchiveUrl
-// Build ID: 16e7c34f-78b1-43f4-b9b3-4fca273ad553 (v1.8.0 — finished 2026-07-08)
-// NOTE: EAS artifact links expire — this one expires 2026-10-06. Refresh
+// Build ID: 427f197c-e164-4bf3-98a7-09f16a5dcfaf (v1.9.0 — finished 2026-07-10)
+// NOTE: EAS artifact links expire — this one expires roughly 2026-10-08. Refresh
 // before then by running the command above against the latest build.
 const EAS_APK_DIRECT =
-  "https://expo.dev/artifacts/eas/1rz8lJhfycENpWSC5b8K8mxEzFkcC4MdTE8ngiAqipA.apk";
-const APP_VERSION = "v1.8.0";
+  "https://expo.dev/artifacts/eas/FSlY72hUIVd-AHHNUk659cBj0vnMjqK5hHSa4a982IY.apk";
+const APP_VERSION = "v1.9.0";
 
 // Stable filename (see herdflow-desktop/package.json nsis.artifactName) so this
 // GitHub "latest" redirect always resolves to the newest release's installer.
@@ -116,11 +116,15 @@ export default function DownloadPage() {
                 </p>
                 <ul className="space-y-1">
                   {[
-                    "🌿 Camp Management — rotational grazing tracking",
-                    "📋 Count Animals — records who counted & when",
-                    "🔄 Move Animals — records who moved & reason",
-                    "💊 Medicine & Treatment tracking",
-                    "🔒 Role-based access (FARM_WORKER can't see financials)",
+                    "🏷️ Animals auto-name from tag colour + number",
+                    "💰 Purchase price now auto-recorded as a Finance expense",
+                    "🐮 Link a new calf to its mother at add-time",
+                    "🔢 Camp codes auto-generate (C-01, C-02...)",
+                    "📊 Camp counts break down by bulls/cows/heifers/calves",
+                    "📍 Open a camp's GPS location directly in Maps",
+                    "🐂 Bull turnout tracking with expected calving windows",
+                    "➕ Add multiple animals at once from a tag range",
+                    "💊 Apply a treatment to a whole camp or selected animals",
                   ].map((item) => (
                     <li key={item} className="text-xs text-slate-600">
                       {item}
