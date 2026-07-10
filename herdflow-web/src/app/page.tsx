@@ -20,8 +20,7 @@ type FeatureCard = {
 const featureCards: FeatureCard[] = [
   {
     title: "HERD MANAGEMENT",
-    description:
-      "Track animals, health records, vaccinations, camps and finances from your phone. Works fully offline on remote farms — free to download.",
+    description: "Manage your herd, health records and vaccinations from your phone",
     image: "https://images.unsplash.com/photo-1694673761978-9de993018e0f?w=600&q=80",
     href: "/download",
   },
@@ -33,8 +32,7 @@ const featureCards: FeatureCard[] = [
   },
   {
     title: "TRANSPORT SOLUTIONS",
-    description:
-      "A verified network of livestock transport partners, matched to your route. Become a partner or request a delivery.",
+    description: "A verified network of livestock transport partners, matched to your route",
     image: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=600&q=80",
     href: "/logistics",
   },
