@@ -5,6 +5,7 @@ import { Package, DollarSign, TrendingUp, Clock, Wallet } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import type { Prisma, OrderStatus } from "@prisma/client";
 import { getUserIdFromSession, USER_SESSION_COOKIE } from "@/lib/user-auth";
+import { withSellerContext } from "@/lib/tenant-prisma";
 import { formatRand } from "@/lib/marketing/format";
 import { ListingsTabs } from "./ListingsTabs";
 
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function SellerDashboard() {
   const jar = await cookies();
   const sessionValue = jar.get(USER_SESSION_COOKIE)?.value;
-  const userId = getUserIdFromSession(sessionValue);
+  const userId = await getUserIdFromSession(sessionValue);
 
   if (!userId) {
     redirect("/auth/login");
@@ -109,23 +110,26 @@ export default async function SellerDashboard() {
   let sellerOrderItems: Prisma.OrderItemGetPayload<{ include: typeof sellerOrderItemInclude }>[] =
     [];
   let pendingOrders = 0;
+  const sellerId = user.sellerProfile.id as string;
 
   try {
     [sellerOrderItems, pendingOrders] = await Promise.all([
       prisma.orderItem.findMany({
         where: {
-          product: { sellerId: user.sellerProfile.id },
+          product: { sellerId },
           order: { status: { in: PAID_STATUSES } },
         },
         include: sellerOrderItemInclude,
         orderBy: { order: { createdAt: "desc" } },
       }),
-      prisma.order.count({
-        where: {
-          status: "PENDING",
-          items: { some: { product: { sellerId: user.sellerProfile.id } } },
-        },
-      }),
+      withSellerContext(sellerId, (tx) =>
+        tx.order.count({
+          where: {
+            status: "PENDING",
+            items: { some: { product: { sellerId } } },
+          },
+        }),
+      ),
     ]);
   } catch {
     // DB error — show empty stats
@@ -168,18 +172,20 @@ export default async function SellerDashboard() {
   }> = [];
   let totalPaidOutCents = 0;
   try {
-    const [payouts, paidAggregate] = await Promise.all([
-      prisma.sellerPayout.findMany({
-        where: { sellerId: user.sellerProfile.id },
-        orderBy: { createdAt: "desc" },
-        take: 10,
-        select: { id: true, number: true, amountCents: true, status: true, createdAt: true },
-      }),
-      prisma.sellerPayout.aggregate({
-        where: { sellerId: user.sellerProfile.id, status: "PAID" },
-        _sum: { amountCents: true },
-      }),
-    ]);
+    const [payouts, paidAggregate] = await withSellerContext(sellerId, (tx) =>
+      Promise.all([
+        tx.sellerPayout.findMany({
+          where: { sellerId },
+          orderBy: { createdAt: "desc" },
+          take: 10,
+          select: { id: true, number: true, amountCents: true, status: true, createdAt: true },
+        }),
+        tx.sellerPayout.aggregate({
+          where: { sellerId, status: "PAID" },
+          _sum: { amountCents: true },
+        }),
+      ]),
+    );
     recentPayouts = payouts;
     totalPaidOutCents = paidAggregate._sum.amountCents ?? 0;
   } catch {

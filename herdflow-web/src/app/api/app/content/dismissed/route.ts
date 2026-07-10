@@ -1,7 +1,7 @@
 // WEBSITE — herdflow-web/src/app/api/app/content/dismissed/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
+import { withFarmerContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -19,11 +19,13 @@ export async function POST(request: Request) {
   if (!contentId) return NextResponse.json({ error: "contentId required" }, { status: 400 });
 
   try {
-    await prisma.contentDismissal.upsert({
-      where: { contentId_farmerId: { contentId, farmerId: auth.id } },
-      create: { contentId, farmerId: auth.id },
-      update: { dismissedAt: new Date() },
-    });
+    await withFarmerContext(auth.id, (tx) =>
+      tx.contentDismissal.upsert({
+        where: { contentId_farmerId: { contentId, farmerId: auth.id } },
+        create: { contentId, farmerId: auth.id },
+        update: { dismissedAt: new Date() },
+      }),
+    );
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ success: true });

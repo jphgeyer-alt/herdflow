@@ -5,7 +5,7 @@ import { getUserIdFromSession, USER_SESSION_COOKIE } from "@/lib/user-auth";
 export async function getApprovedSeller() {
   const jar = await cookies();
   const sessionValue = jar.get(USER_SESSION_COOKIE)?.value;
-  const userId = getUserIdFromSession(sessionValue);
+  const userId = await getUserIdFromSession(sessionValue);
   if (!userId) return null;
 
   const user = await prisma.user.findUnique({

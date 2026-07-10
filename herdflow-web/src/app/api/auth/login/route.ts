@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   verifyPassword,
-  createUserSessionValue,
+  createUserSession,
   SESSION_COOKIE_OPTIONS,
   USER_SESSION_COOKIE,
 } from "@/lib/user-auth";
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   const valid = await verifyPassword(password, user.passwordHash);
   if (!valid) return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
 
-  const sessionValue = createUserSessionValue(user.id);
+  const sessionValue = await createUserSession(user.id, request.headers.get("user-agent") ?? undefined);
 
   // Determine dashboard based on user profile
   let redirect = "/dashboard/buyer";

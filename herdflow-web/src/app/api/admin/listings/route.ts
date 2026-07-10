@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 type ListingActionBody = {
   kind?: "livestock" | "product";
@@ -147,30 +148,36 @@ export async function PATCH(request: NextRequest) {
     if (kind === "livestock") {
       if (action === "delete") {
         // Livestock listings have no FK dependents that would block deletion
-        await prisma.listing.delete({ where: { id } });
+        await withAdminContext((tx) => tx.listing.delete({ where: { id } }));
       }
 
       if (action === "approve") {
-        await prisma.listing.update({ where: { id }, data: { status: "ACTIVE" } });
+        await withAdminContext((tx) =>
+          tx.listing.update({ where: { id }, data: { status: "ACTIVE" } }),
+        );
       }
 
       if (action === "feature") {
-        await prisma.listing.update({
-          where: { id },
-          data: { isFeatured: Boolean(body.data?.isFeatured) },
-        });
+        await withAdminContext((tx) =>
+          tx.listing.update({
+            where: { id },
+            data: { isFeatured: Boolean(body.data?.isFeatured) },
+          }),
+        );
       }
 
       if (action === "update") {
-        await prisma.listing.update({
-          where: { id },
-          data: {
-            title: body.data?.title,
-            priceCents: body.data?.priceCents,
-            region: body.data?.region,
-            status: body.data?.status as "ACTIVE" | "DRAFT" | "SOLD" | "ARCHIVED" | undefined,
-          },
-        });
+        await withAdminContext((tx) =>
+          tx.listing.update({
+            where: { id },
+            data: {
+              title: body.data?.title,
+              priceCents: body.data?.priceCents,
+              region: body.data?.region,
+              status: body.data?.status as "ACTIVE" | "DRAFT" | "SOLD" | "ARCHIVED" | undefined,
+            },
+          }),
+        );
       }
     }
 
@@ -178,35 +185,41 @@ export async function PATCH(request: NextRequest) {
       if (action === "delete") {
         // OrderItem has a hard FK to Product with no onDelete cascade.
         // Delete related OrderItems first inside a transaction, then the product.
-        await prisma.$transaction([
-          prisma.orderItem.deleteMany({ where: { productId: id } }),
-          prisma.product.delete({ where: { id } }),
-        ]);
+        await withAdminContext(async (tx) => {
+          await tx.orderItem.deleteMany({ where: { productId: id } });
+          await tx.product.delete({ where: { id } });
+        });
       }
 
       if (action === "approve") {
-        await prisma.product.update({ where: { id }, data: { status: "ACTIVE" } });
+        await withAdminContext((tx) =>
+          tx.product.update({ where: { id }, data: { status: "ACTIVE" } }),
+        );
       }
 
       if (action === "feature") {
-        await prisma.product.update({
-          where: { id },
-          data: { isFeatured: Boolean(body.data?.isFeatured) },
-        });
+        await withAdminContext((tx) =>
+          tx.product.update({
+            where: { id },
+            data: { isFeatured: Boolean(body.data?.isFeatured) },
+          }),
+        );
       }
 
       if (action === "update") {
-        await prisma.product.update({
-          where: { id },
-          data: {
-            name: body.data?.name,
-            priceCents: body.data?.priceCents,
-            region: body.data?.region,
-            stockOnHand: body.data?.stockOnHand,
-            status: body.data?.status as
-              "ACTIVE" | "DRAFT" | "OUT_OF_STOCK" | "ARCHIVED" | undefined,
-          },
-        });
+        await withAdminContext((tx) =>
+          tx.product.update({
+            where: { id },
+            data: {
+              name: body.data?.name,
+              priceCents: body.data?.priceCents,
+              region: body.data?.region,
+              stockOnHand: body.data?.stockOnHand,
+              status: body.data?.status as
+                "ACTIVE" | "DRAFT" | "OUT_OF_STOCK" | "ARCHIVED" | undefined,
+            },
+          }),
+        );
       }
     }
 
@@ -267,23 +280,25 @@ export async function POST(request: NextRequest) {
       const baseSlug = toSlug(title);
       const slug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
 
-      const listing = await prisma.listing.create({
-        data: {
-          title,
-          slug,
-          description,
-          priceCents,
-          region,
-          breed,
-          weightKg,
-          ageMonths,
-          photos,
-          status: "ACTIVE",
-          categoryId,
-          sellerId,
-        },
-        include: { category: { select: { name: true } }, seller: { select: { farmName: true } } },
-      });
+      const listing = await withAdminContext((tx) =>
+        tx.listing.create({
+          data: {
+            title,
+            slug,
+            description,
+            priceCents,
+            region,
+            breed,
+            weightKg,
+            ageMonths,
+            photos,
+            status: "ACTIVE",
+            categoryId,
+            sellerId,
+          },
+          include: { category: { select: { name: true } }, seller: { select: { farmName: true } } },
+        }),
+      );
 
       return NextResponse.json({ ok: true, listing });
     } catch (err) {
@@ -334,24 +349,26 @@ export async function POST(request: NextRequest) {
     const baseSlug = toSlug(name);
     const slug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
 
-    const product = await prisma.product.create({
-      data: {
-        name,
-        slug,
-        description,
-        priceCents,
-        stockOnHand,
-        region: (body.data?.region || "").trim() || null,
-        categoryId,
-        sellerId,
-        photos: productPhotos,
-        status: "ACTIVE",
-      },
-      include: {
-        category: { select: { name: true } },
-        seller: { select: { farmName: true } },
-      },
-    });
+    const product = await withAdminContext((tx) =>
+      tx.product.create({
+        data: {
+          name,
+          slug,
+          description,
+          priceCents,
+          stockOnHand,
+          region: (body.data?.region || "").trim() || null,
+          categoryId,
+          sellerId,
+          photos: productPhotos,
+          status: "ACTIVE",
+        },
+        include: {
+          category: { select: { name: true } },
+          seller: { select: { farmName: true } },
+        },
+      }),
+    );
 
     return NextResponse.json({ ok: true, product });
   } catch {

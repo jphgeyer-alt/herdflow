@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { getUserIdFromSession, USER_SESSION_COOKIE } from "@/lib/user-auth";
+import { withUserContext } from "@/lib/tenant-prisma";
 
 type OrderPageProps = {
   params: Promise<{ orderNumber: string }>;
@@ -46,38 +48,50 @@ function normalizePhoto(photo?: string) {
 export default async function OrderPage({ params }: OrderPageProps) {
   const { orderNumber } = await params;
 
+  const jar = await cookies();
+  const sessionValue = jar.get(USER_SESSION_COOKIE)?.value;
+  const userId = await getUserIdFromSession(sessionValue);
+
+  if (!userId) {
+    redirect(`/auth/login?redirect=/orders/${orderNumber}`);
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let order: any = null;
 
   try {
-    order = await prisma.order.findUnique({
-      where: { orderNumber },
-      include: {
-        user: {
-          select: {
-            fullName: true,
-            email: true,
-            phone: true,
+    order = await withUserContext(userId, (tx) =>
+      tx.order.findUnique({
+        where: { orderNumber },
+        include: {
+          user: {
+            select: {
+              fullName: true,
+              email: true,
+              phone: true,
+            },
           },
-        },
-        items: {
-          include: {
-            product: {
-              select: {
-                name: true,
-                slug: true,
-                photos: true,
+          items: {
+            include: {
+              product: {
+                select: {
+                  name: true,
+                  slug: true,
+                  photos: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      }),
+    );
   } catch {
     notFound();
   }
 
-  if (!order) {
+  // Also enforced by RLS once forced, but check explicitly so this fails
+  // safely even before FORCE ROW LEVEL SECURITY is applied.
+  if (!order || order.userId !== userId) {
     notFound();
   }
 

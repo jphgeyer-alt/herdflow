@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminToken, isMobileUser } from "@/lib/mobile-auth";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,8 @@ export async function GET(request: Request, ctx: Ctx) {
   const { id } = await ctx.params;
   const [item, viewCount, dismissCount] = await Promise.all([
     prisma.appContent.findUnique({ where: { id } }),
-    prisma.contentView.count({ where: { contentId: id } }),
-    prisma.contentDismissal.count({ where: { contentId: id } }),
+    withAdminContext((tx) => tx.contentView.count({ where: { contentId: id } })),
+    withAdminContext((tx) => tx.contentDismissal.count({ where: { contentId: id } })),
   ]);
 
   if (!item || item.isDeleted)

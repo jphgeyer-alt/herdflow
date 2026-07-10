@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { Suspense, useState, FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -25,7 +27,7 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (res.ok && data.redirect) {
-        router.push(data.redirect);
+        router.push(redirectTo || data.redirect);
       } else {
         setError(data.error || "Login failed");
       }
@@ -35,6 +37,10 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
+
+  const registerHref = redirectTo
+    ? `/auth/register?redirect=${encodeURIComponent(redirectTo)}`
+    : "/auth/register";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#f5f4ef] px-4 py-12">
@@ -113,7 +119,7 @@ export default function LoginPage() {
           </div>
 
           <Link
-            href="/auth/register"
+            href={registerHref}
             className="block w-full rounded-lg border-2 border-[#1B3A6B] py-3.5 text-center font-bold uppercase tracking-wide text-[#1B3A6B] transition hover:bg-[#1B3A6B] hover:text-white"
           >
             Create New Account
@@ -140,5 +146,19 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#f5f4ef] px-4 py-12 text-sm text-[#5d7497]">
+          Loading…
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

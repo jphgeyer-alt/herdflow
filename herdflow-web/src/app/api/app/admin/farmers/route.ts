@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminToken, isMobileUser } from "@/lib/mobile-auth";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
   const enriched = await Promise.all(
     users.map(async (u) => {
       const [animalCount, profile] = await Promise.all([
-        prisma.farmerAnimal.count({ where: { farmerId: u.id, isDeleted: false } }),
+        withAdminContext((tx) => tx.farmerAnimal.count({ where: { farmerId: u.id, isDeleted: false } })),
         prisma.farmerProfile.findUnique({ where: { userId: u.id } }),
       ]);
       return {

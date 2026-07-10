@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -15,13 +16,15 @@ export async function GET(request: NextRequest, { params }: Params) {
   const { id } = await params;
 
   try {
-    const deliveryRequest = await prisma.deliveryRequest.findUnique({
-      where: { id },
-      include: {
-        logisticsPartner: { select: { companyName: true } },
-        order: { select: { orderNumber: true } },
-      },
-    });
+    const deliveryRequest = await withAdminContext((tx) =>
+      tx.deliveryRequest.findUnique({
+        where: { id },
+        include: {
+          logisticsPartner: { select: { companyName: true } },
+          order: { select: { orderNumber: true } },
+        },
+      }),
+    );
     if (!deliveryRequest)
       return NextResponse.json({ error: "Delivery request not found" }, { status: 404 });
     return NextResponse.json({ request: deliveryRequest });
@@ -41,7 +44,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   };
 
   try {
-    const existing = await prisma.deliveryRequest.findUnique({ where: { id } });
+    const existing = await withAdminContext((tx) => tx.deliveryRequest.findUnique({ where: { id } }));
     if (!existing)
       return NextResponse.json({ error: "Delivery request not found" }, { status: 404 });
 
@@ -52,10 +55,12 @@ export async function PATCH(request: NextRequest, { params }: Params) {
           { status: 400 },
         );
       }
-      const deliveryRequest = await prisma.deliveryRequest.update({
-        where: { id },
-        data: { status: "CANCELLED", notes: body.notes ?? existing.notes },
-      });
+      const deliveryRequest = await withAdminContext((tx) =>
+        tx.deliveryRequest.update({
+          where: { id },
+          data: { status: "CANCELLED", notes: body.notes ?? existing.notes },
+        }),
+      );
       return NextResponse.json({ ok: true, request: deliveryRequest });
     }
 
@@ -72,22 +77,26 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       if (!partner || partner.status !== "APPROVED") {
         return NextResponse.json({ error: "Partner not found or not approved." }, { status: 400 });
       }
-      const deliveryRequest = await prisma.deliveryRequest.update({
-        where: { id },
-        data: {
-          logisticsPartnerId: partner.id,
-          status: "ASSIGNED",
-          assignedAt: new Date(),
-        },
-      });
+      const deliveryRequest = await withAdminContext((tx) =>
+        tx.deliveryRequest.update({
+          where: { id },
+          data: {
+            logisticsPartnerId: partner.id,
+            status: "ASSIGNED",
+            assignedAt: new Date(),
+          },
+        }),
+      );
       return NextResponse.json({ ok: true, request: deliveryRequest });
     }
 
     if (body.notes !== undefined) {
-      const deliveryRequest = await prisma.deliveryRequest.update({
-        where: { id },
-        data: { notes: body.notes },
-      });
+      const deliveryRequest = await withAdminContext((tx) =>
+        tx.deliveryRequest.update({
+          where: { id },
+          data: { notes: body.notes },
+        }),
+      );
       return NextResponse.json({ ok: true, request: deliveryRequest });
     }
 

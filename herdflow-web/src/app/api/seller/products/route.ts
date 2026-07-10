@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getApprovedSeller } from "@/lib/seller-auth";
+import { withSellerContext } from "@/lib/tenant-prisma";
 
 function toSlug(value: string) {
   return value
@@ -70,21 +71,23 @@ export async function POST(request: Request) {
     const baseSlug = toSlug(name);
     const slug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
 
-    const product = await prisma.product.create({
-      data: {
-        name,
-        slug,
-        description,
-        priceCents,
-        stockOnHand,
-        region: (body.region || "").trim() || null,
-        categoryId,
-        sellerId: seller.id,
-        photos,
-        status: "DRAFT",
-      },
-      include: { category: { select: { name: true } } },
-    });
+    const product = await withSellerContext(seller.id, (tx) =>
+      tx.product.create({
+        data: {
+          name,
+          slug,
+          description,
+          priceCents,
+          stockOnHand,
+          region: (body.region || "").trim() || null,
+          categoryId,
+          sellerId: seller.id,
+          photos,
+          status: "DRAFT",
+        },
+        include: { category: { select: { name: true } } },
+      }),
+    );
 
     return NextResponse.json({ ok: true, product });
   } catch (err) {

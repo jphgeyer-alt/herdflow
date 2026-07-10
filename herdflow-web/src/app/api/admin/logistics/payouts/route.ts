@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, getAdminUsername, isValidAdminSession } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { getNextDocumentNumber } from "@/lib/document-number";
 
 function ensureAdmin(request: NextRequest) {
@@ -12,10 +13,12 @@ export async function GET(request: NextRequest) {
   if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const payouts = await prisma.logisticsPayout.findMany({
-      include: { logisticsPartner: { select: { companyName: true } } },
-      orderBy: { createdAt: "desc" },
-    });
+    const payouts = await withAdminContext((tx) =>
+      tx.logisticsPayout.findMany({
+        include: { logisticsPartner: { select: { companyName: true } } },
+        orderBy: { createdAt: "desc" },
+      }),
+    );
     return NextResponse.json({ payouts });
   } catch {
     return NextResponse.json({ error: "Failed to load payouts." }, { status: 500 });
@@ -39,27 +42,27 @@ export async function POST(request: NextRequest) {
     });
     if (!partner) return NextResponse.json({ error: "Partner not found." }, { status: 404 });
 
-    const unpaidDeliveries = await prisma.deliveryRequest.findMany({
-      where: {
-        payoutId: null,
-        status: "DELIVERED",
-        logisticsPartnerId: body.logisticsPartnerId,
-      },
-      select: { id: true, priceCents: true, commissionCents: true },
-    });
-
-    const amountCents = unpaidDeliveries.reduce(
-      (sum, d) => sum + (d.priceCents - d.commissionCents),
-      0,
-    );
-
-    if (unpaidDeliveries.length === 0 || amountCents <= 0) {
-      return NextResponse.json({ error: "This partner has no unpaid balance." }, { status: 400 });
-    }
-
     const createdBy = getAdminUsername(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
 
-    const payout = await prisma.$transaction(async (tx) => {
+    const payout = await withAdminContext(async (tx) => {
+      const unpaidDeliveries = await tx.deliveryRequest.findMany({
+        where: {
+          payoutId: null,
+          status: "DELIVERED",
+          logisticsPartnerId: body.logisticsPartnerId,
+        },
+        select: { id: true, priceCents: true, commissionCents: true },
+      });
+
+      const amountCents = unpaidDeliveries.reduce(
+        (sum, d) => sum + (d.priceCents - d.commissionCents),
+        0,
+      );
+
+      if (unpaidDeliveries.length === 0 || amountCents <= 0) {
+        return null;
+      }
+
       const number = await getNextDocumentNumber(tx, "logistics-payout");
       const created = await tx.logisticsPayout.create({
         data: {
@@ -75,6 +78,10 @@ export async function POST(request: NextRequest) {
       });
       return created;
     });
+
+    if (!payout) {
+      return NextResponse.json({ error: "This partner has no unpaid balance." }, { status: 400 });
+    }
 
     return NextResponse.json({ ok: true, payout });
   } catch (err) {

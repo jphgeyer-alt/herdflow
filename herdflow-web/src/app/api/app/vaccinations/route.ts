@@ -1,7 +1,7 @@
 // WEBSITE — herdflow-web/src/app/api/app/vaccinations/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
+import { withFarmerContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -13,16 +13,18 @@ export async function GET(request: Request) {
   const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   // Get all animals for this farmer to resolve names
-  const [allVaccinations, animals] = await Promise.all([
-    prisma.farmerVaccination.findMany({
-      where: { farmerId: auth.effectiveFarmerId },
-      orderBy: { nextDueDate: "asc" },
-    }),
-    prisma.farmerAnimal.findMany({
-      where: { farmerId: auth.effectiveFarmerId, isDeleted: false },
-      select: { id: true, name: true, tagNumber: true },
-    }),
-  ]);
+  const [allVaccinations, animals] = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    Promise.all([
+      tx.farmerVaccination.findMany({
+        where: { farmerId: auth.effectiveFarmerId },
+        orderBy: { nextDueDate: "asc" },
+      }),
+      tx.farmerAnimal.findMany({
+        where: { farmerId: auth.effectiveFarmerId, isDeleted: false },
+        select: { id: true, name: true, tagNumber: true },
+      }),
+    ]),
+  );
 
   const animalMap = new Map(animals.map((a) => [a.id, a]));
 
@@ -68,27 +70,31 @@ export async function POST(request: Request) {
   if (!b.animalId || !b.vaccineName)
     return NextResponse.json({ error: "animalId and vaccineName are required" }, { status: 400 });
 
-  // Verify the animal belongs to this farmer
-  const animal = await prisma.farmerAnimal.findFirst({
-    where: { id: b.animalId as string, farmerId: auth.effectiveFarmerId, isDeleted: false },
-  });
-  if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
+  const vaccination = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+    // Verify the animal belongs to this farmer
+    const animal = await tx.farmerAnimal.findFirst({
+      where: { id: b.animalId as string, farmerId: auth.effectiveFarmerId, isDeleted: false },
+    });
+    if (!animal) return null;
 
-  const vaccination = await prisma.farmerVaccination.create({
-    data: {
-      animalId: b.animalId as string,
-      farmerId: auth.effectiveFarmerId,
-      vaccineName: b.vaccineName as string,
-      batchNumber: (b.batchNumber as string | undefined) ?? null,
-      administeredBy: (b.administeredBy as string | undefined) ?? null,
-      vetName: (b.vetName as string | undefined) ?? null,
-      cost: b.cost != null ? Number(b.cost) : null,
-      vaccinatedDate: b.vaccinatedDate ? new Date(b.vaccinatedDate as string) : null,
-      nextDueDate: b.nextDueDate ? new Date(b.nextDueDate as string) : null,
-      status: (b.status as string | undefined) ?? "SCHEDULED",
-      notes: (b.notes as string | undefined) ?? null,
-    },
+    return tx.farmerVaccination.create({
+      data: {
+        animalId: b.animalId as string,
+        farmerId: auth.effectiveFarmerId,
+        vaccineName: b.vaccineName as string,
+        batchNumber: (b.batchNumber as string | undefined) ?? null,
+        administeredBy: (b.administeredBy as string | undefined) ?? null,
+        vetName: (b.vetName as string | undefined) ?? null,
+        cost: b.cost != null ? Number(b.cost) : null,
+        vaccinatedDate: b.vaccinatedDate ? new Date(b.vaccinatedDate as string) : null,
+        nextDueDate: b.nextDueDate ? new Date(b.nextDueDate as string) : null,
+        status: (b.status as string | undefined) ?? "SCHEDULED",
+        notes: (b.notes as string | undefined) ?? null,
+      },
+    });
   });
+
+  if (!vaccination) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
   return NextResponse.json(vaccination, { status: 201 });
 }

@@ -4,6 +4,7 @@ import { MapPin, Package, Calendar } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getApprovedLogisticsPartner } from "@/lib/logistics-auth";
 import { formatRand } from "@/lib/marketing/format";
+import { withLogisticsContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -30,10 +31,12 @@ export default async function LogisticsWorkPage() {
 
   let openJobs: Awaited<ReturnType<typeof prisma.deliveryRequest.findMany>> = [];
   try {
-    const allOpen = await prisma.deliveryRequest.findMany({
-      where: { status: "OPEN" },
-      orderBy: { createdAt: "desc" },
-    });
+    const allOpen = await withLogisticsContext(partner.id, (tx) =>
+      tx.deliveryRequest.findMany({
+        where: { status: "OPEN" },
+        orderBy: { createdAt: "desc" },
+      }),
+    );
     openJobs =
       routes.length === 0
         ? allOpen

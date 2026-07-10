@@ -4,6 +4,7 @@ import { MapPin, Package, Calendar, CheckCircle2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getApprovedLogisticsPartner } from "@/lib/logistics-auth";
 import { formatRand } from "@/lib/marketing/format";
+import { withLogisticsContext } from "@/lib/tenant-prisma";
 import { ClaimButton, StatusButton } from "./route-actions";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,9 @@ export default async function LogisticsRouteDetailPage({ params }: PageProps) {
     redirect("/auth/login");
   }
 
-  const job = await prisma.deliveryRequest.findUnique({ where: { id } });
+  const job = await withLogisticsContext(partner.id, (tx) =>
+    tx.deliveryRequest.findUnique({ where: { id } }),
+  );
   if (!job) {
     notFound();
   }

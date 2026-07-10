@@ -1,14 +1,12 @@
-import { createHmac, scrypt, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, scrypt, randomBytes, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
+import { prisma } from "@/lib/prisma";
 
 const scryptAsync = promisify(scrypt);
 
 export const USER_SESSION_COOKIE = "hf_user_session";
-const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
-
-function getSecret() {
-  return process.env.ADMIN_SESSION_SECRET || "herdflow-user-session-secret-change-me";
-}
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
+const SESSION_MAX_AGE_MS = SESSION_MAX_AGE_SECONDS * 1000;
 
 // ── Password hashing ─────────────────────────────────────────────────────────
 
@@ -31,39 +29,78 @@ export async function verifyPassword(password: string, stored: string): Promise<
   }
 }
 
-// ── Session signing ──────────────────────────────────────────────────────────
+// ── DB-backed, expiring, revocable sessions ──────────────────────────────────
+// Session tokens are opaque random strings (same pattern as PasswordResetToken):
+// the raw token is only ever handed to the client (cookie / mobile JSON body);
+// the database stores only a SHA-256 hash of it, plus expiry/revocation state.
 
-function sign(value: string) {
-  return createHmac("sha256", getSecret()).update(value).digest("hex");
+function hashToken(rawToken: string): string {
+  return createHash("sha256").update(rawToken).digest("hex");
 }
 
-export function createUserSessionValue(userId: string): string {
-  const signature = sign(userId);
-  return `${userId}.${signature}`;
+/** Creates a new session for `userId` and returns the raw token to send to the client. */
+export async function createUserSession(userId: string, userAgent?: string): Promise<string> {
+  const rawToken = randomBytes(32).toString("hex");
+  await prisma.userSession.create({
+    data: {
+      userId,
+      tokenHash: hashToken(rawToken),
+      expiresAt: new Date(Date.now() + SESSION_MAX_AGE_MS),
+      userAgent: userAgent || null,
+    },
+  });
+  return rawToken;
 }
 
-export function getUserIdFromSession(sessionValue?: string): string | null {
-  if (!sessionValue) return null;
-  const dotIndex = sessionValue.lastIndexOf(".");
-  if (dotIndex === -1) return null;
-  const userId = sessionValue.slice(0, dotIndex);
-  const providedSig = sessionValue.slice(dotIndex + 1);
-  if (!userId || !providedSig) return null;
-  const expectedSig = sign(userId);
-  try {
-    const p = Buffer.from(providedSig, "hex");
-    const e = Buffer.from(expectedSig, "hex");
-    if (p.length !== e.length) return null;
-    return timingSafeEqual(p, e) ? userId : null;
-  } catch {
-    return null;
-  }
+/** Validates a raw session token and returns the associated userId, or null if invalid/expired/revoked. */
+export async function getUserIdFromSession(rawToken?: string): Promise<string | null> {
+  if (!rawToken) return null;
+
+  const session = await prisma.userSession
+    .findUnique({ where: { tokenHash: hashToken(rawToken) } })
+    .catch(() => null);
+
+  if (!session) return null;
+  if (session.revokedAt) return null;
+  if (session.expiresAt < new Date()) return null;
+
+  // Sliding expiry: touch lastUsedAt without blocking the response.
+  prisma.userSession
+    .update({ where: { id: session.id }, data: { lastUsedAt: new Date() } })
+    .catch(() => {});
+
+  return session.userId;
+}
+
+/** Revokes a single session (e.g. on logout). */
+export async function revokeSession(rawToken?: string): Promise<void> {
+  if (!rawToken) return;
+  await prisma.userSession
+    .updateMany({
+      where: { tokenHash: hashToken(rawToken), revokedAt: null },
+      data: { revokedAt: new Date() },
+    })
+    .catch(() => {});
+}
+
+/** Revokes every other active session for a user (e.g. on password change), keeping the current one alive. */
+export async function revokeAllOtherSessions(userId: string, currentRawToken?: string): Promise<void> {
+  await prisma.userSession
+    .updateMany({
+      where: {
+        userId,
+        revokedAt: null,
+        ...(currentRawToken ? { tokenHash: { not: hashToken(currentRawToken) } } : {}),
+      },
+      data: { revokedAt: new Date() },
+    })
+    .catch(() => {});
 }
 
 export const SESSION_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
-  maxAge: SESSION_MAX_AGE,
+  maxAge: SESSION_MAX_AGE_SECONDS,
   path: "/",
 };

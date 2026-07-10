@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
           fullName: true,
           phone: true,
           role: true,
+          marketingConsent: true,
           createdAt: true,
           _count: { select: { orders: true } },
           sellerProfile: { select: { farmName: true, status: true } },

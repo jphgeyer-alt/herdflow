@@ -1,8 +1,8 @@
 // WEBSITE — herdflow-web/src/app/api/app/camps/route.ts
 // Multi-tenant: every query filters by farmerId extracted from the Bearer token.
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
+import { withFarmerContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -10,10 +10,12 @@ export async function GET(request: Request) {
   const auth = await requireMobileUser(request);
   if (!isMobileUser(auth)) return auth;
 
-  const camps = await prisma.farmerCamp.findMany({
-    where: { farmerId: auth.effectiveFarmerId, isDeleted: false },
-    orderBy: { name: "asc" },
-  });
+  const camps = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    tx.farmerCamp.findMany({
+      where: { farmerId: auth.effectiveFarmerId, isDeleted: false },
+      orderBy: { name: "asc" },
+    }),
+  );
   return NextResponse.json(camps);
 }
 
@@ -33,26 +35,31 @@ export async function POST(request: Request) {
 
   // Idempotent: if the localId already exists, return the existing record
   const localId = (b.localId as string | undefined) ?? null;
-  if (localId) {
-    const existing = await prisma.farmerCamp.findUnique({ where: { localId } });
-    if (existing) return NextResponse.json(existing);
-  }
 
-  const camp = await prisma.farmerCamp.create({
-    data: {
-      localId,
-      farmerId: auth.effectiveFarmerId,
-      name: String(b.name),
-      number: (b.number as string | undefined) ?? null,
-      hectares: b.hectares != null ? Number(b.hectares) : null,
-      forageType: (b.forageType as string | undefined) ?? null,
-      currentStatus:
-        (b.status as string | undefined) ?? (b.currentStatus as string | undefined) ?? "RESTING",
-      maxCarryingCapacity: b.maxCapacity != null ? Number(b.maxCapacity) : null,
-      restingDaysRequired: b.restingDaysRequired != null ? Number(b.restingDaysRequired) : 42,
-      gpsCoordinates: (b.gpsCoordinates as string | undefined) ?? null,
-      notes: (b.notes as string | undefined) ?? null,
-    },
+  const result = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+    if (localId) {
+      const existing = await tx.farmerCamp.findUnique({ where: { localId } });
+      if (existing) return { record: existing, created: false };
+    }
+
+    const created = await tx.farmerCamp.create({
+      data: {
+        localId,
+        farmerId: auth.effectiveFarmerId,
+        name: String(b.name),
+        number: (b.number as string | undefined) ?? null,
+        hectares: b.hectares != null ? Number(b.hectares) : null,
+        forageType: (b.forageType as string | undefined) ?? null,
+        currentStatus:
+          (b.status as string | undefined) ?? (b.currentStatus as string | undefined) ?? "RESTING",
+        maxCarryingCapacity: b.maxCapacity != null ? Number(b.maxCapacity) : null,
+        restingDaysRequired: b.restingDaysRequired != null ? Number(b.restingDaysRequired) : 42,
+        gpsCoordinates: (b.gpsCoordinates as string | undefined) ?? null,
+        notes: (b.notes as string | undefined) ?? null,
+      },
+    });
+    return { record: created, created: true };
   });
-  return NextResponse.json(camp, { status: 201 });
+
+  return NextResponse.json(result.record, { status: result.created ? 201 : 200 });
 }

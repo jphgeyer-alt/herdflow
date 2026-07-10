@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 type OrderActionBody = {
   id?: string;
@@ -46,23 +46,25 @@ export async function GET(request: NextRequest) {
     const where =
       statusFilter && isValidStatus(statusFilter) ? { status: statusFilter } : undefined;
 
-    const [total, orders] = await Promise.all([
-      prisma.order.count({ where }),
-      prisma.order.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        include: {
-          user: { select: { fullName: true, email: true } },
-          items: {
-            include: {
-              product: { select: { name: true, slug: true } },
+    const [total, orders] = await withAdminContext((tx) =>
+      Promise.all([
+        tx.order.count({ where }),
+        tx.order.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+          include: {
+            user: { select: { fullName: true, email: true } },
+            items: {
+              include: {
+                product: { select: { name: true, slug: true } },
+              },
             },
           },
-        },
-      }),
-    ]);
+        }),
+      ]),
+    );
 
     return NextResponse.json({ orders, total, page, pageSize });
   } catch {
@@ -89,7 +91,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     try {
-      await prisma.order.update({ where: { id }, data: { status } });
+      await withAdminContext((tx) => tx.order.update({ where: { id }, data: { status } }));
       return NextResponse.json({ ok: true });
     } catch {
       return NextResponse.json({ error: "Failed to update order status." }, { status: 500 });

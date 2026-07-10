@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminToken, isMobileUser } from "@/lib/mobile-auth";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -21,11 +22,13 @@ export async function GET(request: Request, ctx: Ctx) {
 
   const [profile, animalCounts] = await Promise.all([
     prisma.farmerProfile.findUnique({ where: { userId: id } }),
-    prisma.farmerAnimal.groupBy({
-      by: ["species"],
-      where: { farmerId: id, isDeleted: false },
-      _count: { id: true },
-    }),
+    withAdminContext((tx) =>
+      tx.farmerAnimal.groupBy({
+        by: ["species"],
+        where: { farmerId: id, isDeleted: false },
+        _count: { id: true },
+      }),
+    ),
   ]);
 
   const speciesCounts = Object.fromEntries(animalCounts.map((r) => [r.species, r._count.id]));

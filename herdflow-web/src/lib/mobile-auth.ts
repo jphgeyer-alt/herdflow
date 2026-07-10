@@ -37,7 +37,7 @@ export async function getMobileUser(request: Request): Promise<MobileUser | null
   const token = extractBearerToken(request);
   if (!token) return null;
 
-  const userId = getUserIdFromSession(token);
+  const userId = await getUserIdFromSession(token);
   if (!userId) return null;
 
   try {

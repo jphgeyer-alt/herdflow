@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   hashPassword,
-  createUserSessionValue,
+  createUserSession,
   SESSION_COOKIE_OPTIONS,
   USER_SESSION_COOKIE,
 } from "@/lib/user-auth";
@@ -29,6 +29,7 @@ export async function POST(request: Request) {
   const phone = (b.phone as string | undefined)?.trim();
   const password = b.password as string | undefined;
   const accountType = b.accountType as string | undefined;
+  const marketingConsent = b.marketingConsent === true;
   // Mobile app sends role: "farmer" | "worker" | "manager"
   const mobileRole = (b.role as string | undefined)?.toLowerCase();
   const isMobileRegistration = !!mobileRole && !accountType;
@@ -118,10 +119,18 @@ export async function POST(request: Request) {
           });
           inviteId = invite.id;
         } else {
-          // Try HF-XXXXXX farm code format
-          ownerProfile = await prisma.farmerProfile.findUnique({
-            where: { farmCode: suppliedCode },
-          });
+          // Static HF-XXXXXX farm codes no longer grant instant self-registration —
+          // they never expire and require no owner approval, so a leaked code would
+          // grant permanent Manager/Worker access to that farm's data. Ask the joiner
+          // to get a proper one-time invite code from their farm owner instead.
+          return NextResponse.json(
+            {
+              error:
+                "Farm codes can no longer be used to join directly. Please ask your farm owner to generate an invite code for you from the Team screen in their HerdFlow app.",
+              code: "FARM_CODE_INVALID",
+            },
+            { status: 400 },
+          );
         }
 
         if (!ownerProfile) {
@@ -162,7 +171,7 @@ export async function POST(request: Request) {
             .catch(() => {});
         }
 
-        const sessionValue = createUserSessionValue(user.id);
+        const sessionValue = await createUserSession(user.id, request.headers.get("user-agent") ?? undefined);
         return NextResponse.json({
           token: sessionValue,
           user: {
@@ -213,7 +222,7 @@ export async function POST(request: Request) {
         return { created, profile };
       });
       user = result.created;
-      const sessionValue = createUserSessionValue(user.id);
+      const sessionValue = await createUserSession(user.id, request.headers.get("user-agent") ?? undefined);
       return NextResponse.json({
         token: sessionValue,
         user: {
@@ -234,7 +243,14 @@ export async function POST(request: Request) {
 
     // ── Web registration (buyer / seller / logistics) ──────────────────────
     user = await prisma.user.create({
-      data: { email, fullName, phone: phone || null, passwordHash, role: "CUSTOMER" },
+      data: {
+        email,
+        fullName,
+        phone: phone || null,
+        passwordHash,
+        role: "CUSTOMER",
+        marketingConsent,
+      },
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "";
@@ -253,7 +269,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const sessionValue = createUserSessionValue(user.id);
+  const sessionValue = await createUserSession(user.id, request.headers.get("user-agent") ?? undefined);
 
   let redirect = "/dashboard/buyer";
   if (accountType === "seller") redirect = "/register/seller";

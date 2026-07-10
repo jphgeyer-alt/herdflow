@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -40,31 +41,33 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
   try {
-    const listing = await prisma.listing.update({
-      where: { id },
-      data: {
-        ...(body.title !== undefined && { title: String(body.title) }),
-        ...(body.description !== undefined && { description: String(body.description) }),
-        ...(body.breed !== undefined && { breed: String(body.breed) }),
-        ...(body.region !== undefined && { region: String(body.region) }),
-        ...(body.status !== undefined && {
-          status: body.status as "ACTIVE" | "DRAFT" | "SOLD" | "ARCHIVED",
-        }),
-        ...(body.priceCents !== undefined && { priceCents: Number(body.priceCents) }),
-        ...(body.weightKg !== undefined && {
-          weightKg: body.weightKg !== null ? Number(body.weightKg) : null,
-        }),
-        ...(body.ageMonths !== undefined && {
-          ageMonths: body.ageMonths !== null ? Number(body.ageMonths) : null,
-        }),
-        ...(body.isFeatured !== undefined && { isFeatured: Boolean(body.isFeatured) }),
-        ...(body.photos !== undefined && { photos: body.photos as string[] }),
-      },
-      include: {
-        category: { select: { name: true } },
-        seller: { select: { farmName: true } },
-      },
-    });
+    const listing = await withAdminContext((tx) =>
+      tx.listing.update({
+        where: { id },
+        data: {
+          ...(body.title !== undefined && { title: String(body.title) }),
+          ...(body.description !== undefined && { description: String(body.description) }),
+          ...(body.breed !== undefined && { breed: String(body.breed) }),
+          ...(body.region !== undefined && { region: String(body.region) }),
+          ...(body.status !== undefined && {
+            status: body.status as "ACTIVE" | "DRAFT" | "SOLD" | "ARCHIVED",
+          }),
+          ...(body.priceCents !== undefined && { priceCents: Number(body.priceCents) }),
+          ...(body.weightKg !== undefined && {
+            weightKg: body.weightKg !== null ? Number(body.weightKg) : null,
+          }),
+          ...(body.ageMonths !== undefined && {
+            ageMonths: body.ageMonths !== null ? Number(body.ageMonths) : null,
+          }),
+          ...(body.isFeatured !== undefined && { isFeatured: Boolean(body.isFeatured) }),
+          ...(body.photos !== undefined && { photos: body.photos as string[] }),
+        },
+        include: {
+          category: { select: { name: true } },
+          seller: { select: { farmName: true } },
+        },
+      }),
+    );
 
     return NextResponse.json({ ok: true, listing });
   } catch (err) {
@@ -91,16 +94,18 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Listing is already removed" }, { status: 400 });
 
     // SOFT DELETE — record stays in DB, all history preserved
-    await prisma.listing.update({
-      where: { id },
-      data: {
-        isDeleted: true,
-        deletedAt: new Date(),
-        deletedBy: "admin",
-        deleteReason: [body.reason, body.notes].filter(Boolean).join(" — ") || "Removed by admin",
-        status: "ARCHIVED",
-      },
-    });
+    await withAdminContext((tx) =>
+      tx.listing.update({
+        where: { id },
+        data: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: "admin",
+          deleteReason: [body.reason, body.notes].filter(Boolean).join(" — ") || "Removed by admin",
+          status: "ARCHIVED",
+        },
+      }),
+    );
 
     return NextResponse.json({
       ok: true,
@@ -128,16 +133,18 @@ export async function POST(request: NextRequest, { params }: Params) {
     if (!listing.isDeleted)
       return NextResponse.json({ error: "Listing is not removed" }, { status: 400 });
 
-    await prisma.listing.update({
-      where: { id },
-      data: {
-        isDeleted: false,
-        deletedAt: null,
-        deletedBy: null,
-        deleteReason: null,
-        status: "ACTIVE",
-      },
-    });
+    await withAdminContext((tx) =>
+      tx.listing.update({
+        where: { id },
+        data: {
+          isDeleted: false,
+          deletedAt: null,
+          deletedBy: null,
+          deleteReason: null,
+          status: "ACTIVE",
+        },
+      }),
+    );
 
     return NextResponse.json({ ok: true, message: "Listing restored and set to Active." });
   } catch (err) {

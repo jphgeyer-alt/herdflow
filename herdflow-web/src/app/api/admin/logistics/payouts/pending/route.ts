@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-auth";
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 function ensureAdmin(request: NextRequest) {
   return isValidAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
@@ -13,19 +13,21 @@ export async function GET(request: NextRequest) {
   if (!ensureAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const deliveries = await prisma.deliveryRequest.findMany({
-      where: {
-        payoutId: null,
-        status: "DELIVERED",
-        logisticsPartnerId: { not: null },
-      },
-      select: {
-        priceCents: true,
-        commissionCents: true,
-        logisticsPartnerId: true,
-        logisticsPartner: { select: { companyName: true } },
-      },
-    });
+    const deliveries = await withAdminContext((tx) =>
+      tx.deliveryRequest.findMany({
+        where: {
+          payoutId: null,
+          status: "DELIVERED",
+          logisticsPartnerId: { not: null },
+        },
+        select: {
+          priceCents: true,
+          commissionCents: true,
+          logisticsPartnerId: true,
+          logisticsPartner: { select: { companyName: true } },
+        },
+      }),
+    );
 
     const byPartner = new Map<
       string,
