@@ -922,6 +922,10 @@ model FarmerHealthRecord {
 
 model FarmerTransaction {
   id            String   @id @default(cuid())
+  // The mobile app's local SQLite autoincrement id — never learns the real
+  // cuid back, so every later DELETE targets this instead (same pattern as
+  // FarmerAnimal.localId).
+  localId       String?  @unique
   farmerId      String
   type          String
   category      String
@@ -932,6 +936,7 @@ model FarmerTransaction {
   supplier      String?
   invoiceNumber String?
   date          DateTime
+  isDeleted     Boolean  @default(false)
   createdAt     DateTime @default(now())
 
   @@index([farmerId])
