@@ -262,6 +262,106 @@ View it here: ${viewUrl}
   await sendEmail({ to, subject: `HerdFlow Invoice ${invoiceNumber}`, html, text });
 }
 
+export async function sendVendorRegistrationFeeEmail(opts: {
+  to: string;
+  sellerName: string;
+  amountLabel: string;
+  payUrl: string;
+}): Promise<void> {
+  const { to, sellerName, amountLabel, payUrl } = opts;
+
+  const html = documentEmailHtml({
+    heading: "You're Approved — Complete Your Registration",
+    greetingName: sellerName,
+    bodyLines: [
+      `Great news — your HerdFlow seller application has been approved.`,
+      `To activate your storefront and start listing, please pay the one-time registration fee below.`,
+    ],
+    amountLabel,
+    viewUrl: payUrl,
+    buttonLabel: "Pay Registration Fee",
+  });
+
+  const text = `You're Approved — Complete Your Registration
+
+Hi ${sellerName},
+
+Your HerdFlow seller application has been approved.
+To activate your storefront, pay the one-time registration fee: ${amountLabel}
+
+Pay here: ${payUrl}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: "You're approved — activate your HerdFlow storefront", html, text });
+}
+
+export async function sendPayoutRemittanceEmail(opts: {
+  to: string;
+  sellerName: string;
+  payoutNumber: string;
+  amountLabel: string;
+  paidDate: string;
+}): Promise<void> {
+  const { to, sellerName, payoutNumber, amountLabel, paidDate } = opts;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f4ef;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f4ef;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e4ebf5;">
+        <tr>
+          <td style="background:#1B3A6B;padding:28px 32px;text-align:center;">
+            <p style="margin:0;color:#d9c08f;font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;">HerdFlow</p>
+            <h1 style="margin:8px 0 0;color:#ffffff;font-size:24px;font-weight:900;">Payout Sent</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="margin:0 0 16px;color:#244367;font-size:15px;">Hi ${sellerName},</p>
+            <p style="margin:0 0 16px;color:#5d7497;font-size:14px;line-height:1.6;">
+              Payout <strong>${payoutNumber}</strong> was paid to your bank account on <strong>${paidDate}</strong>.
+            </p>
+            <p style="margin:0 0 24px;color:#244367;font-size:16px;font-weight:bold;">${amountLabel}</p>
+            <div style="background:#f5f8fd;border-radius:10px;padding:16px;">
+              <p style="margin:0;color:#9aabb9;font-size:12px;">
+                If this doesn't reflect in your account within 2–3 business days, contact info@herdflow.co.za.
+              </p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f5f8fd;padding:20px 32px;border-top:1px solid #e4ebf5;text-align:center;">
+            <p style="margin:0;color:#9aabb9;font-size:11px;">
+              © 2026 HerdFlow — A division of Geyer Holdings<br>
+              North West Province, South Africa
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Payout Sent
+
+Hi ${sellerName},
+
+Payout ${payoutNumber} was paid to your bank account on ${paidDate}.
+Amount: ${amountLabel}
+
+If this doesn't reflect within 2-3 business days, contact info@herdflow.co.za.
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `HerdFlow Payout ${payoutNumber} Sent`, html, text });
+}
+
 export async function sendSellerSaleNotification(opts: {
   to: string;
   sellerName: string;
@@ -299,4 +399,190 @@ View your dashboard: ${dashboardUrl}
 © 2026 HerdFlow, a division of Geyer Holdings`;
 
   await sendEmail({ to, subject: `You made a sale on HerdFlow — ${orderNumber}`, html, text });
+}
+
+export async function sendOrderConfirmationEmail(opts: {
+  to: string;
+  buyerName: string;
+  orderNumber: string;
+  totalLabel: string;
+  trackingUrl: string;
+}): Promise<void> {
+  const { to, buyerName, orderNumber, totalLabel, trackingUrl } = opts;
+
+  const html = documentEmailHtml({
+    heading: "Order Confirmed",
+    greetingName: buyerName,
+    bodyLines: [
+      `Thanks for your order! <strong>${orderNumber}</strong> is confirmed and being prepared by the seller.`,
+      `You can track its status any time from your order history.`,
+    ],
+    amountLabel: totalLabel,
+    viewUrl: trackingUrl,
+    buttonLabel: "Track My Order",
+  });
+
+  const text = `Order Confirmed
+
+Hi ${buyerName},
+
+Thanks for your order! ${orderNumber} is confirmed and being prepared by the seller.
+Total: ${totalLabel}
+
+Track it here: ${trackingUrl}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `Your HerdFlow order ${orderNumber} is confirmed`, html, text });
+}
+
+export async function sendListingLiveEmail(opts: {
+  to: string;
+  sellerName: string;
+  listingTitle: string;
+  viewUrl: string;
+}): Promise<void> {
+  const { to, sellerName, listingTitle, viewUrl } = opts;
+
+  const html = documentEmailHtml({
+    heading: "Your Listing Is Live",
+    greetingName: sellerName,
+    bodyLines: [
+      `Your listing <strong>${listingTitle}</strong> is now live on the HerdFlow marketplace.`,
+      `Buyers can now view your listing and contact you directly via WhatsApp or phone.`,
+    ],
+    amountLabel: "",
+    viewUrl,
+    buttonLabel: "View My Listing",
+  });
+
+  const text = `Your Listing Is Live
+
+Hi ${sellerName},
+
+Your listing "${listingTitle}" is now live on the HerdFlow marketplace.
+Buyers can now view it and contact you directly.
+
+View it here: ${viewUrl}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `Your listing "${listingTitle}" is live on HerdFlow`, html, text });
+}
+
+export async function sendListingExpiringEmail(opts: {
+  to: string;
+  sellerName: string;
+  listingTitle: string;
+  expiresDate: string;
+  renewUrl: string;
+}): Promise<void> {
+  const { to, sellerName, listingTitle, expiresDate, renewUrl } = opts;
+
+  const html = documentEmailHtml({
+    heading: "Your Listing Expires Soon",
+    greetingName: sellerName,
+    bodyLines: [
+      `Your listing <strong>${listingTitle}</strong> expires on <strong>${expiresDate}</strong> — in 3 days.`,
+      `Create a new listing before then to keep it visible to buyers.`,
+    ],
+    amountLabel: "",
+    viewUrl: renewUrl,
+    buttonLabel: "Renew My Listing",
+  });
+
+  const text = `Your Listing Expires Soon
+
+Hi ${sellerName},
+
+Your listing "${listingTitle}" expires on ${expiresDate} — in 3 days.
+Create a new listing before then to keep it visible to buyers.
+
+Renew here: ${renewUrl}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `Your HerdFlow listing expires in 3 days`, html, text });
+}
+
+export async function sendBookingConfirmedEmail(opts: {
+  to: string;
+  recipientName: string;
+  isPartner: boolean;
+  bookingNumber: string;
+  route: string;
+  viewUrl: string;
+}): Promise<void> {
+  const { to, recipientName, isPartner, bookingNumber, route, viewUrl } = opts;
+  const heading = "Transport Booking Confirmed";
+  const bodyLines = isPartner
+    ? [
+        `You've been assigned delivery <strong>${bookingNumber}</strong>: ${route}.`,
+        `Please contact the farmer to arrange pickup details.`,
+      ]
+    : [
+        `Your transport booking <strong>${bookingNumber}</strong> has been confirmed: ${route}.`,
+        `A HerdFlow logistics partner has been assigned and will be in touch to arrange pickup.`,
+      ];
+
+  const html = documentEmailHtml({
+    heading,
+    greetingName: recipientName,
+    bodyLines,
+    amountLabel: "",
+    viewUrl,
+    buttonLabel: "View Booking",
+  });
+
+  const text = `${heading}
+
+Hi ${recipientName},
+
+${bodyLines.join("\n").replace(/<\/?strong>/g, "")}
+
+View it here: ${viewUrl}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `HerdFlow Transport Booking ${bookingNumber} Confirmed`, html, text });
+}
+
+export async function sendTrialEndingEmail(opts: {
+  to: string;
+  userName: string;
+  planName: string;
+  trialEndsDate: string;
+  billingUrl: string;
+}): Promise<void> {
+  const { to, userName, planName, trialEndsDate, billingUrl } = opts;
+
+  const html = documentEmailHtml({
+    heading: "Your Trial Is Ending Soon",
+    greetingName: userName,
+    bodyLines: [
+      `Your <strong>${planName}</strong> trial ends on <strong>${trialEndsDate}</strong> — in 7 days.`,
+      `Make sure your payment details are up to date so your plan continues without interruption.`,
+    ],
+    amountLabel: "",
+    viewUrl: billingUrl,
+    buttonLabel: "Manage My Plan",
+  });
+
+  const text = `Your Trial Is Ending Soon
+
+Hi ${userName},
+
+Your ${planName} trial ends on ${trialEndsDate} — in 7 days.
+Make sure your payment details are up to date so your plan continues without interruption.
+
+Manage your plan: ${billingUrl}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `Your HerdFlow trial ends in 7 days`, html, text });
 }

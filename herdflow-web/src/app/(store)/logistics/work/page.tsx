@@ -116,7 +116,7 @@ export default async function LogisticsWorkPage() {
                   </div>
                   <div className="space-y-3 text-right">
                     <p className="text-2xl font-black text-[#2E7D32]">
-                      {formatRand(job.priceCents / 100)}
+                      {job.priceCents != null ? formatRand(job.priceCents / 100) : "Quote pending"}
                     </p>
                     <Link
                       href={`/logistics/routes/${job.id}`}

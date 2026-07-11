@@ -70,20 +70,39 @@ export function CheckoutClient({ initialUser }: { initialUser: InitialUser }) {
 
       const data = await res.json();
 
-      if (res.ok && data.orderNumber) {
-        // Clear cart
+      if (res.ok && data.orderNumber && data.payment) {
+        // Cart is cleared now — the order is already created; PayFast
+        // handles the payment from here and the ITN webhook reconciles it.
         clearCart();
-
-        // Redirect to order confirmation page
+        submitToPayFast(data.payment.processUrl, data.payment.fields);
+      } else if (res.ok && data.orderNumber) {
+        // Payment couldn't be initialized (e.g. PayFast config missing) —
+        // fall back to the order page rather than losing the order.
+        clearCart();
         router.push(`/orders/${data.orderNumber}`);
       } else {
         setError(data.error || "Failed to create order");
+        setLoading(false);
       }
     } catch {
       setError("Network error. Please try again.");
-    } finally {
       setLoading(false);
     }
+  }
+
+  function submitToPayFast(processUrl: string, fields: Record<string, string>) {
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = processUrl;
+    for (const [name, value] of Object.entries(fields)) {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    }
+    document.body.appendChild(form);
+    form.submit();
   }
 
   if (items.length === 0) {

@@ -58,6 +58,9 @@ export function HomeNav() {
             <Link href="/marketing" className="whitespace-nowrap text-white transition hover:text-white/80">
               Marketing
             </Link>
+            <Link href="/pricing" className="whitespace-nowrap text-white transition hover:text-white/80">
+              Pricing
+            </Link>
             <Link href="/contact" className="whitespace-nowrap text-white transition hover:text-white/80">
               Contact
             </Link>
@@ -147,6 +150,13 @@ export function HomeNav() {
               onClick={() => setMenuOpen(false)}
             >
               Marketing & Ads
+            </Link>
+            <Link
+              href="/pricing"
+              className="block rounded-lg px-4 py-2.5 text-sm text-white hover:bg-white/10"
+              onClick={() => setMenuOpen(false)}
+            >
+              Pricing
             </Link>
             <Link
               href="/contact"

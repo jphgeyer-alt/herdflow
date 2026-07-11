@@ -15,7 +15,14 @@ export default async function SellerStorefrontPage({
 
   const seller = await prisma.seller.findUnique({
     where: { slug },
-    select: { id: true, farmName: true, region: true, status: true },
+    select: {
+      id: true,
+      farmName: true,
+      region: true,
+      status: true,
+      storeDescription: true,
+      storeLogoUrl: true,
+    },
   });
 
   if (!seller || seller.status !== "APPROVED") notFound();
@@ -42,12 +49,25 @@ export default async function SellerStorefrontPage({
   return (
     <div className="min-h-screen bg-[#f5f4ef]">
       <div className="bg-[#1B3A6B] px-4 py-12 text-white md:px-8">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="mb-2 text-4xl font-black">{seller.farmName}</h1>
-          <p className="flex items-center gap-1.5 text-white/80">
-            <MapPin size={16} />
-            {seller.region}
-          </p>
+        <div className="mx-auto flex max-w-7xl items-center gap-6">
+          {seller.storeLogoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={seller.storeLogoUrl}
+              alt={seller.farmName}
+              className="h-20 w-20 shrink-0 rounded-full border-2 border-white/30 object-cover"
+            />
+          )}
+          <div>
+            <h1 className="mb-2 text-4xl font-black">{seller.farmName}</h1>
+            <p className="flex items-center gap-1.5 text-white/80">
+              <MapPin size={16} />
+              {seller.region}
+            </p>
+            {seller.storeDescription && (
+              <p className="mt-2 max-w-2xl text-sm text-white/70">{seller.storeDescription}</p>
+            )}
+          </div>
         </div>
       </div>
 

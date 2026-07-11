@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { activeCreativeWhere } from "@/lib/marketing/active-creative";
 
 export const dynamic = "force-dynamic";
 
@@ -13,17 +14,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const now = new Date();
     const creatives = await prisma.sponsorCreative.findMany({
-      where: {
-        placement: placement as "HOMEPAGE" | "SHOP" | "LISTINGS",
-        isActive: true,
-        sponsor: { status: "ACTIVE" },
-        AND: [
-          { OR: [{ startDate: null }, { startDate: { lte: now } }] },
-          { OR: [{ endDate: null }, { endDate: { gte: now } }] },
-        ],
-      },
+      where: activeCreativeWhere(placement),
       select: {
         id: true,
         imageUrl: true,

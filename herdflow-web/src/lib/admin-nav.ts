@@ -17,6 +17,10 @@ import {
   Smartphone,
   CreditCard,
   ShieldCheck,
+  DollarSign,
+  UserCog,
+  TrendingUp,
+  Palette,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -43,6 +47,14 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { label: "Dashboard", href: "/admin", description: "Sales, approvals, and activity at a glance", icon: LayoutDashboard },
       { label: "Activity Log", href: "/admin/activity", description: "Audit trail of every admin action", icon: Activity },
+    ],
+  },
+  {
+    label: "Commerce",
+    items: [
+      { label: "Pricing", href: "/admin/pricing", description: "Subscription plans and platform fees", icon: DollarSign },
+      { label: "Subscribers", href: "/admin/subscribers", description: "Active and trial subscriptions", icon: UserCog },
+      { label: "Revenue", href: "/admin/revenue", description: "MRR and revenue by stream", icon: TrendingUp },
     ],
   },
   {
@@ -78,6 +90,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: "Quotes", href: "/admin/marketing/quotes", description: "Sponsor quotes", icon: Megaphone },
       { label: "Invoices", href: "/admin/marketing/invoices", description: "Sponsor invoices", icon: Megaphone },
       { label: "Creative", href: "/admin/marketing/creative", description: "Sponsor ad banners", icon: Megaphone },
+      { label: "Ad Studio", href: "/admin/ad-studio", description: "Campaign builder, PNG export, performance", icon: Palette },
     ],
   },
   {

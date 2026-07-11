@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     for (const delivery of deliveries) {
       const partnerId = delivery.logisticsPartnerId;
       if (!partnerId) continue;
-      const netCents = delivery.priceCents - delivery.commissionCents;
+      const netCents = (delivery.priceCents ?? 0) - delivery.commissionCents;
       const existing = byPartner.get(partnerId);
       if (existing) {
         existing.amountCents += netCents;

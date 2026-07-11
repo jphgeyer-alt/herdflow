@@ -68,15 +68,15 @@ export default async function LogisticsDashboard() {
   weekAgo.setDate(weekAgo.getDate() - 7);
   const revenueThisWeekCents = deliveredJobs
     .filter((j) => j.deliveredAt && j.deliveredAt >= weekAgo)
-    .reduce((sum, j) => sum + (j.priceCents - j.commissionCents), 0);
+    .reduce((sum, j) => sum + ((j.priceCents ?? 0) - j.commissionCents), 0);
 
   const totalEarnedCents = deliveredJobs.reduce(
-    (sum, j) => sum + (j.priceCents - j.commissionCents),
+    (sum, j) => sum + ((j.priceCents ?? 0) - j.commissionCents),
     0,
   );
   const pendingPayoutCents = deliveredJobs
     .filter((j) => j.payoutId === null)
-    .reduce((sum, j) => sum + (j.priceCents - j.commissionCents), 0);
+    .reduce((sum, j) => sum + ((j.priceCents ?? 0) - j.commissionCents), 0);
 
   let recentPayouts: Array<{
     id: string;
@@ -358,7 +358,7 @@ export default async function LogisticsDashboard() {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-[#244367]">
-                      {route.number} delivered — {formatRand(route.priceCents / 100)}
+                      {route.number} delivered — {formatRand((route.priceCents ?? 0) / 100)}
                     </p>
                     <p className="mt-1 text-xs text-[#5d7497]">
                       {route.deliveredAt && formatDate(route.deliveredAt)}

@@ -20,6 +20,12 @@ type Seller = {
   status: string;
   createdAt: Date | string;
   totalSalesCents: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  balance: any;
+  bankName: string | null;
+  accountNumber: string | null;
+  branchCode: string | null;
+  accountHolder: string | null;
   user: { fullName: string; email: string };
   _count: { livestockListings: number; products: number };
 };
@@ -123,6 +129,8 @@ export function SellersManager({ initialSellers }: SellersManagerProps) {
             <Th align="right">Livestock</Th>
             <Th align="right">Products</Th>
             <Th align="right">Total Sales</Th>
+            <Th align="right">Balance Owed</Th>
+            <Th>Bank Details</Th>
             <Th>Joined</Th>
             <Th>Status</Th>
             <Th>Action</Th>
@@ -130,7 +138,7 @@ export function SellersManager({ initialSellers }: SellersManagerProps) {
         </Thead>
         <Tbody>
           {filtered.length === 0 ? (
-            <TableEmptyRow colSpan={9} message="No sellers found." />
+            <TableEmptyRow colSpan={11} message="No sellers found." />
           ) : (
             filtered.map((seller) => {
               const isSaving = savingId === seller.id;
@@ -154,6 +162,23 @@ export function SellersManager({ initialSellers }: SellersManagerProps) {
                   <Td align="right">{seller._count.products}</Td>
                   <Td align="right" className="font-semibold text-navy-600">
                     {toCurrency(seller.totalSalesCents)}
+                  </Td>
+                  <Td align="right" className="font-semibold text-navy-600">
+                    {toCurrency(Math.round(Number(seller.balance) * 100))}
+                  </Td>
+                  <Td>
+                    {seller.bankName || seller.accountNumber ? (
+                      <div className="text-xs text-navy-400">
+                        <div className="font-semibold text-navy-600">{seller.accountHolder || "—"}</div>
+                        <div>{seller.bankName || "—"}</div>
+                        <div>
+                          {seller.accountNumber || "—"}
+                          {seller.branchCode ? ` · ${seller.branchCode}` : ""}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-navy-300">Not provided</span>
+                    )}
                   </Td>
                   <Td>{formatDate(seller.createdAt)}</Td>
                   <Td>

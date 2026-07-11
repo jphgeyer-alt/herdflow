@@ -68,6 +68,23 @@ export async function POST(request: Request) {
     const category = await prisma.category.findUnique({ where: { id: categoryId } });
     if (!category) return NextResponse.json({ error: "Invalid category." }, { status: 400 });
 
+    // BASIC storefronts are capped at 20 active products — Unlimited plans
+    // (or an admin override) skip this check entirely.
+    if (seller.storefrontPlan === "BASIC") {
+      const productCount = await prisma.product.count({
+        where: { sellerId: seller.id, isDeleted: false },
+      });
+      if (productCount >= 20) {
+        return NextResponse.json(
+          {
+            error:
+              "You've reached the 20-product limit on the Basic plan. Upgrade to Unlimited in your storefront settings to add more.",
+          },
+          { status: 403 },
+        );
+      }
+    }
+
     const baseSlug = toSlug(name);
     const slug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
 

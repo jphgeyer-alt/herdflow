@@ -2,6 +2,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { DocumentView } from "@/components/marketing/DocumentView";
+import { PayNowButton } from "./pay-now-button";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,8 @@ export default async function PublicInvoicePage({ params }: { params: Promise<{ 
     ? `${invoice.notes ? invoice.notes + " — " : ""}Payment ref: ${invoice.paymentReference}`
     : invoice.notes;
 
+  const isPayable = invoice.status === "UNPAID" || invoice.status === "OVERDUE";
+
   return (
     <DocumentView
       kind="invoice"
@@ -30,6 +33,7 @@ export default async function PublicInvoicePage({ params }: { params: Promise<{ 
       description={invoice.description}
       amount={invoice.amount.toString()}
       notes={notes}
+      actions={isPayable ? <PayNowButton invoiceId={invoice.id} /> : undefined}
     />
   );
 }

@@ -43,6 +43,7 @@ type PayoutConfig = {
   createBodyKey: "sellerId" | "logisticsPartnerId";
   mapPending: (raw: RawRecord) => PendingBalance;
   mapPayout: (raw: RawRecord) => PayoutRow;
+  invoicePath?: (id: string) => string;
 };
 
 const KIND_CONFIG: Record<PayoutKind, PayoutConfig> = {
@@ -87,6 +88,7 @@ const KIND_CONFIG: Record<PayoutKind, PayoutConfig> = {
       paidAt: raw.paidAt,
       counterpartyName: raw.logisticsPartner?.companyName ?? "Unknown Partner",
     }),
+    invoicePath: (id) => `/admin/logistics/payouts/${id}/invoice`,
   },
 };
 
@@ -243,13 +245,25 @@ export function PayoutsTable({ kind }: { kind: PayoutKind }) {
                   </Td>
                   <Td>{p.paymentReference || "—"}</Td>
                   <Td>
-                    {p.status === "PENDING" && (
-                      <PayoutActions
-                        payout={p}
-                        payoutApiPath={config.payoutApi(p.id)}
-                        onDone={load}
-                      />
-                    )}
+                    <div className="flex items-center gap-2">
+                      {p.status === "PENDING" && (
+                        <PayoutActions
+                          payout={p}
+                          payoutApiPath={config.payoutApi(p.id)}
+                          onDone={load}
+                        />
+                      )}
+                      {config.invoicePath && (
+                        <a
+                          href={config.invoicePath(p.id)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-navy-600 hover:underline"
+                        >
+                          Invoice
+                        </a>
+                      )}
+                    </div>
                   </Td>
                 </Tr>
               ))

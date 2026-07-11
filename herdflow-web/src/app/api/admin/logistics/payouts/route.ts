@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       });
 
       const amountCents = unpaidDeliveries.reduce(
-        (sum, d) => sum + (d.priceCents - d.commissionCents),
+        (sum, d) => sum + ((d.priceCents ?? 0) - d.commissionCents),
         0,
       );
 

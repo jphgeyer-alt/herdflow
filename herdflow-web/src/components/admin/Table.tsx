@@ -21,11 +21,17 @@ export function Tbody({ children }: { children: React.ReactNode }) {
 export function Tr({
   children,
   className = "",
+  onClick,
 }: {
   children: React.ReactNode;
   className?: string;
+  onClick?: () => void;
 }) {
-  return <tr className={`hover:bg-navy-25/60 ${className}`}>{children}</tr>;
+  return (
+    <tr className={`hover:bg-navy-25/60 ${className}`} onClick={onClick}>
+      {children}
+    </tr>
+  );
 }
 
 export function Th({

@@ -97,7 +97,7 @@ const FAQS = [
   },
   {
     q: "Can I cancel my sponsorship?",
-    a: "Yes. Starter and Growth are month to month with 30 days notice. No long term contracts.",
+    a: "Starter and Growth require a 3-month minimum commitment, then continue month to month with 30 days notice. No long term contracts beyond that.",
   },
   {
     q: "How do I measure results?",
@@ -109,10 +109,22 @@ const FAQS = [
   },
 ];
 
+async function getFoundingSpotsRemaining() {
+  try {
+    const takenCount = await prisma.sponsor.count({
+      where: { package: { contains: "founding", mode: "insensitive" } },
+    });
+    return Math.max(0, 5 - takenCount);
+  } catch {
+    return 5;
+  }
+}
+
 export default async function MarketingPage() {
   const sponsors = await getActiveSponsors();
   const PACKAGES = await getPackages();
   const platformStats = await getPlatformStats();
+  const foundingSpotsRemaining = await getFoundingSpotsRemaining();
 
   const heroStats = [
     { value: platformStats.activeFarmers.toLocaleString(), label: "Active Farmers Reached" },
@@ -187,6 +199,32 @@ export default async function MarketingPage() {
         </div>
       </section>
 
+      {/* ── FOUNDING SPONSOR ──────────────────────────────────── */}
+      {foundingSpotsRemaining > 0 && (
+        <section className="bg-[#A07C3A] py-8">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-white/80">
+                Limited to the first 5 sponsors
+              </p>
+              <h3 className="text-xl font-black text-white">
+                Founding Sponsor — R1,950{" "}
+                <span className="font-normal text-white/80">
+                  ({foundingSpotsRemaining} spot{foundingSpotsRemaining !== 1 ? "s" : ""}{" "}
+                  remaining)
+                </span>
+              </h3>
+            </div>
+            <Link
+              href="/contact?subject=founding-sponsorship"
+              className="rounded-lg bg-[#1B3A6B] px-6 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-lg transition hover:bg-[#122844]"
+            >
+              Claim Founding Rate
+            </Link>
+          </div>
+        </section>
+      )}
+
       {/* ── PACKAGES ──────────────────────────────────────────── */}
       <section id="packages" className="bg-[#f5f4ef] py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -230,6 +268,13 @@ export default async function MarketingPage() {
                       {pkg.period}
                     </span>
                   </div>
+                  {(pkg.id === "starter" || pkg.id === "growth") && (
+                    <p
+                      className={`-mt-2 mb-4 text-xs ${pkg.cardBg === "bg-[#1B3A6B]" ? "text-white/60" : "text-[#9aabb9]"}`}
+                    >
+                      3-month minimum commitment
+                    </p>
+                  )}
                   <ul className="flex-1 space-y-2">
                     {pkg.features.map((f) => (
                       <li

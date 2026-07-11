@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { StoreBanner } from "@/components/store-banner";
 import { SponsorBanner } from "@/components/ui/SponsorBanner";
 import { SponsorCreativeBanner } from "@/components/marketing/SponsorCreativeBanner";
@@ -79,6 +80,15 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
       <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
         {/* Hero Banner */}
         <StoreBanner />
+
+        <div className="flex justify-end">
+          <Link
+            href="/orders"
+            className="text-brand-navy text-sm font-semibold hover:underline"
+          >
+            My Orders &rarr;
+          </Link>
+        </div>
 
         {/* Sponsor Strip */}
         <SponsorBanner />
