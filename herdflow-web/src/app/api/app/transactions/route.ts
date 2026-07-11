@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     tx.farmerTransaction.findMany({
       where: {
         farmerId: auth.effectiveFarmerId,
+        isDeleted: false,
         ...(type != null && { type }),
         ...((startDate != null || endDate != null) && {
           date: {
@@ -52,9 +53,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const transaction = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
-    tx.farmerTransaction.create({
+  // localId is the mobile app's local SQLite row id — needed so a later
+  // DELETE (which the app can only address by its own local id) can find
+  // this row, and so a retried queued POST doesn't create a duplicate.
+  const localId = (b.localId as string | undefined) ?? null;
+
+  const transaction = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+    if (localId) {
+      const existing = await tx.farmerTransaction.findUnique({ where: { localId } });
+      if (existing) return existing;
+    }
+
+    return tx.farmerTransaction.create({
       data: {
+        localId,
         farmerId: auth.effectiveFarmerId,
         type: String(b.type),
         category: String(b.category),
@@ -66,8 +78,8 @@ export async function POST(request: Request) {
         invoiceNumber: (b.invoiceNumber as string | undefined) ?? null,
         date: new Date(b.date as string),
       },
-    }),
-  );
+    });
+  });
 
   return NextResponse.json(transaction, { status: 201 });
 }
