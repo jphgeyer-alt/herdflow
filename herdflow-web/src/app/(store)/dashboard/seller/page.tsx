@@ -8,6 +8,7 @@ import { getUserIdFromSession, USER_SESSION_COOKIE } from "@/lib/user-auth";
 import { withSellerContext } from "@/lib/tenant-prisma";
 import { formatRand } from "@/lib/marketing/format";
 import { ListingsTabs } from "./ListingsTabs";
+import { StorefrontSettingsForm } from "./StorefrontSettingsForm";
 
 export const dynamic = "force-dynamic";
 
@@ -160,7 +161,7 @@ export default async function SellerDashboard() {
     0,
   );
   const pendingPayoutCents = sellerOrderItems
-    .filter((i) => i.payoutId === null)
+    .filter((i) => i.releasedAt === null)
     .reduce((sum, i) => sum + (i.lineTotalCents - i.commissionCents), 0);
 
   let recentPayouts: Array<{
@@ -266,11 +267,25 @@ export default async function SellerDashboard() {
         {/* Earnings */}
         <section>
           <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">Earnings</h2>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-4">
             <div className="rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-lg">
               <div className="mb-2 flex items-center gap-4">
                 <div className="rounded-xl bg-green-100 p-3">
                   <Wallet size={32} className="text-[#2E7D32]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#5d7497]">Current Balance</p>
+                  <p className="text-3xl font-black text-[#1B3A6B]">
+                    {formatRand(Number(user.sellerProfile.balance))}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#9aabb9]">Released, awaiting next payout</p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-lg">
+              <div className="mb-2 flex items-center gap-4">
+                <div className="rounded-xl bg-green-100 p-3">
+                  <DollarSign size={32} className="text-[#2E7D32]" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-[#5d7497]">Total Earned</p>
@@ -287,11 +302,11 @@ export default async function SellerDashboard() {
                   <Clock size={32} className="text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-[#5d7497]">Pending Payout</p>
+                  <p className="text-sm font-semibold text-[#5d7497]">Awaiting Release</p>
                   <p className="text-3xl font-black text-[#1B3A6B]">
                     {formatRand(pendingPayoutCents / 100)}
                   </p>
-                  <p className="mt-0.5 text-xs text-[#9aabb9]">Not yet paid out</p>
+                  <p className="mt-0.5 text-xs text-[#9aabb9]">Order not yet shipped/confirmed</p>
                 </div>
               </div>
             </div>
@@ -409,6 +424,24 @@ export default async function SellerDashboard() {
             </div>
           </section>
         )}
+
+        {/* Storefront Settings */}
+        <section>
+          <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">Storefront Settings</h2>
+          <StorefrontSettingsForm
+            initial={{
+              location: user.sellerProfile.location,
+              contactPhone: user.sellerProfile.contactPhone,
+              storeDescription: user.sellerProfile.storeDescription,
+              storeLogoUrl: user.sellerProfile.storeLogoUrl,
+              bankName: user.sellerProfile.bankName,
+              accountNumber: user.sellerProfile.accountNumber,
+              branchCode: user.sellerProfile.branchCode,
+              accountHolder: user.sellerProfile.accountHolder,
+              storefrontPlan: user.sellerProfile.storefrontPlan,
+            }}
+          />
+        </section>
       </div>
     </div>
   );

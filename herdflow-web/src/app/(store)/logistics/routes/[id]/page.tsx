@@ -104,7 +104,7 @@ export default async function LogisticsRouteDetailPage({ params }: PageProps) {
           )}
           {job.notes && <p className="text-sm text-[#5d7497]">Notes: {job.notes}</p>}
           <p className="pt-2 text-2xl font-black text-[#2E7D32]">
-            {formatRand(job.priceCents / 100)}
+            {job.priceCents != null ? formatRand(job.priceCents / 100) : "Quote pending"}
           </p>
         </div>
 

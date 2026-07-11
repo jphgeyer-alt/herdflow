@@ -3,49 +3,26 @@ import type { NextRequest } from "next/server";
 import { getAdminFromRequest } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 
-const PAID_STATUSES = ["PAID", "PROCESSING", "SHIPPED", "COMPLETED"] as const;
-
-// Per-seller aggregate of unpaid net revenue (sale amount minus platform
-// commission) that hasn't been included in a payout batch yet — "who do
-// we owe, and how much."
+// Per-seller released balance not yet included in a payout batch — reads
+// Seller.balance directly (credited by releaseFunds()/confirmOrderReceived()
+// in src/lib/payments/payouts.ts) so this always matches what a payout
+// batch will actually pay out.
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const items = await prisma.orderItem.findMany({
-      where: {
-        payoutId: null,
-        order: { status: { in: [...PAID_STATUSES] } },
-        product: { sellerId: { not: null } },
-      },
-      select: {
-        lineTotalCents: true,
-        commissionCents: true,
-        product: { select: { sellerId: true, seller: { select: { farmName: true } } } },
-      },
+    const sellers = await prisma.seller.findMany({
+      where: { balance: { gt: 0 } },
+      select: { id: true, farmName: true, balance: true },
+      orderBy: { balance: "desc" },
     });
 
-    const bySeller = new Map<string, { sellerId: string; farmName: string; amountCents: number }>();
-    for (const item of items) {
-      const sellerId = item.product.sellerId;
-      if (!sellerId) continue;
-      const netCents = item.lineTotalCents - item.commissionCents;
-      const existing = bySeller.get(sellerId);
-      if (existing) {
-        existing.amountCents += netCents;
-      } else {
-        bySeller.set(sellerId, {
-          sellerId,
-          farmName: item.product.seller?.farmName || "Unknown Seller",
-          amountCents: netCents,
-        });
-      }
-    }
-
-    const pending = [...bySeller.values()]
-      .filter((s) => s.amountCents > 0)
-      .sort((a, b) => b.amountCents - a.amountCents);
+    const pending = sellers.map((s) => ({
+      sellerId: s.id,
+      farmName: s.farmName,
+      amountCents: Math.round(Number(s.balance) * 100),
+    }));
 
     return NextResponse.json({ pending });
   } catch (err) {

@@ -62,3 +62,21 @@ npm run dev
 ## Deployment
 
 Deployed on Render (`render.yaml` at the repo root, `rootDir: herdflow-web`), with managed PostgreSQL on Render. Auto-deploys on push to `main`.
+
+## Cron Jobs
+
+Vendor payout fund-release runs on a schedule via a Render Cron Job (configured in the Render dashboard, not in `render.yaml`):
+
+- **Command**: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://www.herdflow.co.za/api/cron/release-funds`
+- **Schedule**: daily (e.g. `0 2 * * *`)
+- **Env**: requires `CRON_SECRET` to match the value set on the web service.
+
+This marks `OrderItem`s eligible for payout (order DELIVERED/COMPLETED, or PAID for 7+ days) and credits the seller's `balance`. Admins then use **Payouts → Create Payout Batch** to turn accumulated balances into an EFT batch (CSV) and mark them paid once processed.
+
+A second Render Cron Job sends day-ahead reminder emails:
+
+- **Command**: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://www.herdflow.co.za/api/cron/reminders`
+- **Schedule**: daily (e.g. `0 8 * * *`)
+- **Env**: requires `CRON_SECRET` to match the value set on the web service.
+
+This emails sellers whose listing expires in 3 days, and subscribers whose 30-day trial ends in 7 days (day 23). See `src/lib/reminders.ts`.

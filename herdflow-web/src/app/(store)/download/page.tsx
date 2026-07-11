@@ -55,7 +55,7 @@ export default function DownloadPage() {
             offline in remote farm areas.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3 text-sm text-white/70">
-            {["100% Free", "Works Offline", "Secure Data", "All Livestock Types"].map((f) => (
+            {["Free Starter Plan", "Works Offline", "Secure Cloud Sync", "All Livestock Types"].map((f) => (
               <span key={f} className="rounded-full bg-white/10 px-4 py-1.5">
                 {f}
               </span>
@@ -215,6 +215,20 @@ export default function DownloadPage() {
           </div>
         </div>
 
+        {/* Pricing strip */}
+        <div className="rounded-2xl border border-[#2E7D32]/30 bg-[#eef8f0] p-6 text-center">
+          <p className="text-sm text-slate-700">
+            Free forever for small herds — larger herds and multi-user farms can upgrade for more
+            animals, users and reporting.
+          </p>
+          <a
+            href="/pricing"
+            className="mt-3 inline-block text-sm font-bold text-[#2E7D32] underline underline-offset-2"
+          >
+            See plans & pricing →
+          </a>
+        </div>
+
         {/* Coming soon */}
         <div className="grid gap-4 sm:grid-cols-3">
           {[
@@ -240,7 +254,7 @@ export default function DownloadPage() {
             {[
               {
                 q: "Is the HerdFlow app free?",
-                a: "Yes — completely free. No subscription or hidden fees.",
+                a: "The Starter plan is free forever for up to 10 animals and 1 user. Larger herds and teams can upgrade to a paid plan — see /pricing for details.",
               },
               {
                 q: "Is my farm data safe?",

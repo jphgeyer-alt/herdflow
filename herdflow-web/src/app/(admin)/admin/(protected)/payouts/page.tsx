@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PayoutsTable } from "./PayoutsTable";
+import { CreateBatchButton } from "./CreateBatchButton";
 
 export default function AdminPayoutsPage() {
   return (
@@ -11,9 +12,12 @@ export default function AdminPayoutsPage() {
             Track what HerdFlow owes each seller and settle it via EFT.
           </p>
         </div>
-        <Link href="/admin" className="text-sm text-green hover:underline">
-          ← Dashboard
-        </Link>
+        <div className="flex items-center gap-4">
+          <CreateBatchButton />
+          <Link href="/admin" className="text-sm text-green hover:underline">
+            ← Dashboard
+          </Link>
+        </div>
       </div>
 
       <PayoutsTable kind="seller" />

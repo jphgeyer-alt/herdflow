@@ -3,6 +3,9 @@ import type { NextRequest } from "next/server";
 import { getAdminFromRequest } from "@/lib/admin-auth";
 import { logAdminActivity } from "@/lib/admin-activity";
 import { prisma } from "@/lib/prisma";
+import { initiatePayment } from "@/lib/payfast/initiate";
+import { sendVendorRegistrationFeeEmail } from "@/lib/email";
+import { env } from "@/lib/env";
 
 const VALID_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
 type VerificationStatus = (typeof VALID_STATUSES)[number];
@@ -174,12 +177,57 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Valid status is required." }, { status: 400 });
 
   try {
+    const existing = await prisma.seller.findUnique({
+      where: { id },
+      include: { user: { select: { email: true, fullName: true } } },
+    });
+
     const updated = await prisma.seller.update({ where: { id }, data: { status } });
     logAdminActivity(admin, "seller.status_update", "Seller", {
       entityId: updated.id,
       entityLabel: updated.farmName,
       metadata: reason ? { status, reason } : { status },
     });
+
+    // Newly approved (and not already paid, e.g. re-approval after a
+    // suspension) — email a PayFast link for the one-time registration fee.
+    // Best-effort: a failure here shouldn't fail the approval itself.
+    if (status === "APPROVED" && existing?.status !== "APPROVED" && !updated.registrationFeePaid) {
+      (async () => {
+        try {
+          const fee = await prisma.platformFee.findUnique({
+            where: { feeKey: "vendor_registration" },
+          });
+          const amount = fee ? Number(fee.amount) : 500;
+          const siteUrl = env.NEXT_PUBLIC_SITE_URL || "";
+          const reference = `VR-${updated.id}`;
+          await initiatePayment({
+            reference,
+            amount,
+            itemName: `HerdFlow Vendor Registration Fee — ${updated.farmName}`,
+            paymentType: "VENDOR_REG",
+            returnUrl: `${siteUrl}/dashboard/seller?payment=success`,
+            cancelUrl: `${siteUrl}/dashboard/seller?payment=cancelled`,
+            sellerId: updated.id,
+          });
+          // Emailed links can only ever be a GET click — route through the
+          // auto-submitting redirect page rather than PayFast's process URL
+          // directly (which requires a POST).
+          const payUrl = `${siteUrl}/api/payfast/redirect/${encodeURIComponent(reference)}`;
+          if (existing?.user.email) {
+            await sendVendorRegistrationFeeEmail({
+              to: existing.user.email,
+              sellerName: updated.farmName,
+              amountLabel: `R${amount.toFixed(2)}`,
+              payUrl,
+            });
+          }
+        } catch (err) {
+          console.error("Vendor registration fee email failed:", err);
+        }
+      })();
+    }
+
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Failed to update seller." }, { status: 500 });

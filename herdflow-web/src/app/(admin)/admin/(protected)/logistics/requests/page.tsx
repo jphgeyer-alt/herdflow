@@ -13,7 +13,7 @@ type RequestRow = {
   dropoffRegion: string;
   cargoDescription: string;
   neededBy: string | null;
-  priceCents: number;
+  priceCents: number | null;
   commissionCents: number;
   status: string;
   notes: string | null;
@@ -206,6 +206,47 @@ function NewRequestModal({ onClose, onCreated }: { onClose: () => void; onCreate
   );
 }
 
+function SetPriceRow({ requestId, onDone }: { requestId: string; onDone: () => void }) {
+  const [price, setPrice] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    const priceCents = Math.round(Number(price) * 100);
+    if (!priceCents || priceCents <= 0) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/logistics/requests/${requestId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceCents }),
+      });
+      if (res.ok) onDone();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="number"
+        value={price}
+        onChange={(e) => setPrice(e.target.value)}
+        placeholder="Quote R"
+        className="w-24 rounded-lg border border-[#cdd8e7] px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/30"
+      />
+      <button
+        type="button"
+        disabled={busy || !price}
+        onClick={save}
+        className="rounded-lg bg-[#1B3A6B] px-3 py-1 text-xs font-bold text-white disabled:opacity-50"
+      >
+        Set Price
+      </button>
+    </div>
+  );
+}
+
 function AssignRow({
   requestId,
   partners,
@@ -373,7 +414,11 @@ export default function LogisticsRequestsPage() {
                     {r.cargoDescription}
                   </td>
                   <td className="px-4 py-3 font-bold text-[#244367]">
-                    {formatRand(r.priceCents / 100)}
+                    {r.priceCents === null ? (
+                      <span className="text-xs font-normal text-[#9aabb9]">Awaiting quote</span>
+                    ) : (
+                      formatRand(r.priceCents / 100)
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span
@@ -386,7 +431,10 @@ export default function LogisticsRequestsPage() {
                     {r.logisticsPartner?.companyName || "—"}
                   </td>
                   <td className="px-4 py-3">
-                    {r.status === "OPEN" && (
+                    {r.status === "OPEN" && r.priceCents === null && (
+                      <SetPriceRow requestId={r.id} onDone={() => load(filter)} />
+                    )}
+                    {r.status === "OPEN" && r.priceCents !== null && (
                       <AssignRow requestId={r.id} partners={partners} onDone={() => load(filter)} />
                     )}
                     {(r.status === "ASSIGNED" || r.status === "IN_TRANSIT") && (

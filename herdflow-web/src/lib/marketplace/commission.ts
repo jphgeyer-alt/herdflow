@@ -4,7 +4,7 @@ const COMMISSION_RATE_KEY = "commission_rate";
 const DEFAULT_COMMISSION_RATE = 0.05;
 
 const LOGISTICS_COMMISSION_RATE_KEY = "logistics_commission_rate";
-const DEFAULT_LOGISTICS_COMMISSION_RATE = 0.1;
+const DEFAULT_LOGISTICS_COMMISSION_RATE = 0.04;
 
 /**
  * Single source of truth for the platform commission rate — admin-editable

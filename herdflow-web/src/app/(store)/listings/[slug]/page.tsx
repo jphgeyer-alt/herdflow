@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Truck, Phone, Mail, MapPin, Tag, Weight } from "lucide-react";
+import { Truck, Phone, Mail, MapPin, Tag, Weight, MessageCircle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { HerdflowTrusted } from "@/components/ui/HerdflowTrusted";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +44,13 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   if (!listing || listing.status === "ARCHIVED") {
     notFound();
   }
+
+  // Best-effort, and deliberately bypasses RLS via withAdminContext — a
+  // public page view has no seller session to scope this write to, and a
+  // view counter is a system-level increment, not a tenant write.
+  withAdminContext((tx) =>
+    tx.listing.update({ where: { id: listing.id }, data: { views: { increment: 1 } } }),
+  ).catch(() => {});
 
   const sellerEmail = listing.seller.user.email;
   const sellerPhone = listing.seller.contactPhone;
@@ -161,12 +169,30 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+              {(listing.contactWhatsApp || sellerPhone) && (
+                <a
+                  href={`https://wa.me/${(listing.contactWhatsApp || sellerPhone).replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I'm interested in your listing "${listing.title}" on HerdFlow.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#25D366] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#1ebe5b]"
+                >
+                  <MessageCircle size={16} />
+                  WhatsApp
+                </a>
+              )}
               <a
-                href={`mailto:${sellerEmail}?subject=Enquiry%20about%20${encodeURIComponent(listing.title)}`}
+                href={`tel:${sellerPhone}`}
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#1B3A6B] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#16305a]"
               >
+                <Phone size={16} />
+                Call
+              </a>
+              <a
+                href={`mailto:${sellerEmail}?subject=Enquiry%20about%20${encodeURIComponent(listing.title)}`}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-[#1B3A6B] px-5 py-3 text-sm font-bold text-[#1B3A6B] transition hover:bg-[#1B3A6B] hover:text-white"
+              >
                 <Mail size={16} />
-                Contact Seller
+                Email
               </a>
               <Link
                 href={`/contact?subject=transport&listing=${encodeURIComponent(listing.title)}`}
@@ -175,6 +201,11 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                 <Truck size={16} />
                 Arrange Transport
               </Link>
+            </div>
+
+            <div className="rounded-lg border border-[#e4ebf5] bg-[#f5f8fd] p-4 text-xs leading-relaxed text-[#5d7497]">
+              HerdFlow is an advertising platform. All sales are concluded directly between buyer
+              and seller. HerdFlow is not a party to any livestock transaction.
             </div>
           </div>
         </div>

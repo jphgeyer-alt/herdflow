@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getUserIdFromSession, USER_SESSION_COOKIE } from "@/lib/user-auth";
 import { withUserContext } from "@/lib/tenant-prisma";
+import { initiatePayment } from "@/lib/payfast/initiate";
+import { env } from "@/lib/env";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -86,14 +88,28 @@ export async function POST(request: Request) {
       }),
     );
 
-    // TODO: Initialize PayFast payment
-    // In production, redirect to PayFast payment page with order details
+    const siteUrl = env.NEXT_PUBLIC_SITE_URL || "";
+    const [firstName, ...rest] = customerInfo.fullName.trim().split(" ");
+    const payment = await initiatePayment({
+      reference: order.orderNumber,
+      amount: totalCents / 100,
+      itemName: `HerdFlow order ${order.orderNumber}`,
+      paymentType: "STORE_ORDER",
+      returnUrl: `${siteUrl}/api/payfast/return?orderNumber=${order.orderNumber}`,
+      cancelUrl: `${siteUrl}/api/payfast/cancel?orderNumber=${order.orderNumber}`,
+      userId,
+      orderId: order.id,
+      customerFirstName: firstName,
+      customerLastName: rest.join(" "),
+      customerEmail: customerInfo.email,
+    });
 
     return NextResponse.json({
       ok: true,
       orderId: order.id,
       orderNumber: order.orderNumber,
       message: "Order created successfully",
+      payment,
     });
   } catch (err) {
     console.error("Order creation error:", err);

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Truck, Package, Send } from "lucide-react";
+import { Truck, Package } from "lucide-react";
+import { RequestTransportButton } from "./request-transport-button";
 
 export const metadata: Metadata = {
   title: "Livestock Transport | HerdFlow",
@@ -94,15 +95,48 @@ export default function LogisticsLandingPage() {
               ))}
             </ul>
             <p className="mb-6 text-sm font-semibold text-[#1B3A6B]">
-              Have your route and load details ready — our team will follow up to arrange it.
+              R195 booking fee to submit — the final transport price is agreed with your matched
+              partner.
             </p>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 rounded-lg border-2 border-[#1B3A6B] px-6 py-3 text-sm font-bold uppercase tracking-wide text-[#1B3A6B] transition hover:bg-[#1B3A6B] hover:text-white"
-            >
-              <Send size={16} />
-              Request Transport
-            </Link>
+            <RequestTransportButton />
+          </div>
+        </div>
+
+        {/* Pricing */}
+        <div className="mt-12 grid gap-6 lg:grid-cols-2 lg:gap-8">
+          <div className="rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-lg">
+            <h3 className="mb-4 text-sm font-black uppercase tracking-wide text-[#1B3A6B]">
+              For Transport Partners
+            </h3>
+            <ul className="space-y-2 text-sm text-[#5d7497]">
+              <li className="flex justify-between border-b border-[#e4ebf5] pb-2">
+                <span>Registration</span>
+                <span className="font-bold text-[#2E7D32]">Free</span>
+              </li>
+              <li className="flex justify-between border-b border-[#e4ebf5] pb-2">
+                <span>Premium Listing (optional)</span>
+                <span className="font-bold text-[#244367]">R299/month</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Service Fee (on completed jobs)</span>
+                <span className="font-bold text-[#244367]">4%</span>
+              </li>
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-lg">
+            <h3 className="mb-4 text-sm font-black uppercase tracking-wide text-[#1B3A6B]">
+              For Farmers &amp; Sellers
+            </h3>
+            <ul className="space-y-2 text-sm text-[#5d7497]">
+              <li className="flex justify-between border-b border-[#e4ebf5] pb-2">
+                <span>Booking Fee</span>
+                <span className="font-bold text-[#244367]">R195</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Transport Price</span>
+                <span className="font-bold text-[#244367]">Quoted &amp; agreed upfront</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

@@ -24,6 +24,8 @@ model User {
   orders           Order[]
   passwordResets   PasswordResetToken[]
   sessions         UserSession[]
+  subscriptions    Subscription[]
+  payments         Payment[]
 }
 
 model UserSession {
@@ -90,6 +92,11 @@ model AdminActivityLog {
   @@index([createdAt])
 }
 
+enum VendorPlan {
+  BASIC
+  UNLIMITED
+}
+
 model Seller {
   id               String             @id @default(cuid())
   userId           String             @unique
@@ -101,6 +108,16 @@ model Seller {
   nationalIdNumber String
   idDocumentUrl    String
   status           VerificationStatus @default(PENDING)
+  // Bank details for automated payout batches — see src/lib/payments/payouts.ts
+  bankName         String?
+  accountNumber    String?
+  branchCode       String?
+  accountHolder    String?
+  storefrontPlan   VendorPlan         @default(BASIC)
+  registrationFeePaid Boolean         @default(false)
+  balance          Decimal            @default(0) @db.Decimal(12, 2)
+  storeDescription String?
+  storeLogoUrl     String?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
@@ -108,6 +125,7 @@ model Seller {
   livestockListings Listing[]
   products          Product[]
   payouts           SellerPayout[]
+  payments          Payment[]
 }
 
 model LogisticsPartner {
@@ -138,31 +156,42 @@ model Category {
   products Product[]
 }
 
+enum ListingTier {
+  BASIC
+  FEATURED
+}
+
 model Listing {
-  id           String        @id @default(cuid())
-  slug         String        @unique
-  title        String
-  description  String
-  priceCents   Int
-  region       String
-  breed        String
-  weightKg     Int?
-  ageMonths    Int?
-  photos       String[]
-  status       ListingStatus @default(ACTIVE)
-  isFeatured   Boolean       @default(false)
-  isDeleted    Boolean       @default(false)
-  deletedAt    DateTime?
-  deletedBy    String?
-  deleteReason String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  description     String
+  priceCents      Int
+  region          String
+  breed           String
+  weightKg        Int?
+  ageMonths       Int?
+  photos          String[]
+  status          ListingStatus @default(ACTIVE)
+  isFeatured      Boolean       @default(false)
+  tier            ListingTier   @default(BASIC)
+  feePaid         Boolean       @default(false)
+  expiresAt       DateTime?
+  views           Int           @default(0)
+  contactWhatsApp String?
+  isDeleted       Boolean       @default(false)
+  deletedAt       DateTime?
+  deletedBy       String?
+  deleteReason    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   sellerId   String
   categoryId String
 
-  seller   Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  category Category @relation(fields: [categoryId], references: [id])
+  seller   Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id])
+  payments Payment[]
 
   @@index([categoryId, region])
   @@index([status, isFeatured])
@@ -219,6 +248,7 @@ model Order {
   user            User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
   items           OrderItem[]
   deliveryRequest DeliveryRequest?
+  payments        Payment[]
 
   @@index([status, createdAt])
 }
@@ -238,14 +268,17 @@ model ContactInquiry {
 }
 
 model OrderItem {
-  id              String  @id @default(cuid())
+  id              String    @id @default(cuid())
   orderId         String
   productId       String
   quantity        Int
   unitPriceCents  Int
   lineTotalCents  Int
-  commissionCents Int     @default(0)
+  commissionCents Int       @default(0)
   payoutId        String?
+  // Set once the seller's earning on this line is eligible for payout —
+  // see releaseFunds() in src/lib/payments/payouts.ts
+  releasedAt      DateTime?
 
   order   Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product       @relation(fields: [productId], references: [id])
@@ -295,11 +328,20 @@ model DeliveryRequest {
   dropoffRegion      String
   cargoDescription   String
   neededBy           DateTime?
-  priceCents         Int
+  // Nullable — a self-service request has no job price until a partner
+  // quotes it (see farmerId/bookingFeePaid below); admin-created rows
+  // continue to always supply a real value.
+  priceCents         Int?
   commissionCents    Int               @default(0)
   status             DeliveryStatus    @default(OPEN)
   logisticsPartnerId String?
   logisticsPartner   LogisticsPartner? @relation(fields: [logisticsPartnerId], references: [id])
+  // Self-service booking (farmer requests + pays a flat booking fee,
+  // separate from the job price above) — see /logistics booking flow.
+  farmerId           String?
+  bookingFeePaid     Boolean           @default(false)
+  headCount          Int?
+  livestockType      String?
   assignedAt         DateTime?
   pickedUpAt         DateTime?
   deliveredAt        DateTime?
@@ -309,6 +351,8 @@ model DeliveryRequest {
   createdBy          String
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
+
+  payments Payment[]
 
   @@index([status, pickupRegion])
   @@index([payoutId])
@@ -571,6 +615,20 @@ enum CreativePlacement {
   HOMEPAGE
   SHOP
   LISTINGS
+  APP_HOME_BANNER
+  APP_ANNOUNCEMENT
+  WEB_HOMEPAGE
+  WEB_MARKETPLACE
+  EMAIL_HEADER
+  PUSH_NOTIFICATION
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  LIVE
+  PAUSED
+  ENDED
 }
 
 model SponsorCreative {
@@ -588,6 +646,20 @@ model SponsorCreative {
   createdBy   String
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+
+  // Ad Studio fields — headline/subline/CTA/colours/template drive the
+  // live-preview builder at /admin/ad-studio; imageUrl above doubles as
+  // either the sponsor logo or a full background image depending on
+  // `template`. status defaults LIVE so existing rows keep rendering
+  // exactly as they do today (isActive/startDate/endDate already gate them).
+  headline  String?
+  subline   String?
+  ctaText   String?
+  ctaUrl    String?
+  bgColor   String         @default("#1B3A6B")
+  textColor String         @default("#FFFFFF")
+  template  String         @default("banner-classic")
+  status    CampaignStatus @default(LIVE)
 
   @@index([placement, isActive])
 }
@@ -663,6 +735,8 @@ model Invoice {
   sentAt           DateTime?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
+
+  payments Payment[]
 }
 
 model DocumentCounter {
@@ -1073,4 +1147,132 @@ model FarmerTreatment {
   @@index([animalId])
   @@index([farmerId])
   @@index([withdrawalEndDate])
+}
+
+// ─── Commercial system: subscriptions + unified payments ────────────────────
+// These are genuinely new — there was no billing/subscription concept
+// anywhere in the app before this. Existing commercial flows (seller
+// commission, sponsor invoicing, logistics payouts) are extended in place
+// above rather than duplicated; Payment below is what actually gets created
+// and updated by src/lib/payfast/* for every payable action platform-wide.
+
+enum SubStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum Cycle {
+  MONTHLY
+  ANNUAL
+}
+
+model SubscriptionPlan {
+  id           String   @id @default(cuid())
+  key          String   @unique // STARTER ESSENTIAL PROFESSIONAL ENTERPRISE COOP
+  displayName  String
+  monthlyPrice Decimal  @db.Decimal(10, 2)
+  annualPrice  Decimal  @db.Decimal(10, 2)
+  maxAnimals   Int?
+  maxUsers     Int?
+  maxFarms     Int      @default(1)
+  features     Json
+  isPopular    Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id               String    @id @default(cuid())
+  userId           String
+  planId           String
+  status           SubStatus @default(TRIAL)
+  billingCycle     Cycle     @default(MONTHLY)
+  currentPeriodEnd DateTime
+  trialEndsAt      DateTime?
+  cancelledAt      DateTime?
+  payfastToken     String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan     SubscriptionPlan @relation(fields: [planId], references: [id])
+  payments Payment[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum PaymentType {
+  SUBSCRIPTION
+  STORE_ORDER
+  LISTING_FEE
+  TRANSPORT_BOOKING
+  SPONSORSHIP
+  VENDOR_REG
+}
+
+enum PayStatus {
+  PENDING
+  COMPLETE
+  FAILED
+  REFUNDED
+}
+
+// Unified payment ledger — every PayFast redirect creates one of these first
+// (status PENDING), and the ITN webhook (src/app/api/payfast/notify) updates
+// it to COMPLETE/FAILED and routes to the right downstream entity based on
+// paymentType. Existing entities (Order, Invoice, SellerPayout, etc.) keep
+// their own status/paymentReference fields for their own display purposes;
+// this table is the cross-cutting record of the payment attempt itself.
+model Payment {
+  id             String      @id @default(cuid())
+  userId         String?
+  amount         Decimal     @db.Decimal(10, 2)
+  paymentType    PaymentType
+  status         PayStatus   @default(PENDING)
+  payfastId      String?
+  reference      String      @unique
+  subscriptionId String?
+  orderId        String?
+  listingId      String?
+  deliveryRequestId String?
+  invoiceId      String?
+  sellerId       String?
+  metadata       Json?
+  paidAt         DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  user            User?             @relation(fields: [userId], references: [id])
+  subscription    Subscription?     @relation(fields: [subscriptionId], references: [id])
+  order           Order?            @relation(fields: [orderId], references: [id])
+  listing         Listing?          @relation(fields: [listingId], references: [id])
+  deliveryRequest DeliveryRequest?  @relation(fields: [deliveryRequestId], references: [id])
+  invoice         Invoice?          @relation(fields: [invoiceId], references: [id])
+  seller          Seller?           @relation(fields: [sellerId], references: [id])
+
+  @@index([paymentType, status])
+  @@index([userId])
+}
+
+enum FeeKind {
+  FLAT
+  PERCENT
+}
+
+model PlatformFee {
+  id        String   @id @default(cuid())
+  feeKey    String   @unique
+  name      String
+  amount    Decimal  @db.Decimal(10, 2)
+  feeType   FeeKind
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
 }

@@ -20,6 +20,30 @@ export default function SellerRegistrationPage() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-8">
+        {/* Pricing */}
+        <div className="mb-10 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl border border-[#e4ebf5] bg-white p-5 text-center shadow-lg">
+            <p className="text-xs font-bold uppercase tracking-wide text-[#5d7497]">
+              One-Time Registration
+            </p>
+            <p className="mt-1 text-2xl font-black text-[#1B3A6B]">R500</p>
+          </div>
+          <div className="rounded-2xl border border-[#e4ebf5] bg-white p-5 text-center shadow-lg">
+            <p className="text-xs font-bold uppercase tracking-wide text-[#5d7497]">
+              Storefront Plan
+            </p>
+            <p className="mt-1 text-2xl font-black text-[#1B3A6B]">R299 – R499/mo</p>
+            <p className="mt-1 text-xs text-[#9aabb9]">Basic (20 products) or Unlimited</p>
+          </div>
+          <div className="rounded-2xl border border-[#e4ebf5] bg-white p-5 text-center shadow-lg">
+            <p className="text-xs font-bold uppercase tracking-wide text-[#5d7497]">
+              Sale Commission
+            </p>
+            <p className="mt-1 text-2xl font-black text-[#1B3A6B]">5%</p>
+            <p className="mt-1 text-xs text-[#9aabb9]">Only on completed sales</p>
+          </div>
+        </div>
+
         <div className="grid gap-10 md:grid-cols-[1.5fr_1fr]">
           {/* Form */}
           <div className="rounded-2xl border border-[#e4ebf5] bg-white p-8 shadow-xl">
