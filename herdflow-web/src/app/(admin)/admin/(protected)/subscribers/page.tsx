@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { Card, CardHeader, StatCard } from "@/components/admin/Card";
 import { Table, Thead, Tbody, Tr, Th, Td } from "@/components/admin/Table";
 import { TableEmptyRow } from "@/components/admin/EmptyState";
@@ -24,17 +24,19 @@ export default async function AdminSubscribersPage({
   const page = Math.max(1, Number.parseInt(params.page || "1", 10) || 1);
 
   const [total, subscriptions, statusCounts] = await Promise.all([
-    prisma.subscription.count(),
-    prisma.subscription.findMany({
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      include: {
-        user: { select: { fullName: true, email: true } },
-        plan: { select: { displayName: true } },
-      },
-    }),
-    prisma.subscription.groupBy({ by: ["status"], _count: { _all: true } }),
+    withAdminContext((tx) => tx.subscription.count()),
+    withAdminContext((tx) =>
+      tx.subscription.findMany({
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+        include: {
+          user: { select: { fullName: true, email: true } },
+          plan: { select: { displayName: true } },
+        },
+      }),
+    ),
+    withAdminContext((tx) => tx.subscription.groupBy({ by: ["status"], _count: { _all: true } })),
   ]);
 
   const countByStatus = Object.fromEntries(statusCounts.map((s) => [s.status, s._count._all]));

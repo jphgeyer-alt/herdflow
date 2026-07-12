@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 function readOrderNumber(url: URL) {
   return (
@@ -16,10 +16,13 @@ export async function GET(request: Request) {
 
   if (orderNumber) {
     try {
-      await prisma.order.update({
-        where: { orderNumber },
-        data: { status: "CANCELLED" },
-      });
+      // Order has FORCE ROW LEVEL SECURITY — see payfast/return/route.ts.
+      await withAdminContext((tx) =>
+        tx.order.update({
+          where: { orderNumber },
+          data: { status: "CANCELLED" },
+        }),
+      );
     } catch {
       // Keep redirect flow even if order update fails.
     }

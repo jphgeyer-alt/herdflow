@@ -586,3 +586,237 @@ Manage your plan: ${billingUrl}
 
   await sendEmail({ to, subject: `Your HerdFlow trial ends in 7 days`, html, text });
 }
+
+export async function sendLeadToPartnerEmail(opts: {
+  to: string;
+  partnerName: string;
+  categoryName: string;
+  leadName: string;
+  leadPhone: string;
+  leadEmail?: string;
+  province: string;
+  farmName?: string;
+  amountLabel?: string;
+  message?: string;
+}): Promise<void> {
+  const { to, partnerName, categoryName, leadName, leadPhone, leadEmail, province, farmName, amountLabel, message } =
+    opts;
+
+  const html = documentEmailHtml({
+    heading: `New ${categoryName} Lead`,
+    greetingName: partnerName,
+    bodyLines: [
+      `A HerdFlow farmer has requested a quote for <strong>${categoryName}</strong>.`,
+      `Name: ${leadName}<br>Phone: ${leadPhone}${leadEmail ? `<br>Email: ${leadEmail}` : ""}<br>Province: ${province}${farmName ? `<br>Farm: ${farmName}` : ""}`,
+      message ? `Message: ${message}` : "",
+    ].filter(Boolean),
+    amountLabel: amountLabel || "",
+    viewUrl: "https://www.herdflow.co.za/admin/leads",
+    buttonLabel: "View in HerdFlow",
+  });
+
+  const text = `New ${categoryName} Lead
+
+Hi ${partnerName},
+
+A HerdFlow farmer has requested a quote for ${categoryName}.
+
+Name: ${leadName}
+Phone: ${leadPhone}
+${leadEmail ? `Email: ${leadEmail}\n` : ""}Province: ${province}
+${farmName ? `Farm: ${farmName}\n` : ""}${message ? `Message: ${message}\n` : ""}
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `New ${categoryName} Lead — ${leadName}`, html, text });
+}
+
+export async function sendLeadConfirmationEmail(opts: {
+  to: string;
+  leadName: string;
+  categoryName: string;
+  partnerName: string;
+}): Promise<void> {
+  const { to, leadName, categoryName, partnerName } = opts;
+
+  const html = documentEmailHtml({
+    heading: "Quote Request Received",
+    greetingName: leadName,
+    bodyLines: [
+      `Thanks for your ${categoryName} quote request. We've referred your details to <strong>${partnerName}</strong>, an independent provider, who will contact you directly.`,
+      `HerdFlow is not a Financial Services Provider and does not provide financial advice or intermediary services. HerdFlow may receive a referral fee from partners.`,
+    ],
+    amountLabel: "",
+    viewUrl: "https://www.herdflow.co.za/finance",
+    buttonLabel: "Back to Farm Finance",
+  });
+
+  const text = `Quote Request Received
+
+Hi ${leadName},
+
+Thanks for your ${categoryName} quote request. We've referred your details to ${partnerName}, an independent provider, who will contact you directly.
+
+HerdFlow is not a Financial Services Provider and does not provide financial advice or intermediary services. HerdFlow may receive a referral fee from partners.
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `Your ${categoryName} quote request — HerdFlow`, html, text });
+}
+
+export async function sendDigitalProductEmail(opts: {
+  to: string;
+  buyerName: string;
+  productTitle: string;
+  downloadUrl: string;
+  expiresDate: string;
+  maxDownloads: number;
+}): Promise<void> {
+  const { to, buyerName, productTitle, downloadUrl, expiresDate, maxDownloads } = opts;
+
+  const html = documentEmailHtml({
+    heading: "Your Download Is Ready",
+    greetingName: buyerName,
+    bodyLines: [
+      `Thanks for your purchase! <strong>${productTitle}</strong> is ready to download.`,
+      `This link works up to ${maxDownloads} times and expires on <strong>${expiresDate}</strong>.`,
+    ],
+    amountLabel: "",
+    viewUrl: downloadUrl,
+    buttonLabel: "Download Now",
+  });
+
+  const text = `Your Download Is Ready
+
+Hi ${buyerName},
+
+Thanks for your purchase! ${productTitle} is ready to download.
+This link works up to ${maxDownloads} times and expires on ${expiresDate}.
+
+Download here: ${downloadUrl}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: `Your HerdFlow download: ${productTitle}`, html, text });
+}
+
+export async function sendDirectoryPaymentEmail(opts: {
+  to: string;
+  businessName: string;
+  planLabel: string;
+  amountLabel: string;
+  payUrl: string;
+}): Promise<void> {
+  const { to, businessName, planLabel, amountLabel, payUrl } = opts;
+
+  const html = documentEmailHtml({
+    heading: "You're Approved — Activate Your Listing",
+    greetingName: businessName,
+    bodyLines: [
+      `Great news — your Services Directory application has been approved.`,
+      `To go live, please set up your <strong>${planLabel}</strong> monthly subscription below. This will bill automatically each month until cancelled.`,
+    ],
+    amountLabel: `${amountLabel} / month`,
+    viewUrl: payUrl,
+    buttonLabel: "Activate My Listing",
+  });
+
+  const text = `You're Approved — Activate Your Listing
+
+Hi ${businessName},
+
+Your Services Directory application has been approved.
+To go live, set up your ${planLabel} monthly subscription: ${amountLabel} / month
+
+Activate here: ${payUrl}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: "You're approved — activate your HerdFlow Directory listing", html, text });
+}
+
+export async function sendWeeklyMarketPriceEmail(opts: {
+  to: string;
+  farmerName: string;
+  prices: {
+    beef: { a23: number; b23: number; c23: number; weanerCalves: number; unit: string };
+    mutton: { a23: number; b23: number; c23: number; feederLamb: number; unit: string };
+    feed: { safexMaize: number; unit: string };
+  };
+  sponsor?: { name: string; imageUrl: string; linkUrl: string } | null;
+  unsubscribeNote: string;
+}): Promise<void> {
+  const { to, farmerName, prices, sponsor, unsubscribeNote } = opts;
+
+  const priceRows = `
+    <tr><td style="padding:6px 0;color:#5d7497;font-size:13px;">Beef A23 / B23 / C23</td><td style="padding:6px 0;text-align:right;font-weight:bold;color:#244367;font-size:13px;">R${prices.beef.a23} / R${prices.beef.b23} / R${prices.beef.c23}</td></tr>
+    <tr><td style="padding:6px 0;color:#5d7497;font-size:13px;">Weaner Calves</td><td style="padding:6px 0;text-align:right;font-weight:bold;color:#244367;font-size:13px;">R${prices.beef.weanerCalves}</td></tr>
+    <tr><td style="padding:6px 0;color:#5d7497;font-size:13px;">Mutton A23 / B23 / C23</td><td style="padding:6px 0;text-align:right;font-weight:bold;color:#244367;font-size:13px;">R${prices.mutton.a23} / R${prices.mutton.b23} / R${prices.mutton.c23}</td></tr>
+    <tr><td style="padding:6px 0;color:#5d7497;font-size:13px;">Feeder Lamb</td><td style="padding:6px 0;text-align:right;font-weight:bold;color:#244367;font-size:13px;">R${prices.mutton.feederLamb}</td></tr>
+    <tr><td style="padding:6px 0;color:#5d7497;font-size:13px;">SAFEX Maize</td><td style="padding:6px 0;text-align:right;font-weight:bold;color:#244367;font-size:13px;">R${prices.feed.safexMaize}/ton</td></tr>
+  `;
+
+  const sponsorBlock = sponsor
+    ? `<tr><td style="padding-top:20px;">
+         <p style="margin:0 0 6px;color:#9aabb9;font-size:10px;text-transform:uppercase;letter-spacing:1px;">In partnership with ${sponsor.name}</p>
+         <a href="${sponsor.linkUrl}"><img src="${sponsor.imageUrl}" alt="${sponsor.name}" style="max-width:100%;border-radius:8px;" /></a>
+       </td></tr>`
+    : "";
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f4ef;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f4ef;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e4ebf5;">
+        <tr>
+          <td style="background:#1B3A6B;padding:28px 32px;text-align:center;">
+            <p style="margin:0;color:#d9c08f;font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;">HerdFlow</p>
+            <h1 style="margin:8px 0 0;color:#ffffff;font-size:24px;font-weight:900;">This Week's Market Prices</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="margin:0 0 16px;color:#244367;font-size:15px;">Hi ${farmerName},</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e4ebf5;padding-top:8px;">
+              ${priceRows}
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0">${sponsorBlock}</table>
+            <p style="margin:20px 0 0;color:#9aabb9;font-size:11px;">${unsubscribeNote}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f5f8fd;padding:20px 32px;border-top:1px solid #e4ebf5;text-align:center;">
+            <p style="margin:0;color:#9aabb9;font-size:11px;">
+              © 2026 HerdFlow — A division of Geyer Holdings<br>
+              North West Province, South Africa
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `This Week's Market Prices
+
+Hi ${farmerName},
+
+Beef A23/B23/C23: R${prices.beef.a23} / R${prices.beef.b23} / R${prices.beef.c23}
+Weaner Calves: R${prices.beef.weanerCalves}
+Mutton A23/B23/C23: R${prices.mutton.a23} / R${prices.mutton.b23} / R${prices.mutton.c23}
+Feeder Lamb: R${prices.mutton.feederLamb}
+SAFEX Maize: R${prices.feed.safexMaize}/ton
+
+${sponsor ? `In partnership with ${sponsor.name}\n\n` : ""}${unsubscribeNote}
+
+— HerdFlow Team
+© 2026 HerdFlow, a division of Geyer Holdings`;
+
+  await sendEmail({ to, subject: "This Week's Market Prices — HerdFlow", html, text });
+}

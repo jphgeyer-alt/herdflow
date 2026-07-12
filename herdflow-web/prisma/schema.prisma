@@ -26,6 +26,7 @@ model User {
   sessions         UserSession[]
   subscriptions    Subscription[]
   payments         Payment[]
+  classifieds      Classified[]
 }
 
 model UserSession {
@@ -609,6 +610,7 @@ model Sponsor {
   quotes           Quote[]
   invoices         Invoice[]
   creatives        SponsorCreative[]
+  emailSponsorships EmailSponsorship[]
 }
 
 enum CreativePlacement {
@@ -660,6 +662,8 @@ model SponsorCreative {
   textColor String         @default("#FFFFFF")
   template  String         @default("banner-classic")
   status    CampaignStatus @default(LIVE)
+
+  emailSponsorships EmailSponsorship[]
 
   @@index([placement, isActive])
 }
@@ -736,7 +740,8 @@ model Invoice {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
-  payments Payment[]
+  payments          Payment[]
+  emailSponsorships EmailSponsorship[]
 }
 
 model DocumentCounter {
@@ -1221,6 +1226,8 @@ enum PaymentType {
   TRANSPORT_BOOKING
   SPONSORSHIP
   VENDOR_REG
+  DIRECTORY_SUBSCRIPTION
+  DIGITAL_PRODUCT
 }
 
 enum PayStatus {
@@ -1250,6 +1257,9 @@ model Payment {
   deliveryRequestId String?
   invoiceId      String?
   sellerId       String?
+  classifiedId       String?
+  directoryListingId String?
+  digitalPurchaseId  String?
   metadata       Json?
   paidAt         DateTime?
   createdAt      DateTime    @default(now())
@@ -1262,6 +1272,9 @@ model Payment {
   deliveryRequest DeliveryRequest?  @relation(fields: [deliveryRequestId], references: [id])
   invoice         Invoice?          @relation(fields: [invoiceId], references: [id])
   seller          Seller?           @relation(fields: [sellerId], references: [id])
+  classified        Classified?        @relation(fields: [classifiedId], references: [id])
+  directoryListing  DirectoryListing?  @relation(fields: [directoryListingId], references: [id])
+  digitalPurchase   DigitalPurchase?   @relation(fields: [digitalPurchaseId], references: [id])
 
   @@index([paymentType, status])
   @@index([userId])
@@ -1280,4 +1293,216 @@ model PlatformFee {
   feeType   FeeKind
   isActive  Boolean  @default(true)
   updatedAt DateTime @updatedAt
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// PASSIVE REVENUE MODULES (6) — see plan "Six passive-revenue modules"
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── MODULE 1: LEAD REFERRALS ──────────────────────────────────────────────
+model LeadCategory {
+  id                  String  @id @default(cuid())
+  key                 String  @unique // AGRI_FINANCE, LIVESTOCK_INSURANCE, ASSET_INSURANCE, EQUIPMENT_FINANCE
+  displayName         String
+  description         String
+  partnerName         String
+  partnerEmail        String
+  externalUrl         String?
+  useExternalRedirect Boolean @default(false)
+  commissionNote      String?
+  isActive            Boolean @default(true)
+
+  leads Lead[]
+}
+
+enum LeadStatus {
+  NEW
+  SENT_TO_PARTNER
+  CONVERTED
+  DECLINED
+  EXPIRED
+}
+
+model Lead {
+  id               String    @id @default(cuid())
+  categoryId       String
+  name             String
+  phone            String
+  email            String?
+  province         String
+  farmName         String?
+  message          String?   @db.Text
+  amountSought     Decimal?  @db.Decimal(12, 2)
+  livestockValue   Decimal?  @db.Decimal(12, 2)
+  status           LeadStatus @default(NEW)
+  sentToPartnerAt  DateTime?
+  outcome          String?
+  commissionEarned Decimal?  @db.Decimal(10, 2)
+  source           String    @default("website")
+  createdAt        DateTime  @default(now())
+
+  category LeadCategory @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId, status])
+  @@index([createdAt])
+}
+
+// ── MODULE 2: EXPANDED CLASSIFIEDS ────────────────────────────────────────
+enum ClassifiedCategory {
+  FARM_EQUIPMENT
+  FARM_JOBS
+  GRAZING_LAND
+  WANTED
+}
+
+model Classified {
+  id              String             @id @default(cuid())
+  posterId        String
+  category        ClassifiedCategory
+  title           String
+  description     String             @db.Text
+  price           Decimal?           @db.Decimal(12, 2)
+  priceType       String             @default("FIXED") // FIXED, NEGOTIABLE, POA
+  province        String
+  town            String?
+  photos          Json
+  contactPhone    String
+  contactWhatsApp String?
+  jobType         String? // PERMANENT, SEASONAL, CONTRACT
+  hectares        Decimal?           @db.Decimal(10, 2)
+  availableFrom   DateTime?
+  tier            ListingTier        @default(BASIC)
+  status          ListingStatus      @default(DRAFT)
+  feePaid         Boolean            @default(false)
+  expiresAt       DateTime?
+  views           Int                @default(0)
+  createdAt       DateTime           @default(now())
+
+  poster   User      @relation(fields: [posterId], references: [id])
+  payments Payment[]
+
+  @@index([category, status])
+  @@index([posterId])
+}
+
+// ── MODULE 3: SERVICES DIRECTORY ──────────────────────────────────────────
+enum DirectoryCategory {
+  VETERINARIAN
+  SHEARER
+  FENCING_CONTRACTOR
+  BOREHOLE_DRILLING
+  AI_TECHNICIAN
+  DIP_SUPPLIER
+  AUCTIONEER
+  FARM_SECURITY
+  MECHANIC
+  OTHER
+}
+
+enum DirectoryPlan {
+  STANDARD
+  PREMIUM
+}
+
+model DirectoryListing {
+  id                 String             @id @default(cuid())
+  businessName       String
+  category           DirectoryCategory
+  contactName        String
+  phone              String
+  email              String?
+  whatsapp           String?
+  provinces          Json
+  description        String             @db.Text
+  logoUrl            String?
+  verified           Boolean            @default(false)
+  plan               DirectoryPlan      @default(STANDARD)
+  status             VerificationStatus @default(PENDING)
+  subscriptionActive Boolean            @default(false)
+  renewsAt           DateTime?
+  views              Int                @default(0)
+  createdAt          DateTime           @default(now())
+
+  payments Payment[]
+
+  @@index([category, status])
+}
+
+// ── MODULE 4: SPONSORED EMAIL/PUSH SLOT ───────────────────────────────────
+enum SponsorSlot {
+  THURSDAY_PRICE_EMAIL
+  PRICE_PUSH_NOTIFICATION
+}
+
+model EmailSponsorship {
+  id         String      @id @default(cuid())
+  sponsorId  String
+  slotType   SponsorSlot
+  weekStart  DateTime // Monday of sponsored week
+  creativeId String? // links to SponsorCreative (Ad Studio)
+  invoiceId  String? // links to the generated Invoice
+  fee        Decimal     @db.Decimal(10, 2)
+  status     PayStatus   @default(PENDING)
+  createdAt  DateTime    @default(now())
+
+  sponsor  Sponsor          @relation(fields: [sponsorId], references: [id])
+  creative SponsorCreative? @relation(fields: [creativeId], references: [id])
+  invoice  Invoice?         @relation(fields: [invoiceId], references: [id])
+
+  @@unique([slotType, weekStart])
+  @@index([weekStart])
+}
+
+// ── MODULE 5: DIGITAL PRODUCTS ────────────────────────────────────────────
+model DigitalProduct {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String   @db.Text
+  price       Decimal  @db.Decimal(10, 2)
+  coverImage  String?
+  fileKey     String // S3 object key — never a public URL
+  fileName    String
+  fileType    String // e.g. "application/pdf"
+  category    String // Templates, Record Books, Contracts, Guides
+  salesCount  Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  purchases DigitalPurchase[]
+}
+
+model DigitalPurchase {
+  id            String    @id @default(cuid())
+  productId     String
+  buyerEmail    String
+  buyerName     String?
+  paymentRef    String    @unique
+  status        PayStatus @default(PENDING)
+  downloadToken String    @unique @default(cuid())
+  downloadCount Int       @default(0)
+  maxDownloads  Int       @default(5)
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+
+  product  DigitalProduct @relation(fields: [productId], references: [id])
+  payments Payment[]
+
+  @@index([downloadToken])
+}
+
+// ── MODULE 6: AFFILIATE LINKS ─────────────────────────────────────────────
+model AffiliateLink {
+  id         String   @id @default(cuid())
+  name       String
+  network    String?
+  targetUrl  String
+  placement  String // BLOG, FOOTER, RESOURCES_PAGE, EMPTY_AD_SLOT
+  imageUrl   String?
+  clicks     Int      @default(0)
+  isActive   Boolean  @default(true)
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  @@index([placement, isActive])
 }

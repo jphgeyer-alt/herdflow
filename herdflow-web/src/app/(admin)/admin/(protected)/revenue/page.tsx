@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { formatRand } from "@/lib/marketing/format";
 import { Card, CardHeader, StatCard } from "@/components/admin/Card";
 import { Table, Thead, Tbody, Tr, Th, Td } from "@/components/admin/Table";
@@ -23,24 +23,32 @@ export default async function AdminRevenuePage() {
   monthStart.setHours(0, 0, 0, 0);
 
   const [activeSubs, streamTotals, monthTotals, allTimeAgg] = await Promise.all([
-    prisma.subscription.findMany({
-      where: { status: "ACTIVE" },
-      select: { billingCycle: true, plan: { select: { monthlyPrice: true, annualPrice: true } } },
-    }),
-    prisma.payment.groupBy({
-      by: ["paymentType"],
-      where: { status: "COMPLETE" },
-      _sum: { amount: true },
-      _count: { _all: true },
-    }),
-    prisma.payment.aggregate({
-      where: { status: "COMPLETE", paidAt: { gte: monthStart } },
-      _sum: { amount: true },
-    }),
-    prisma.payment.aggregate({
-      where: { status: "COMPLETE" },
-      _sum: { amount: true },
-    }),
+    withAdminContext((tx) =>
+      tx.subscription.findMany({
+        where: { status: "ACTIVE" },
+        select: { billingCycle: true, plan: { select: { monthlyPrice: true, annualPrice: true } } },
+      }),
+    ),
+    withAdminContext((tx) =>
+      tx.payment.groupBy({
+        by: ["paymentType"],
+        where: { status: "COMPLETE" },
+        _sum: { amount: true },
+        _count: { _all: true },
+      }),
+    ),
+    withAdminContext((tx) =>
+      tx.payment.aggregate({
+        where: { status: "COMPLETE", paidAt: { gte: monthStart } },
+        _sum: { amount: true },
+      }),
+    ),
+    withAdminContext((tx) =>
+      tx.payment.aggregate({
+        where: { status: "COMPLETE" },
+        _sum: { amount: true },
+      }),
+    ),
   ]);
 
   const mrrCents = activeSubs.reduce((sum, s) => {

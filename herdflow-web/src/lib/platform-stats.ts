@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 /**
  * Real, database-backed platform stats for public marketing surfaces
@@ -62,7 +63,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
       prisma.farmerAnimal.count({ where: { isDeleted: false } }),
       prisma.product.count({ where: { isDeleted: false, status: "ACTIVE" } }),
       prisma.auctionSession.count({ where: { status: "CLOSED" } }),
-      prisma.deliveryRequest.count(),
+      withAdminContext((tx) => tx.deliveryRequest.count()),
       prisma.user.count(),
       prisma.seller.count({ where: { status: "APPROVED" } }),
       prisma.logisticsPartner.count({ where: { status: "APPROVED" } }),

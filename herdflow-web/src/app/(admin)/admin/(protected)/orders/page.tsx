@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { Card, CardHeader } from "@/components/admin/Card";
 import { Pagination } from "@/components/admin/Pagination";
 import { OrdersManager } from "./orders-manager";
@@ -10,21 +10,23 @@ const PAGE_SIZE = 25;
 async function getOrders(page: number) {
   try {
     const [total, orders] = await Promise.all([
-      prisma.order.count(),
-      prisma.order.findMany({
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * PAGE_SIZE,
-        take: PAGE_SIZE,
-        include: {
-          user: { select: { fullName: true, email: true } },
-          items: {
-            include: {
-              product: { select: { name: true, slug: true } },
+      withAdminContext((tx) => tx.order.count()),
+      withAdminContext((tx) =>
+        tx.order.findMany({
+          orderBy: { createdAt: "desc" },
+          skip: (page - 1) * PAGE_SIZE,
+          take: PAGE_SIZE,
+          include: {
+            user: { select: { fullName: true, email: true } },
+            items: {
+              include: {
+                product: { select: { name: true, slug: true } },
+              },
             },
+            deliveryRequest: { select: { id: true, status: true } },
           },
-          deliveryRequest: { select: { id: true, status: true } },
-        },
-      }),
+        }),
+      ),
     ]);
 
     return { orders, total };

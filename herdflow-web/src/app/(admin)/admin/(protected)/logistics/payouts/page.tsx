@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { formatRand } from "@/lib/marketing/format";
 import { getLogisticsCommissionRate } from "@/lib/marketplace/commission";
 import { Card, CardHeader, StatCard } from "@/components/admin/Card";
@@ -14,16 +14,20 @@ export default async function LogisticsPayoutsPage() {
 
   const [commissionRate, allTime, thisMonth] = await Promise.all([
     getLogisticsCommissionRate(),
-    prisma.deliveryRequest.aggregate({
-      where: { status: "DELIVERED" },
-      _sum: { commissionCents: true },
-      _count: { _all: true },
-    }),
-    prisma.deliveryRequest.aggregate({
-      where: { status: "DELIVERED", deliveredAt: { gte: monthStart } },
-      _sum: { commissionCents: true },
-      _count: { _all: true },
-    }),
+    withAdminContext((tx) =>
+      tx.deliveryRequest.aggregate({
+        where: { status: "DELIVERED" },
+        _sum: { commissionCents: true },
+        _count: { _all: true },
+      }),
+    ),
+    withAdminContext((tx) =>
+      tx.deliveryRequest.aggregate({
+        where: { status: "DELIVERED", deliveredAt: { gte: monthStart } },
+        _sum: { commissionCents: true },
+        _count: { _all: true },
+      }),
+    ),
   ]);
 
   return (

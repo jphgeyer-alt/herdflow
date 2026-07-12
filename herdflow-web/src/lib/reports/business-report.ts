@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { getCommissionRate } from "@/lib/marketplace/commission";
 
 const PAID_ORDER_STATUSES = ["PAID", "PROCESSING", "SHIPPED", "COMPLETED"] as const;
@@ -59,16 +60,22 @@ export async function getBusinessReportData(): Promise<BusinessReportData> {
     // data via the `.has(key)` guard, so totals and monthly rows stay
     // consistent with each other.
     const [paidOrders, topSellerRows, livestockSales, paidInvoices, expenses] = await Promise.all([
-      prisma.order.findMany({
-        where: { status: { in: [...PAID_ORDER_STATUSES] } },
-        select: { totalCents: true, createdAt: true },
-        orderBy: { createdAt: "asc" },
-      }),
-      prisma.orderItem.groupBy({
-        by: ["productId"],
-        where: { order: { status: { in: [...PAID_ORDER_STATUSES] } } },
-        _sum: { lineTotalCents: true },
-      }),
+      // Order has FORCE ROW LEVEL SECURITY; orderItem.groupBy below filters
+      // through a relation into Order too, which is equally subject to it.
+      withAdminContext((tx) =>
+        tx.order.findMany({
+          where: { status: { in: [...PAID_ORDER_STATUSES] } },
+          select: { totalCents: true, createdAt: true },
+          orderBy: { createdAt: "asc" },
+        }),
+      ),
+      withAdminContext((tx) =>
+        tx.orderItem.groupBy({
+          by: ["productId"],
+          where: { order: { status: { in: [...PAID_ORDER_STATUSES] } } },
+          _sum: { lineTotalCents: true },
+        }),
+      ),
       prisma.listing.findMany({
         where: { status: "SOLD" },
         select: { id: true, priceCents: true, seller: { select: { farmName: true } } },

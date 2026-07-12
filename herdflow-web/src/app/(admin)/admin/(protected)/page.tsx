@@ -9,6 +9,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { getBusinessReportData, monthKey } from "@/lib/reports/business-report";
 import { Card, CardHeader, StatCard } from "@/components/admin/Card";
 import { BarChart } from "@/components/admin/BarChart";
@@ -31,20 +32,29 @@ async function getOpsData() {
   try {
     const [pendingSellerPayout, pendingLogisticsPayout, openDeliveryRequests, recentOrders] =
       await Promise.all([
-        prisma.orderItem.aggregate({
-          where: { payoutId: null, order: { status: { in: [...PAID_ORDER_STATUSES] } } },
-          _sum: { lineTotalCents: true, commissionCents: true },
-        }),
-        prisma.deliveryRequest.aggregate({
-          where: { payoutId: null, status: "DELIVERED" },
-          _sum: { priceCents: true, commissionCents: true },
-        }),
-        prisma.deliveryRequest.count({ where: { status: "OPEN" } }),
-        prisma.order.findMany({
-          orderBy: { createdAt: "desc" },
-          take: 6,
-          select: { orderNumber: true, totalCents: true, status: true, createdAt: true },
-        }),
+        // OrderItem itself isn't RLS-protected, but this filters through a
+        // relation to Order (which is FORCE RLS) — the join predicate is
+        // silently excluded without bypass context too.
+        withAdminContext((tx) =>
+          tx.orderItem.aggregate({
+            where: { payoutId: null, order: { status: { in: [...PAID_ORDER_STATUSES] } } },
+            _sum: { lineTotalCents: true, commissionCents: true },
+          }),
+        ),
+        withAdminContext((tx) =>
+          tx.deliveryRequest.aggregate({
+            where: { payoutId: null, status: "DELIVERED" },
+            _sum: { priceCents: true, commissionCents: true },
+          }),
+        ),
+        withAdminContext((tx) => tx.deliveryRequest.count({ where: { status: "OPEN" } })),
+        withAdminContext((tx) =>
+          tx.order.findMany({
+            orderBy: { createdAt: "desc" },
+            take: 6,
+            select: { orderNumber: true, totalCents: true, status: true, createdAt: true },
+          }),
+        ),
       ]);
 
     const pendingSellerPayoutCents =

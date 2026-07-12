@@ -2,10 +2,10 @@
 // helper — every payable action (checkout, listing fee, transport booking,
 // vendor registration, subscription, sponsor invoice) follows this same
 // shape, so each wiring route calls this instead of repeating it.
-import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
 import { buildPayFastInitializePayload, getPayFastProcessUrl } from "@/lib/payfast/client";
 import { getPayFastConfig } from "@/lib/payfast/config";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import type { PaymentType, Prisma } from "@prisma/client";
 
 export type InitiatePaymentInput = {
@@ -22,6 +22,9 @@ export type InitiatePaymentInput = {
   invoiceId?: string;
   subscriptionId?: string;
   sellerId?: string;
+  classifiedId?: string;
+  directoryListingId?: string;
+  digitalPurchaseId?: string;
   customerFirstName?: string;
   customerLastName?: string;
   customerEmail?: string;
@@ -60,28 +63,40 @@ export async function initiatePayment(input: InitiatePaymentInput) {
     },
   };
 
-  await prisma.payment.upsert({
-    where: { reference: input.reference },
-    update: {
-      amount: input.amount,
-      status: "PENDING",
-      metadata: metadata as Prisma.InputJsonValue,
-    },
-    create: {
-      reference: input.reference,
-      amount: input.amount,
-      paymentType: input.paymentType,
-      status: "PENDING",
-      userId: input.userId,
-      orderId: input.orderId,
-      listingId: input.listingId,
-      deliveryRequestId: input.deliveryRequestId,
-      invoiceId: input.invoiceId,
-      subscriptionId: input.subscriptionId,
-      sellerId: input.sellerId,
-      metadata: metadata as Prisma.InputJsonValue,
-    },
-  });
+  // Payment rows must be writable regardless of whether this checkout has a
+  // logged-in user (sponsor invoices and digital product purchases are both
+  // guest flows) — RLS on this table is FORCEd, so without this the insert
+  // is silently rejected ("new row violates row-level security policy")
+  // whenever app.current_user_id isn't already set for the current
+  // transaction. The row still stores userId/sellerId/etc. correctly for
+  // later tenant-scoped reads; this only bypasses the check at write time.
+  await withAdminContext((tx) =>
+    tx.payment.upsert({
+      where: { reference: input.reference },
+      update: {
+        amount: input.amount,
+        status: "PENDING",
+        metadata: metadata as Prisma.InputJsonValue,
+      },
+      create: {
+        reference: input.reference,
+        amount: input.amount,
+        paymentType: input.paymentType,
+        status: "PENDING",
+        userId: input.userId,
+        orderId: input.orderId,
+        listingId: input.listingId,
+        deliveryRequestId: input.deliveryRequestId,
+        invoiceId: input.invoiceId,
+        subscriptionId: input.subscriptionId,
+        sellerId: input.sellerId,
+        classifiedId: input.classifiedId,
+        directoryListingId: input.directoryListingId,
+        digitalPurchaseId: input.digitalPurchaseId,
+        metadata: metadata as Prisma.InputJsonValue,
+      },
+    }),
+  );
 
   const fields = buildPayFastInitializePayload(
     {

@@ -3,8 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { getPayFastConfig } from "@/lib/payfast/config";
 import { createPayFastSignature } from "@/lib/payfast/client";
 import { isValidPayFastSourceIp, getRequestIp, confirmWithPayFast } from "@/lib/payfast/security";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { getCommissionRate } from "@/lib/marketplace/commission";
-import { sendSellerSaleNotification, sendOrderConfirmationEmail, sendListingLiveEmail } from "@/lib/email";
+import {
+  sendSellerSaleNotification,
+  sendOrderConfirmationEmail,
+  sendListingLiveEmail,
+  sendDigitalProductEmail,
+} from "@/lib/email";
 import { formatRand } from "@/lib/marketing/format";
 import { env } from "@/lib/env";
 import type { Payment } from "@prisma/client";
@@ -26,7 +32,10 @@ function normalizeItnPayload(params: URLSearchParams) {
 async function completeStoreOrder(orderId: string) {
   const commissionRate = await getCommissionRate();
 
-  const order = await prisma.$transaction(
+  // Order and Product both have FORCE ROW LEVEL SECURITY — this webhook has
+  // no session context, so this must run under withAdminContext or every
+  // write here is silently rejected (42501).
+  const order = await withAdminContext(
     async (tx) => {
       const updated = await tx.order.update({
         where: { id: orderId },
@@ -101,32 +110,40 @@ async function completeStoreOrder(orderId: string) {
 }
 
 async function completeSubscription(subscriptionId: string, payment: Payment) {
-  const subscription = await prisma.subscription.findUnique({
-    where: { id: subscriptionId },
-    include: { plan: true },
-  });
+  // Subscription has FORCE ROW LEVEL SECURITY — see completeStoreOrder.
+  const subscription = await withAdminContext((tx) =>
+    tx.subscription.findUnique({
+      where: { id: subscriptionId },
+      include: { plan: true },
+    }),
+  );
   if (!subscription) return;
 
   const periodDays = subscription.billingCycle === "ANNUAL" ? 365 : 30;
   const currentPeriodEnd = new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000);
 
-  await prisma.subscription.update({
-    where: { id: subscriptionId },
-    data: {
-      status: "ACTIVE",
-      currentPeriodEnd,
-      payfastToken: (payment.metadata as Record<string, unknown> | null)?.token as string | undefined,
-    },
-  });
+  await withAdminContext((tx) =>
+    tx.subscription.update({
+      where: { id: subscriptionId },
+      data: {
+        status: "ACTIVE",
+        currentPeriodEnd,
+        payfastToken: (payment.metadata as Record<string, unknown> | null)?.token as string | undefined,
+      },
+    }),
+  );
 }
 
 async function completeListingFee(listingId: string) {
+  // Listing has FORCE ROW LEVEL SECURITY — see completeStoreOrder.
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-  const listing = await prisma.listing.update({
-    where: { id: listingId },
-    data: { status: "ACTIVE", feePaid: true, expiresAt },
-    include: { seller: { include: { user: { select: { fullName: true, email: true } } } } },
-  });
+  const listing = await withAdminContext((tx) =>
+    tx.listing.update({
+      where: { id: listingId },
+      data: { status: "ACTIVE", feePaid: true, expiresAt },
+      include: { seller: { include: { user: { select: { fullName: true, email: true } } } } },
+    }),
+  );
 
   if (listing.seller.user.email) {
     await sendListingLiveEmail({
@@ -139,10 +156,13 @@ async function completeListingFee(listingId: string) {
 }
 
 async function completeTransportBooking(deliveryRequestId: string) {
-  await prisma.deliveryRequest.update({
-    where: { id: deliveryRequestId },
-    data: { bookingFeePaid: true },
-  });
+  // DeliveryRequest has FORCE ROW LEVEL SECURITY — see completeStoreOrder.
+  await withAdminContext((tx) =>
+    tx.deliveryRequest.update({
+      where: { id: deliveryRequestId },
+      data: { bookingFeePaid: true },
+    }),
+  );
 }
 
 async function completeVendorReg(sellerId: string) {
@@ -159,6 +179,50 @@ async function completeSponsorship(invoiceId: string) {
   });
 }
 
+async function completeClassifiedFee(classifiedId: string) {
+  const classified = await prisma.classified.findUnique({ where: { id: classifiedId } });
+  if (!classified) return;
+  const days = classified.category === "FARM_JOBS" ? 21 : 30;
+  const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  await prisma.classified.update({
+    where: { id: classifiedId },
+    data: { status: "ACTIVE", feePaid: true, expiresAt },
+  });
+}
+
+async function completeDirectorySubscription(directoryListingId: string) {
+  const renewsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  await prisma.directoryListing.update({
+    where: { id: directoryListingId },
+    data: { subscriptionActive: true, status: "APPROVED", renewsAt },
+  });
+}
+
+async function completeDigitalProductPurchase(digitalPurchaseId: string) {
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const purchase = await prisma.$transaction(async (tx) => {
+    const updated = await tx.digitalPurchase.update({
+      where: { id: digitalPurchaseId },
+      data: { status: "COMPLETE", expiresAt },
+      include: { product: true },
+    });
+    await tx.digitalProduct.update({
+      where: { id: updated.productId },
+      data: { salesCount: { increment: 1 } },
+    });
+    return updated;
+  });
+
+  await sendDigitalProductEmail({
+    to: purchase.buyerEmail,
+    buyerName: purchase.buyerName || "there",
+    productTitle: purchase.product.title,
+    downloadUrl: `${env.NEXT_PUBLIC_SITE_URL || ""}/api/downloads/${purchase.downloadToken}`,
+    expiresDate: expiresAt.toLocaleDateString("en-ZA"),
+    maxDownloads: purchase.maxDownloads,
+  }).catch((err) => console.error("Digital product email failed:", err));
+}
+
 // ── Legacy fallback ───────────────────────────────────────────────────────────
 // Orders placed before checkout created a Payment row per attempt (i.e. any
 // order that predates this change) used Order.orderNumber directly as
@@ -166,15 +230,20 @@ async function completeSponsorship(invoiceId: string) {
 // backward-compatibility window — new STORE_ORDER payments always go through
 // the Payment-row path above.
 async function handleLegacyOrderNotify(orderNumber: string, paymentStatus: string, paymentReference: string) {
+  // Order has FORCE ROW LEVEL SECURITY — see completeStoreOrder.
   if (paymentStatus === "COMPLETE") {
-    const order = await prisma.order.findUnique({ where: { orderNumber } });
+    const order = await withAdminContext((tx) => tx.order.findUnique({ where: { orderNumber } }));
     if (!order) return;
-    await prisma.order.update({ where: { orderNumber }, data: { paymentReference } });
+    await withAdminContext((tx) => tx.order.update({ where: { orderNumber }, data: { paymentReference } }));
     await completeStoreOrder(order.id);
   } else if (paymentStatus === "FAILED") {
-    await prisma.order.update({ where: { orderNumber }, data: { status: "FAILED", paymentReference } });
+    await withAdminContext((tx) =>
+      tx.order.update({ where: { orderNumber }, data: { status: "FAILED", paymentReference } }),
+    );
   } else if (paymentStatus === "CANCELLED") {
-    await prisma.order.update({ where: { orderNumber }, data: { status: "CANCELLED", paymentReference } });
+    await withAdminContext((tx) =>
+      tx.order.update({ where: { orderNumber }, data: { status: "CANCELLED", paymentReference } }),
+    );
   }
 }
 
@@ -226,7 +295,12 @@ export async function POST(request: Request) {
   const pfPaymentId = (payload.pf_payment_id || reference).trim();
 
   try {
-    const payment = await prisma.payment.findUnique({ where: { reference } });
+    // The PayFast ITN webhook carries no user session at all — Payment has
+    // FORCE ROW LEVEL SECURITY, so without bypassing RLS here every one of
+    // these queries would silently see zero rows (findUnique returns null
+    // even for a real reference), permanently falling through to the legacy
+    // handler below for every payment type this route was built to support.
+    const payment = await withAdminContext((tx) => tx.payment.findUnique({ where: { reference } }));
 
     if (!payment) {
       await handleLegacyOrderNotify(reference, paymentStatus, pfPaymentId);
@@ -240,10 +314,12 @@ export async function POST(request: Request) {
     }
 
     if (paymentStatus === "COMPLETE") {
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: { status: "COMPLETE", payfastId: pfPaymentId, paidAt: new Date() },
-      });
+      await withAdminContext((tx) =>
+        tx.payment.update({
+          where: { id: payment.id },
+          data: { status: "COMPLETE", payfastId: pfPaymentId, paidAt: new Date() },
+        }),
+      );
 
       switch (payment.paymentType) {
         case "STORE_ORDER":
@@ -253,7 +329,10 @@ export async function POST(request: Request) {
           if (payment.subscriptionId) await completeSubscription(payment.subscriptionId, payment);
           break;
         case "LISTING_FEE":
+          // Shared by real livestock Listings and Classifieds — disambiguated
+          // by which FK the initiating route actually set.
           if (payment.listingId) await completeListingFee(payment.listingId);
+          else if (payment.classifiedId) await completeClassifiedFee(payment.classifiedId);
           break;
         case "TRANSPORT_BOOKING":
           if (payment.deliveryRequestId) await completeTransportBooking(payment.deliveryRequestId);
@@ -264,14 +343,22 @@ export async function POST(request: Request) {
         case "SPONSORSHIP":
           if (payment.invoiceId) await completeSponsorship(payment.invoiceId);
           break;
+        case "DIRECTORY_SUBSCRIPTION":
+          if (payment.directoryListingId) await completeDirectorySubscription(payment.directoryListingId);
+          break;
+        case "DIGITAL_PRODUCT":
+          if (payment.digitalPurchaseId) await completeDigitalProductPurchase(payment.digitalPurchaseId);
+          break;
       }
     } else if (paymentStatus === "FAILED" || paymentStatus === "CANCELLED") {
       // PayStatus has no CANCELLED value — a cancelled attempt is treated
       // the same as FAILED (neither resulted in a completed payment).
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: { status: "FAILED" },
-      });
+      await withAdminContext((tx) =>
+        tx.payment.update({
+          where: { id: payment.id },
+          data: { status: "FAILED" },
+        }),
+      );
     }
 
     return new NextResponse("OK", { status: 200 });
