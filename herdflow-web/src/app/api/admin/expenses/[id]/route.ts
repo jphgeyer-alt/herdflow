@@ -18,8 +18,16 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
-  const { category, description, amountCents, date, notes, isRecurring, recurrenceInterval } =
-    parsed.data;
+  const {
+    category,
+    description,
+    amountCents,
+    date,
+    notes,
+    invoiceNumber,
+    isRecurring,
+    recurrenceInterval,
+  } = parsed.data;
 
   try {
     const expense = await withAdminContext(async (tx) => {
@@ -40,6 +48,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
           ...(amountCents !== undefined && { amountCents }),
           ...(date !== undefined && { date: effectiveDate }),
           ...(notes !== undefined && { notes: notes || null }),
+          ...(invoiceNumber !== undefined && { invoiceNumber: invoiceNumber || null }),
           ...(isRecurring !== undefined && { isRecurring }),
           ...(recurrenceInterval !== undefined && { recurrenceInterval }),
           nextOccurrenceAt:
@@ -64,6 +73,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 export async function DELETE(request: NextRequest, { params }: Params) {
   const admin = await getAdminFromRequest(request);
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (admin.role !== "SUPER_ADMIN") {
+    return NextResponse.json({ error: "Only super admins can delete records." }, { status: 403 });
+  }
 
   const { id } = await params;
 

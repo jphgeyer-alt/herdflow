@@ -44,8 +44,16 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
-  const { category, description, amountCents, date, notes, isRecurring, recurrenceInterval } =
-    parsed.data;
+  const {
+    category,
+    description,
+    amountCents,
+    date,
+    notes,
+    invoiceNumber,
+    isRecurring,
+    recurrenceInterval,
+  } = parsed.data;
 
   try {
     const createdBy = admin.fullName;
@@ -58,6 +66,7 @@ export async function POST(request: NextRequest) {
           amountCents,
           date: parsedDate,
           notes: notes || null,
+          invoiceNumber: invoiceNumber || null,
           createdBy,
           isRecurring: isRecurring ?? false,
           recurrenceInterval: isRecurring ? recurrenceInterval : null,

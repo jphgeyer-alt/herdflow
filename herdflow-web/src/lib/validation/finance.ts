@@ -13,7 +13,9 @@ export const isoDateString = z.string().trim().min(1).refine((v) => !Number.isNa
 export const expenseCategory = z.string().trim().min(1).max(120);
 export const expenseDescription = z.string().trim().min(1).max(500);
 export const expenseNotes = z.string().trim().max(2000).optional();
+export const expenseInvoiceNumber = z.string().trim().max(120).optional();
 export const recurrenceInterval = z.enum(["MONTHLY", "QUARTERLY", "ANNUAL"]);
+export const expenseCategoryName = z.string().trim().min(1).max(120);
 
 export const expenseCreateSchema = z
   .object({
@@ -22,6 +24,7 @@ export const expenseCreateSchema = z
     amountCents: centsAmount,
     date: isoDateString,
     notes: expenseNotes,
+    invoiceNumber: expenseInvoiceNumber,
     isRecurring: z.boolean().optional(),
     recurrenceInterval: recurrenceInterval.optional(),
   })
@@ -39,6 +42,7 @@ export const expenseUpdateSchema = z
     amountCents: centsAmount.optional(),
     date: isoDateString.optional(),
     notes: expenseNotes,
+    invoiceNumber: expenseInvoiceNumber,
     isRecurring: z.boolean().optional(),
     recurrenceInterval: recurrenceInterval.optional(),
   })
@@ -46,3 +50,7 @@ export const expenseUpdateSchema = z
     message: "recurrenceInterval is required when isRecurring is true",
     path: ["recurrenceInterval"],
   });
+
+export const expenseCategoryCreateSchema = z.object({
+  name: expenseCategoryName,
+});

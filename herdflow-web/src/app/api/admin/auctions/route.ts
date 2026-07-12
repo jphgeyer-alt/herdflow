@@ -228,6 +228,9 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (admin.role !== "SUPER_ADMIN") {
+    return NextResponse.json({ error: "Only super admins can delete records." }, { status: 403 });
+  }
 
   const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get("sessionId");
