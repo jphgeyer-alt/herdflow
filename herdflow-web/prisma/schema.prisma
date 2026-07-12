@@ -382,15 +382,16 @@ model SiteConfig {
 }
 
 model Expense {
-  id          String   @id @default(cuid())
-  category    String
-  description String
-  amountCents Int
-  date        DateTime
-  notes       String?
-  createdBy   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  category      String
+  description   String
+  amountCents   Int
+  date          DateTime
+  notes         String?
+  invoiceNumber String?
+  createdBy     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   receiptUrl          String?
   isRecurring         Boolean             @default(false)
@@ -401,6 +402,19 @@ model Expense {
   recurrenceInstances Expense[]           @relation("ExpenseRecurrence")
 
   @@index([date])
+}
+
+// Admin-managed lookup list for Expense.category (kept as free text on
+// Expense itself for backward compatibility with existing rows — this
+// table is the source for the picker, not a foreign key). Global catalog
+// data, admin-only write via application-level checks (SUPER_ADMIN gate in
+// the API route) — same convention as SubscriptionPlan/PlatformFee, no RLS
+// needed since it holds no tenant-scoped or sensitive data.
+model ExpenseCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdBy String
+  createdAt DateTime @default(now())
 }
 
 enum RecurrenceInterval {
