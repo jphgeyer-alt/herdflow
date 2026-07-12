@@ -26,6 +26,7 @@ import {
   BookOpen,
   FileDown,
   Link2,
+  Landmark,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -55,11 +56,20 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     ],
   },
   {
+    label: "Finance",
+    items: [
+      { label: "Finance Overview", href: "/admin/finance", description: "MRR, net profit, cash position, and payables at a glance", icon: Landmark },
+      { label: "Revenue", href: "/admin/revenue", description: "MRR and revenue by stream", icon: TrendingUp },
+      { label: "Seller Payouts", href: "/admin/payouts", description: "Track and settle seller balances", icon: Wallet },
+      { label: "Expenses", href: "/admin/expenses", description: "Business costs and P&L", icon: Receipt },
+      { label: "Reports", href: "/admin/reports", description: "Revenue, commission, seller analytics", icon: BarChart3 },
+    ],
+  },
+  {
     label: "Commerce",
     items: [
       { label: "Pricing", href: "/admin/pricing", description: "Subscription plans and platform fees", icon: DollarSign },
       { label: "Subscribers", href: "/admin/subscribers", description: "Active and trial subscriptions", icon: UserCog },
-      { label: "Revenue", href: "/admin/revenue", description: "MRR and revenue by stream", icon: TrendingUp },
     ],
   },
   {
@@ -77,14 +87,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: "Partners", href: "/admin/logistics", description: "Logistics partner approvals", icon: Truck },
       { label: "Delivery Requests", href: "/admin/logistics/requests", description: "Delivery job board", icon: ClipboardList },
       { label: "Logistics Payouts", href: "/admin/logistics/payouts", description: "Settle partner earnings", icon: Wallet },
-    ],
-  },
-  {
-    label: "Finance",
-    items: [
-      { label: "Seller Payouts", href: "/admin/payouts", description: "Track and settle seller balances", icon: Wallet },
-      { label: "Expenses", href: "/admin/expenses", description: "Business costs and P&L", icon: Receipt },
-      { label: "Reports", href: "/admin/reports", description: "Revenue, commission, seller analytics", icon: BarChart3 },
     ],
   },
   {

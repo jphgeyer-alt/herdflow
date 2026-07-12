@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { withAdminContext } from "@/lib/tenant-prisma";
 import { getNextDocumentNumber } from "@/lib/document-number";
 import { sendPayoutRemittanceEmail } from "@/lib/email";
-import { formatRand } from "@/lib/marketing/format";
+import { centsToRand, randToCents, formatCents } from "@/lib/money";
 
 const MIN_PAYOUT_CENTS = 10000; // R100
 
@@ -64,7 +64,7 @@ export async function releaseFunds(): Promise<{ released: number; totalCents: nu
   for (const [sellerId, cents] of bySeller.entries()) {
     await prisma.seller.update({
       where: { id: sellerId },
-      data: { balance: { increment: cents / 100 } },
+      data: { balance: { increment: centsToRand(cents) } },
     });
   }
 
@@ -112,7 +112,10 @@ export async function confirmOrderReceived(orderId: string): Promise<void> {
   }
 
   for (const [sellerId, cents] of bySeller.entries()) {
-    await prisma.seller.update({ where: { id: sellerId }, data: { balance: { increment: cents / 100 } } });
+    await prisma.seller.update({
+      where: { id: sellerId },
+      data: { balance: { increment: centsToRand(cents) } },
+    });
   }
 }
 
@@ -133,7 +136,7 @@ export async function createSellerPayout(
   });
   if (!seller) return null;
 
-  const amountCents = Math.round(Number(seller.balance) * 100);
+  const amountCents = randToCents(Number(seller.balance));
   if (amountCents < MIN_PAYOUT_CENTS) return null;
 
   const releasedItems = await prisma.orderItem.findMany({
@@ -169,7 +172,7 @@ export async function createPayoutBatch(
   createdBy: string,
 ): Promise<{ payouts: number; csv: string }> {
   const sellers = await prisma.seller.findMany({
-    where: { balance: { gte: MIN_PAYOUT_CENTS / 100 } },
+    where: { balance: { gte: centsToRand(MIN_PAYOUT_CENTS) } },
     select: {
       id: true,
       farmName: true,
@@ -194,7 +197,7 @@ export async function createPayoutBatch(
         seller.bankName || "",
         seller.accountNumber || "",
         seller.branchCode || "",
-        (payout.amountCents / 100).toFixed(2),
+        centsToRand(payout.amountCents).toFixed(2),
         payout.number,
       ]
         .map((v) => `"${String(v).replace(/"/g, '""')}"`)
@@ -222,7 +225,7 @@ export async function markPayoutPaid(payoutId: string, paymentReference?: string
       to: payout.seller.user.email,
       sellerName: payout.seller.farmName,
       payoutNumber: payout.number,
-      amountLabel: formatRand(payout.amountCents / 100),
+      amountLabel: formatCents(payout.amountCents),
       paidDate: new Date().toLocaleDateString("en-ZA"),
     }).catch((err) => console.error("Payout remittance email failed:", err));
   }

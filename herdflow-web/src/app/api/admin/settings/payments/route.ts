@@ -10,6 +10,8 @@ const KEYS = [
   "payfast_passphrase",
   "commission_rate",
   "logistics_commission_rate",
+  "vat_enabled",
+  "vat_rate",
 ] as const;
 
 export async function GET(request: NextRequest) {

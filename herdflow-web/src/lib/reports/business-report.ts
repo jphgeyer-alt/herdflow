@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { withAdminContext } from "@/lib/tenant-prisma";
-import { getCommissionRate } from "@/lib/marketplace/commission";
+import { getCommissionRate, getVatConfig, calculateVatCents } from "@/lib/marketplace/commission";
+import { randToCents } from "@/lib/money";
 
 const PAID_ORDER_STATUSES = ["PAID", "PROCESSING", "SHIPPED", "COMPLETED"] as const;
 
@@ -38,6 +39,8 @@ const EMPTY_REPORT = {
     expenseCents: number;
     netProfitCents: number;
   }[],
+  vatEnabled: false,
+  vatCollectedCents: 0,
 };
 
 export type BusinessReportData = typeof EMPTY_REPORT;
@@ -51,7 +54,7 @@ export type BusinessReportData = typeof EMPTY_REPORT;
  */
 export async function getBusinessReportData(): Promise<BusinessReportData> {
   try {
-    const commissionRate = await getCommissionRate();
+    const [commissionRate, vatConfig] = await Promise.all([getCommissionRate(), getVatConfig()]);
     const months = lastNMonths(12);
 
     // All-time totals, matching the existing totalCommissionCents/
@@ -59,7 +62,7 @@ export async function getBusinessReportData(): Promise<BusinessReportData> {
     // below naturally only surface the last-12-months slice of the same
     // data via the `.has(key)` guard, so totals and monthly rows stay
     // consistent with each other.
-    const [paidOrders, topSellerRows, livestockSales, paidInvoices, expenses] = await Promise.all([
+    const [paidOrders, topSellerRows, livestockSales, paidInvoices, expenses, vatPayments] = await Promise.all([
       // Order has FORCE ROW LEVEL SECURITY; orderItem.groupBy below filters
       // through a relation into Order too, which is equally subject to it.
       withAdminContext((tx) =>
@@ -84,9 +87,24 @@ export async function getBusinessReportData(): Promise<BusinessReportData> {
         where: { status: "PAID" },
         select: { amount: true, paidAt: true },
       }),
-      prisma.expense.findMany({
-        select: { category: true, amountCents: true, date: true },
-      }),
+      // Expense has FORCE ROW LEVEL SECURITY (admin-only, no tenant column —
+      // see the RLS migration comment) — must go through withAdminContext.
+      withAdminContext((tx) =>
+        tx.expense.findMany({
+          select: { category: true, amountCents: true, date: true },
+        }),
+      ),
+      // Only rows with vatRateBps set contribute — historical/untracked
+      // payments (vatRateBps null) are silently excluded rather than
+      // treated as 0% VAT, so nothing changes retroactively when the
+      // vat_enabled toggle flips on. Skip the query entirely while VAT is
+      // off, since nothing would use the result.
+      vatConfig.enabled
+        ? prisma.payment.findMany({
+            where: { status: "COMPLETE", vatRateBps: { not: null } },
+            select: { amount: true, vatRateBps: true, vatInclusive: true },
+          })
+        : Promise.resolve([]),
     ]);
 
     // Gross marketplace volume by month (sellers' money passing through,
@@ -133,10 +151,24 @@ export async function getBusinessReportData(): Promise<BusinessReportData> {
     const totalCommissionCents = productCommissionCents + livestockCommissionCents;
 
     // P&L: HerdFlow's actual income is commission + sponsorship revenue,
-    // never the gross order volume above.
-    const marketingRevenueCents = paidInvoices.reduce((sum, i) => sum + Number(i.amount), 0);
+    // never the gross order volume above. Invoice.amount is a Decimal Rand
+    // column (the admin invoice form is literally labeled "Amount (R)"),
+    // unlike every other *Cents figure here — randToCents converts it so
+    // this sum isn't silently off by 100x against totalCommissionCents/
+    // expensesCents below.
+    const marketingRevenueCents = paidInvoices.reduce(
+      (sum, i) => sum + randToCents(Number(i.amount)),
+      0,
+    );
     const expensesCents = expenses.reduce((sum, e) => sum + e.amountCents, 0);
     const netProfitCents = totalCommissionCents + marketingRevenueCents - expensesCents;
+
+    // VAT collected is informational only — it's the tax portion of revenue
+    // already counted above, not added to or subtracted from net profit.
+    const vatCollectedCents = vatPayments.reduce(
+      (sum, p) => sum + calculateVatCents(Number(p.amount), p.vatRateBps, p.vatInclusive),
+      0,
+    );
 
     const categoryMap = new Map<string, number>();
     for (const e of expenses) {
@@ -155,7 +187,7 @@ export async function getBusinessReportData(): Promise<BusinessReportData> {
       if (!inv.paidAt) continue;
       const key = monthKey(new Date(inv.paidAt));
       if (marketingBuckets.has(key)) {
-        marketingBuckets.set(key, (marketingBuckets.get(key) ?? 0) + Number(inv.amount));
+        marketingBuckets.set(key, (marketingBuckets.get(key) ?? 0) + randToCents(Number(inv.amount)));
       }
     }
     const expenseBuckets = new Map<string, number>(months.map((m) => [m, 0]));
@@ -192,6 +224,8 @@ export async function getBusinessReportData(): Promise<BusinessReportData> {
       netProfitCents,
       expensesByCategory,
       monthlyPnl,
+      vatEnabled: vatConfig.enabled,
+      vatCollectedCents,
     };
   } catch (err) {
     console.error("getBusinessReportData error:", err);
