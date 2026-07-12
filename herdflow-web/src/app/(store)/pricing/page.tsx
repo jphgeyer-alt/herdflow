@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "HerdFlow subscription plans and marketplace fees — herd management, selling, transport and sponsorship.",
 };
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 const FEE_GROUPS: { title: string; keys: string[] }[] = [
   {

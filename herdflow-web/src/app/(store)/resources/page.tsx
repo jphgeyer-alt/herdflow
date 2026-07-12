@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Templates, record books, contracts, and guides for South African farmers.",
 };
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function ResourcesPage() {
   const products = await prisma.digitalProduct.findMany({
