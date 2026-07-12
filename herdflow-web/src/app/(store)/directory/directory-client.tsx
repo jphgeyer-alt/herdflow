@@ -230,13 +230,17 @@ export function DirectoryClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
     const qs = activeCat ? `?category=${activeCat}` : "";
     fetch(`/api/directory${qs}`)
       .then((r) => r.json())
       .then((d) => setListings(d.listings || []))
       .finally(() => setLoading(false));
   }, [activeCat]);
+
+  function selectCategory(value: string | null) {
+    setActiveCat(value);
+    setLoading(true);
+  }
 
   if (applying) {
     return <ApplicationForm onDone={() => setApplying(false)} />;
@@ -248,7 +252,7 @@ export function DirectoryClient() {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setActiveCat(null)}
+            onClick={() => selectCategory(null)}
             className={`rounded-full px-4 py-2 text-sm font-bold transition ${
               activeCat === null ? "bg-[#1B3A6B] text-white" : "border border-[#cdd8e7] bg-white text-[#5d7497]"
             }`}
@@ -259,7 +263,7 @@ export function DirectoryClient() {
             <button
               key={c.value}
               type="button"
-              onClick={() => setActiveCat(c.value)}
+              onClick={() => selectCategory(c.value)}
               className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition ${
                 activeCat === c.value ? "bg-[#1B3A6B] text-white" : "border border-[#cdd8e7] bg-white text-[#5d7497]"
               }`}

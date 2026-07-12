@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 
 type Plan = {
@@ -16,6 +17,7 @@ type Plan = {
 };
 
 export function PricingClient({ plans }: { plans: Plan[] }) {
+  const router = useRouter();
   const [annual, setAnnual] = useState(false);
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -46,13 +48,13 @@ export function PricingClient({ plans }: { plans: Plan[] }) {
       });
       const data = await res.json();
       if (res.status === 401) {
-        window.location.href = "/auth/login?next=/pricing";
+        router.push("/auth/login?next=/pricing");
         return;
       }
       if (res.ok && data.payment) {
         submitToPayFast(data.payment.processUrl, data.payment.fields);
       } else if (res.ok) {
-        window.location.href = "/dashboard/seller";
+        router.push("/dashboard/seller");
       } else {
         setError(data.error || "Failed to start subscription.");
         setLoadingKey(null);

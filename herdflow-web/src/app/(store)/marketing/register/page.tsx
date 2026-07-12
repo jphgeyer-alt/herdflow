@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -83,16 +83,13 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState<FormData>({ ...EMPTY_FORM });
+  const [form, setForm] = useState<FormData>(() => ({
+    ...EMPTY_FORM,
+    package: searchParams.get("package") || "",
+  }));
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-
-  // Pre-select package from URL
-  useEffect(() => {
-    const pkg = searchParams.get("package");
-    if (pkg) setForm((f) => ({ ...f, package: pkg }));
-  }, [searchParams]);
 
   function set(field: keyof FormData, value: unknown) {
     setForm((f) => ({ ...f, [field]: value }));

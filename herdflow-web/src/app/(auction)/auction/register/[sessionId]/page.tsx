@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   CheckCircle,
@@ -67,12 +67,10 @@ Any disputes regarding lots must be raised within 24 hours of the auction closin
 
 export default function AuctionRegisterPage() {
   const params = useParams();
-  const router = useRouter();
   const sessionId = params.sessionId as string;
 
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [existing, setExisting] = useState<Registration | null>(null);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<Registration | null>(null);

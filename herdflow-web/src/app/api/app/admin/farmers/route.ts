@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminToken, isMobileUser } from "@/lib/mobile-auth";
 import { withAdminContext } from "@/lib/tenant-prisma";
+import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -12,12 +13,11 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const search = url.searchParams.get("search") ?? "";
-  const status = url.searchParams.get("status") ?? "";
   const page = Math.max(1, Number(url.searchParams.get("page") ?? "1"));
   const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") ?? "20")));
   const skip = (page - 1) * limit;
 
-  const where: Record<string, unknown> = { role: "FARMER" };
+  const where: Prisma.UserWhereInput = { role: "FARMER" };
   if (search.trim()) {
     where.OR = [
       { fullName: { contains: search, mode: "insensitive" } },
@@ -26,9 +26,8 @@ export async function GET(request: Request) {
   }
 
   const [users, total] = await Promise.all([
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prisma.user.findMany({
-      where: where as any,
+      where,
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
@@ -41,8 +40,7 @@ export async function GET(request: Request) {
         updatedAt: true,
       },
     }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    prisma.user.count({ where: where as any }),
+    prisma.user.count({ where }),
   ]);
 
   // Enrich with animal counts and farm profiles

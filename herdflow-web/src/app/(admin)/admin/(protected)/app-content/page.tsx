@@ -1,7 +1,7 @@
 "use client";
 // WEBSITE — herdflow-web/src/app/(admin)/admin/app-content/page.tsx
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Badge, StatusBadge, type BadgeVariant } from "@/components/admin/Badge";
 import { Input, Textarea } from "@/components/admin/Field";
@@ -13,14 +13,6 @@ import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 
 const TABS = ["Announcements", "Banners", "Tips", "Auction Alerts", "Notifications"] as const;
 type Tab = (typeof TABS)[number];
-
-const TYPE_MAP: Record<Tab, string> = {
-  Announcements: "ANNOUNCEMENT",
-  Banners: "BANNER",
-  Tips: "TIP",
-  "Auction Alerts": "AUCTION_ALERT",
-  Notifications: "NOTIFICATION",
-};
 
 const PRIORITIES = ["NORMAL", "IMPORTANT", "URGENT"];
 const TIP_CATS = [
@@ -184,20 +176,16 @@ function AnnouncementsPanel() {
   const [deleteTarget, setDeleteTarget] = useState<AppContentItem | null>(null);
   const [form, setForm] = useState({ title: "", message: "", priority: "NORMAL", sendPush: false });
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const r = await fetch("/api/app/admin/content?type=ANNOUNCEMENT", { credentials: "include" });
-      const d = await r.json();
-      setItems(d.items ?? []);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  function load() {
+    return fetch("/api/app/admin/content?type=ANNOUNCEMENT", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setItems(d.items ?? []))
+      .finally(() => setLoading(false));
+  }
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, []);
 
   const save = async () => {
     if (!form.title || !form.message) return;
@@ -333,15 +321,15 @@ function BannersPanel() {
     targetSpecies: [] as string[],
   });
 
-  const load = useCallback(async () => {
-    const r = await fetch("/api/app/admin/content?type=BANNER", { credentials: "include" });
-    const d = await r.json();
-    setItems(d.items ?? []);
-  }, []);
+  function load() {
+    return fetch("/api/app/admin/content?type=BANNER", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setItems(d.items ?? []));
+  }
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, []);
 
   const save = async () => {
     if (!form.title || !form.message || !form.sponsorName) return;
@@ -478,15 +466,15 @@ function TipsPanel() {
   const [deleteTarget, setDeleteTarget] = useState<AppContentItem | null>(null);
   const [form, setForm] = useState({ title: "", content: "", category: "General", source: "" });
 
-  const load = useCallback(async () => {
-    const r = await fetch("/api/app/admin/content?type=TIP", { credentials: "include" });
-    const d = await r.json();
-    setItems(d.items ?? []);
-  }, []);
+  function load() {
+    return fetch("/api/app/admin/content?type=TIP", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setItems(d.items ?? []));
+  }
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, []);
 
   const save = async () => {
     if (!form.title || !form.content) return;
@@ -607,15 +595,15 @@ function AuctionAlertsPanel() {
     targetProvinces: [] as string[],
   });
 
-  const load = useCallback(async () => {
-    const r = await fetch("/api/app/admin/content?type=AUCTION_ALERT", { credentials: "include" });
-    const d = await r.json();
-    setItems(d.items ?? []);
-  }, []);
+  function load() {
+    return fetch("/api/app/admin/content?type=AUCTION_ALERT", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setItems(d.items ?? []));
+  }
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, []);
 
   const save = async () => {
     if (!form.title) return;
@@ -741,15 +729,15 @@ function NotificationsPanel() {
   const [form, setForm] = useState({ title: "", message: "", target: "ALL", targetValue: "" });
   const [preview, setPreview] = useState(false);
 
-  const load = useCallback(async () => {
-    const r = await fetch("/api/app/admin/notifications", { credentials: "include" });
-    const d = await r.json();
-    setHistory(d.notifications ?? []);
-  }, []);
+  function load() {
+    return fetch("/api/app/admin/notifications", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setHistory(d.notifications ?? []));
+  }
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, []);
 
   const send = async () => {
     if (!form.title || !form.message) return;

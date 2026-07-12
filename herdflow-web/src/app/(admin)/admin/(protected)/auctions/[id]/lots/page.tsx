@@ -450,17 +450,18 @@ export default function AdminLotsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
-    try {
-      const [lotsRes, sessionRes] = await Promise.all([
-        fetch(`/api/admin/auctions/${sessionId}/lots`),
-        fetch(`/api/admin/auctions/${sessionId}/control`),
-      ]);
-      const [lotsData, sessionData] = await Promise.all([lotsRes.json(), sessionRes.json()]);
-      if (lotsData.lots) setLots(lotsData.lots);
-      if (sessionData.session?.title) setSessionTitle(sessionData.session.title);
-    } catch {}
-    setLoading(false);
+  const loadData = useCallback(() => {
+    return Promise.all([
+      fetch(`/api/admin/auctions/${sessionId}/lots`),
+      fetch(`/api/admin/auctions/${sessionId}/control`),
+    ])
+      .then(([lotsRes, sessionRes]) => Promise.all([lotsRes.json(), sessionRes.json()]))
+      .then(([lotsData, sessionData]) => {
+        if (lotsData.lots) setLots(lotsData.lots);
+        if (sessionData.session?.title) setSessionTitle(sessionData.session.title);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [sessionId]);
 
   useEffect(() => {

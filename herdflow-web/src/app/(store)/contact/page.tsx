@@ -51,7 +51,7 @@ export default function ContactPage() {
       <div className="bg-[#1B3A6B] px-4 py-12 text-white md:px-8">
         <div className="mx-auto max-w-7xl">
           <h1 className="mb-2 text-4xl font-black">Contact Us</h1>
-          <p className="text-lg text-white/80">We're here to help. Get in touch with our team.</p>
+          <p className="text-lg text-white/80">We&apos;re here to help. Get in touch with our team.</p>
         </div>
       </div>
 
@@ -63,7 +63,7 @@ export default function ContactPage() {
             <div>
               <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">Get in Touch</h2>
               <p className="leading-relaxed text-[#5d7497]">
-                Whether you're a buyer, seller, or logistics partner, our team is ready to assist
+                Whether you&apos;re a buyer, seller, or logistics partner, our team is ready to assist
                 you with any questions or concerns.
               </p>
             </div>
@@ -156,7 +156,7 @@ export default function ContactPage() {
 
             {success && (
               <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-                Thank you! Your message has been sent successfully. We'll get back to you soon.
+                Thank you! Your message has been sent successfully. We&apos;ll get back to you soon.
               </div>
             )}
 

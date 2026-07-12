@@ -31,8 +31,24 @@ type PayoutRow = {
 
 // Raw API response shapes — kept distinct per kind (sellerId/farmName vs.
 // logisticsPartnerId/companyName) and normalized into the shared
-// PendingBalance/PayoutRow shape above via each kind's map* functions.
-type RawRecord = Record<string, any>;
+// PendingBalance/PayoutRow shape above via each kind's map* functions. Only
+// one branch's fields are populated per actual response; the rest are
+// simply absent rather than a separate type per kind.
+type RawRecord = {
+  id: string;
+  sellerId?: string;
+  farmName?: string;
+  logisticsPartnerId?: string;
+  companyName?: string;
+  amountCents: number;
+  number: string;
+  status: string;
+  paymentReference: string | null;
+  createdAt: string;
+  paidAt: string | null;
+  seller?: { farmName: string };
+  logisticsPartner?: { companyName: string };
+};
 
 type PayoutConfig = {
   counterpartyLabel: string;
@@ -54,7 +70,7 @@ const KIND_CONFIG: Record<PayoutKind, PayoutConfig> = {
     payoutsApi: "/api/admin/payouts",
     payoutApi: (id) => `/api/admin/payouts/${id}`,
     createBodyKey: "sellerId",
-    mapPending: (raw) => ({ id: raw.sellerId, name: raw.farmName, amountCents: raw.amountCents }),
+    mapPending: (raw) => ({ id: raw.sellerId!, name: raw.farmName!, amountCents: raw.amountCents }),
     mapPayout: (raw) => ({
       id: raw.id,
       number: raw.number,
@@ -74,8 +90,8 @@ const KIND_CONFIG: Record<PayoutKind, PayoutConfig> = {
     payoutApi: (id) => `/api/admin/logistics/payouts/${id}`,
     createBodyKey: "logisticsPartnerId",
     mapPending: (raw) => ({
-      id: raw.logisticsPartnerId,
-      name: raw.companyName,
+      id: raw.logisticsPartnerId!,
+      name: raw.companyName!,
       amountCents: raw.amountCents,
     }),
     mapPayout: (raw) => ({
@@ -110,7 +126,6 @@ export function PayoutsTable({ kind }: { kind: PayoutKind }) {
   const [page, setPage] = useState(1);
 
   function load() {
-    setLoading(true);
     Promise.all([
       fetch(config.pendingApi).then((r) => r.json()),
       fetch(config.payoutsApi).then((r) => r.json()),

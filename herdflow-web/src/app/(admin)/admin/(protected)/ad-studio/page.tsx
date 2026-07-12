@@ -379,7 +379,6 @@ export default function AdStudioPage() {
   const [loading, setLoading] = useState(true);
 
   function load() {
-    setLoading(true);
     fetch("/api/admin/marketing/creatives")
       .then((r) => r.json())
       .then((d) => setCampaigns(d.creatives || []))

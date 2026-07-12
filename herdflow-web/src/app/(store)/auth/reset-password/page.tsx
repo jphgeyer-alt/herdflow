@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, AlertTriangle, X, Clock } from "lucide-react";
 import { PasswordInput } from "@/components/ui/PasswordInput";
@@ -11,10 +11,9 @@ type TokenState = "checking" | "valid" | "expired" | "used" | "invalid";
 
 function ResetForm() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get("token") || "";
 
-  const [tokenState, setTokenState] = useState<TokenState>("checking");
+  const [tokenState, setTokenState] = useState<TokenState>(() => (token ? "checking" : "invalid"));
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,10 +21,7 @@ function ResetForm() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!token) {
-      setTokenState("invalid");
-      return;
-    }
+    if (!token) return;
     fetch(`/api/auth/reset-password?token=${encodeURIComponent(token)}`)
       .then((r) => r.json())
       .then((d) => {

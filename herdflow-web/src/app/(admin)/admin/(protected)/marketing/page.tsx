@@ -268,9 +268,15 @@ export default function AdminMarketingPage() {
     );
   }, [statusFiltered, search]);
 
-  useEffect(() => {
+  function selectFilter(tab: "ALL" | "PENDING" | "ACTIVE" | "REJECTED") {
+    setFilter(tab);
     setPage(1);
-  }, [filter, search]);
+  }
+
+  function updateSearch(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
 
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -307,7 +313,7 @@ export default function AdminMarketingPage() {
           {(["ALL", "PENDING", "ACTIVE", "REJECTED"] as const).map((tab) => (
             <button
               key={tab}
-              onClick={() => setFilter(tab)}
+              onClick={() => selectFilter(tab)}
               className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
                 filter === tab
                   ? "bg-navy-600 text-white"
@@ -329,7 +335,7 @@ export default function AdminMarketingPage() {
           type="search"
           placeholder="Search company, email, contact…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => updateSearch(e.target.value)}
           className="w-full sm:w-64"
         />
       </div>

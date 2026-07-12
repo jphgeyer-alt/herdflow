@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
-  const { contentId, contentType } = body as Record<string, string>;
+  const { contentId } = body as Record<string, string>;
   if (!contentId) return NextResponse.json({ error: "contentId required" }, { status: 400 });
 
   try {

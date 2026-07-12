@@ -166,7 +166,6 @@ export default function AdminDigitalProductsPage() {
   const [editTarget, setEditTarget] = useState<ProductRow | null | "new">(null);
 
   function load() {
-    setLoading(true);
     fetch("/api/admin/digital-products")
       .then((r) => r.json())
       .then((d) => setProducts(d.products || []))

@@ -39,29 +39,33 @@ export function Pagination({ page, pageSize, total, basePath, onPageChange }: Pa
 
   const btnClass = buttonClass("outline", "sm");
 
-  function Prev() {
-    if (prevDisabled) return <span className={`${btnClass} opacity-40`}>{icon("prev")}</span>;
-    if (basePath) return <Link className={btnClass} href={hrefForPage(basePath, page - 1)}>{icon("prev")}</Link>;
-    return (
-      <button className={btnClass} onClick={() => onPageChange?.(page - 1)} type="button">
-        {icon("prev")}
-      </button>
-    );
-  }
-
-  function Next() {
-    if (nextDisabled) return <span className={`${btnClass} opacity-40`}>{icon("next")}</span>;
-    if (basePath) return <Link className={btnClass} href={hrefForPage(basePath, page + 1)}>{icon("next")}</Link>;
-    return (
-      <button className={btnClass} onClick={() => onPageChange?.(page + 1)} type="button">
-        {icon("next")}
-      </button>
-    );
-  }
-
   function icon(dir: "prev" | "next") {
     return dir === "prev" ? <ChevronLeft size={14} /> : <ChevronRight size={14} />;
   }
+
+  const prevButton = prevDisabled ? (
+    <span className={`${btnClass} opacity-40`}>{icon("prev")}</span>
+  ) : basePath ? (
+    <Link className={btnClass} href={hrefForPage(basePath, page - 1)}>
+      {icon("prev")}
+    </Link>
+  ) : (
+    <button className={btnClass} onClick={() => onPageChange?.(page - 1)} type="button">
+      {icon("prev")}
+    </button>
+  );
+
+  const nextButton = nextDisabled ? (
+    <span className={`${btnClass} opacity-40`}>{icon("next")}</span>
+  ) : basePath ? (
+    <Link className={btnClass} href={hrefForPage(basePath, page + 1)}>
+      {icon("next")}
+    </Link>
+  ) : (
+    <button className={btnClass} onClick={() => onPageChange?.(page + 1)} type="button">
+      {icon("next")}
+    </button>
+  );
 
   return (
     <div className="flex items-center justify-between border-t border-navy-50 px-4 py-3 text-sm text-navy-300">
@@ -71,11 +75,11 @@ export function Pagination({ page, pageSize, total, basePath, onPageChange }: Pa
         <span className="font-semibold text-navy-500">{total}</span>
       </span>
       <div className="flex items-center gap-2">
-        <Prev />
+        {prevButton}
         <span className="px-2 text-xs font-semibold text-navy-500">
           Page {page} of {totalPages}
         </span>
-        <Next />
+        {nextButton}
       </div>
     </div>
   );

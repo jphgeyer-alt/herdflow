@@ -15,6 +15,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    // Plain CommonJS scripts run directly via `node`, never bundled by
+    // Next.js — require() is the correct, intended module system here.
+    files: ["prisma/seed*.js", "check-db.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

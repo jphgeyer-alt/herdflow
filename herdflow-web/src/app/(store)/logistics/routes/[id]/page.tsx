@@ -1,7 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Package, Calendar, CheckCircle2 } from "lucide-react";
-import { prisma } from "@/lib/prisma";
 import { getApprovedLogisticsPartner } from "@/lib/logistics-auth";
 import { formatRand } from "@/lib/marketing/format";
 import { withLogisticsContext } from "@/lib/tenant-prisma";

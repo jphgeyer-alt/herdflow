@@ -33,7 +33,6 @@ export default function QuoteDetailPage() {
   const [error, setError] = useState("");
 
   function load() {
-    setLoading(true);
     fetch(`/api/admin/marketing/quotes/${params.id}`)
       .then((r) => r.json())
       .then((d) => setQuote(d.quote))

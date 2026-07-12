@@ -37,7 +37,6 @@ export default function InvoiceDetailPage() {
   const [showPaidForm, setShowPaidForm] = useState(false);
 
   function load() {
-    setLoading(true);
     fetch(`/api/admin/marketing/invoices/${params.id}`)
       .then((r) => r.json())
       .then((d) => setInvoice(d.invoice))

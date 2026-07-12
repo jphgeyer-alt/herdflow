@@ -121,7 +121,6 @@ export default function AdminAffiliatesPage() {
   const [editTarget, setEditTarget] = useState<LinkRow | null | "new">(null);
 
   function load() {
-    setLoading(true);
     fetch("/api/admin/affiliates")
       .then((r) => r.json())
       .then((d) => setLinks(d.links || []))

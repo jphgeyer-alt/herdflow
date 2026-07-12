@@ -74,15 +74,15 @@ export default function AdminControlRoomPage() {
     bidderEmail: "phone@manual.bid",
   });
   const [videoUrlInput, setVideoUrlInput] = useState("");
-  const esRef = useRef<EventSource | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const loadData = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/admin/auctions/${sessionId}/control`);
-      const data = await res.json();
-      if (data.session) setSession(data.session);
-    } catch {}
+  const loadData = useCallback(() => {
+    return fetch(`/api/admin/auctions/${sessionId}/control`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.session) setSession(data.session);
+      })
+      .catch(() => {});
   }, [sessionId]);
 
   useEffect(() => {

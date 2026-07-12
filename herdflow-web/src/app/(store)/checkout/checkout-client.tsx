@@ -199,6 +199,7 @@ export function CheckoutClient({ initialUser }: { initialUser: InitialUser }) {
                   <div className="flex items-center gap-4">
                     <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-[#e8eef9] to-[#dce6f6]">
                       {item.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={item.imageUrl}
                           alt={item.productName}
@@ -507,7 +508,7 @@ export function CheckoutClient({ initialUser }: { initialUser: InitialUser }) {
               </form>
 
               <p className="mt-4 text-center text-xs text-[#5d7497]">
-                By completing this purchase, you agree to HerdFlow's Terms of Service and Privacy
+                By completing this purchase, you agree to HerdFlow&apos;s Terms of Service and Privacy
                 Policy.
               </p>
             </div>
