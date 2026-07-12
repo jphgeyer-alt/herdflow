@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { withAdminContext } from "@/lib/tenant-prisma";
 import { formatRand } from "@/lib/marketing/format";
+import { getMrr } from "@/lib/reports/mrr";
+import { monthKey, lastNMonths } from "@/lib/reports/business-report";
 import { Card, CardHeader, StatCard } from "@/components/admin/Card";
 import { Table, Thead, Tbody, Tr, Th, Td } from "@/components/admin/Table";
 import { TableEmptyRow } from "@/components/admin/EmptyState";
+import { RevenueByStreamChart } from "@/components/admin/charts/RevenueByStreamChart";
+import { SubscriptionRevenueByMonthChart } from "@/components/admin/charts/SubscriptionRevenueByMonthChart";
 import { TrendingUp, DollarSign, Calendar, Download } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -22,40 +26,36 @@ export default async function AdminRevenuePage() {
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
 
-  const [activeSubs, streamTotals, monthTotals, allTimeAgg] = await Promise.all([
-    withAdminContext((tx) =>
-      tx.subscription.findMany({
-        where: { status: "ACTIVE" },
-        select: { billingCycle: true, plan: { select: { monthlyPrice: true, annualPrice: true } } },
-      }),
-    ),
-    withAdminContext((tx) =>
-      tx.payment.groupBy({
-        by: ["paymentType"],
-        where: { status: "COMPLETE" },
-        _sum: { amount: true },
-        _count: { _all: true },
-      }),
-    ),
-    withAdminContext((tx) =>
-      tx.payment.aggregate({
-        where: { status: "COMPLETE", paidAt: { gte: monthStart } },
-        _sum: { amount: true },
-      }),
-    ),
-    withAdminContext((tx) =>
-      tx.payment.aggregate({
-        where: { status: "COMPLETE" },
-        _sum: { amount: true },
-      }),
-    ),
-  ]);
-
-  const mrrCents = activeSubs.reduce((sum, s) => {
-    const monthly =
-      s.billingCycle === "ANNUAL" ? Number(s.plan.annualPrice) / 12 : Number(s.plan.monthlyPrice);
-    return sum + monthly;
-  }, 0);
+  const [{ mrr, activeSubscriptions }, streamTotals, monthTotals, allTimeAgg, subscriptionPayments] =
+    await Promise.all([
+      getMrr(),
+      withAdminContext((tx) =>
+        tx.payment.groupBy({
+          by: ["paymentType"],
+          where: { status: "COMPLETE" },
+          _sum: { amount: true },
+          _count: { _all: true },
+        }),
+      ),
+      withAdminContext((tx) =>
+        tx.payment.aggregate({
+          where: { status: "COMPLETE", paidAt: { gte: monthStart } },
+          _sum: { amount: true },
+        }),
+      ),
+      withAdminContext((tx) =>
+        tx.payment.aggregate({
+          where: { status: "COMPLETE" },
+          _sum: { amount: true },
+        }),
+      ),
+      withAdminContext((tx) =>
+        tx.payment.findMany({
+          where: { status: "COMPLETE", paymentType: "SUBSCRIPTION", paidAt: { not: null } },
+          select: { amount: true, paidAt: true },
+        }),
+      ),
+    ]);
 
   const totalRevenue = Number(allTimeAgg._sum.amount ?? 0);
   const monthRevenue = Number(monthTotals._sum.amount ?? 0);
@@ -68,6 +68,19 @@ export default async function AdminRevenuePage() {
       total: Number(s._sum.amount ?? 0),
     }))
     .sort((a, b) => b.total - a.total);
+
+  const months = lastNMonths(12);
+  const subscriptionBuckets = new Map<string, number>(months.map((m) => [m, 0]));
+  for (const p of subscriptionPayments) {
+    const key = monthKey(new Date(p.paidAt!));
+    if (subscriptionBuckets.has(key)) {
+      subscriptionBuckets.set(key, (subscriptionBuckets.get(key) ?? 0) + Number(p.amount));
+    }
+  }
+  const subscriptionRevenueByMonth = months.map((m) => ({
+    month: m,
+    total: subscriptionBuckets.get(m) ?? 0,
+  }));
 
   return (
     <main className="space-y-6 pb-10">
@@ -87,10 +100,10 @@ export default async function AdminRevenuePage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
           label="MRR"
-          value={formatRand(mrrCents)}
+          value={formatRand(mrr)}
           icon={<TrendingUp size={18} />}
           accent="green"
-          hint={`${activeSubs.length} active subscriptions`}
+          hint={`${activeSubscriptions} active subscriptions`}
         />
         <StatCard
           label="Revenue This Month"
@@ -107,7 +120,20 @@ export default async function AdminRevenuePage() {
       </div>
 
       <Card>
+        <CardHeader
+          title="Subscription Revenue by Month"
+          description="Completed subscription payments per month — not a point-in-time MRR snapshot."
+        />
+        <div className="p-4 pt-0">
+          <SubscriptionRevenueByMonthChart data={subscriptionRevenueByMonth} />
+        </div>
+      </Card>
+
+      <Card>
         <CardHeader title="Revenue by Stream" description="All-time, completed payments only." />
+        <div className="p-4 pt-0">
+          <RevenueByStreamChart streams={streams} />
+        </div>
         <Table>
           <Thead>
             <Tr>

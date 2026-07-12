@@ -89,7 +89,7 @@ A third Render Cron Job sends the weekly farmer market-price email:
 
 Emails current RPO/ABSA + Digikraal market prices to every farmer (`User.marketingConsent = true`), embedding that week's `THURSDAY_PRICE_EMAIL` sponsor slot if one is booked (`/admin/marketing/email-slots`). See `src/app/api/cron/weekly-price-email/route.ts`.
 
-A fourth Render Cron Job expires classifieds, directory subscriptions, and livestock listings past their `expiresAt`/`renewsAt`:
+A fourth Render Cron Job expires classifieds, directory subscriptions, and livestock listings past their `expiresAt`/`renewsAt`, and generates any due recurring Expense rows (`src/lib/expenses/recurring.ts`):
 
 - **Command**: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://www.herdflow.co.za/api/cron/housekeeping`
 - **Schedule**: daily (e.g. `0 3 * * *`)

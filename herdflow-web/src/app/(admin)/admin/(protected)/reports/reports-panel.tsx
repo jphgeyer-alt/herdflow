@@ -3,6 +3,9 @@ import { Card, CardHeader, StatCard } from "@/components/admin/Card";
 import { Table, Thead, Tbody, Tr, Th, Td } from "@/components/admin/Table";
 import { TableEmptyRow } from "@/components/admin/EmptyState";
 import { buttonClass } from "@/components/admin/button-styles";
+import { formatCents as toCurrency } from "@/lib/money";
+import { MonthlyPnlChart } from "@/components/admin/charts/MonthlyPnlChart";
+import { ExpenseByCategoryChart } from "@/components/admin/charts/ExpenseByCategoryChart";
 
 type MonthRow = { month: string; totalCents: number };
 type TopSeller = { name: string; totalCents: number };
@@ -29,19 +32,13 @@ type ReportsData = {
   netProfitCents: number;
   expensesByCategory: ExpenseCategory[];
   monthlyPnl: MonthlyPnl[];
+  vatEnabled: boolean;
+  vatCollectedCents: number;
 };
 
 type ReportsPanelProps = {
   data: ReportsData;
 };
-
-function toCurrency(cents: number) {
-  return new Intl.NumberFormat("en-ZA", {
-    style: "currency",
-    currency: "ZAR",
-    maximumFractionDigits: 2,
-  }).format(cents / 100);
-}
 
 function barWidth(value: number, max: number) {
   if (max === 0) return "0%";
@@ -125,6 +122,19 @@ export function ReportsPanel({ data }: ReportsPanelProps) {
           />
         </div>
 
+        {data.vatEnabled && (
+          <StatCard
+            label="VAT Collected"
+            value={toCurrency(data.vatCollectedCents)}
+            hint="Included in revenue above, shown separately for filing"
+          />
+        )}
+
+        <Card className="p-6">
+          <h2 className="mb-4 text-base font-semibold text-navy-600">Monthly P&amp;L (last 12 months)</h2>
+          <MonthlyPnlChart data={data.monthlyPnl} />
+        </Card>
+
         <Card>
           <Table>
             <Thead>
@@ -162,6 +172,9 @@ export function ReportsPanel({ data }: ReportsPanelProps) {
         {data.expensesByCategory.length > 0 && (
           <Card>
             <CardHeader title="Expenses by Category" />
+            <div className="p-4 pt-0">
+              <ExpenseByCategoryChart categories={data.expensesByCategory} />
+            </div>
             <Table>
               <Tbody>
                 {data.expensesByCategory.map((c) => (

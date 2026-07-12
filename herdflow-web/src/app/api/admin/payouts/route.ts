@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
       }),
     );
     return NextResponse.json({ payouts });
-  } catch {
+  } catch (err) {
+    console.error("List payouts error:", err);
     return NextResponse.json({ error: "Failed to load payouts." }, { status: 500 });
   }
 }

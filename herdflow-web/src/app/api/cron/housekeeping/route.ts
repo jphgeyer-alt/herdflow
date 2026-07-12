@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAdminContext } from "@/lib/tenant-prisma";
 import { env } from "@/lib/env";
+import { generateDueRecurringExpenses } from "@/lib/expenses/recurring";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,9 @@ export const dynamic = "force-dynamic";
 // Expires classifieds and directory subscriptions past their expiry, and
 // (bundled in since it's the same "expire past-due rows" job) livestock
 // Listings too — that gap pre-dates this change and was cheap to close
-// alongside it.
+// alongside it. Recurring expense generation is bundled in for the same
+// reason: it's a daily "process due rows" job, no separate Render Cron Job
+// needed.
 export async function POST(request: Request) {
   const auth = request.headers.get("authorization") || "";
   const expected = `Bearer ${env.CRON_SECRET}`;
@@ -22,7 +25,7 @@ export async function POST(request: Request) {
   try {
     const now = new Date();
 
-    const [classifieds, listings, directories] = await Promise.all([
+    const [classifieds, listings, directories, recurringExpenses] = await Promise.all([
       prisma.classified.updateMany({
         where: { status: "ACTIVE", expiresAt: { lt: now } },
         data: { status: "ARCHIVED" },
@@ -37,6 +40,7 @@ export async function POST(request: Request) {
         where: { subscriptionActive: true, renewsAt: { lt: now } },
         data: { subscriptionActive: false },
       }),
+      generateDueRecurringExpenses(),
     ]);
 
     return NextResponse.json({
@@ -44,6 +48,7 @@ export async function POST(request: Request) {
       classifiedsExpired: classifieds.count,
       listingsExpired: listings.count,
       directorySubscriptionsExpired: directories.count,
+      recurringExpensesGenerated: recurringExpenses.generated,
     });
   } catch (err) {
     console.error("housekeeping cron error:", err);

@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getAdminFromRequest } from "@/lib/admin-auth";
 import { logAdminActivity } from "@/lib/admin-activity";
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
+import { expenseCreateSchema } from "@/lib/validation/finance";
+import { advance } from "@/lib/expenses/recurring";
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
@@ -13,19 +15,22 @@ export async function GET(request: NextRequest) {
   const to = searchParams.get("to");
 
   try {
-    const expenses = await prisma.expense.findMany({
-      where: {
-        ...((from || to) && {
-          date: {
-            ...(from && { gte: new Date(from) }),
-            ...(to && { lte: new Date(to) }),
-          },
-        }),
-      },
-      orderBy: { date: "desc" },
-    });
+    const expenses = await withAdminContext((tx) =>
+      tx.expense.findMany({
+        where: {
+          ...((from || to) && {
+            date: {
+              ...(from && { gte: new Date(from) }),
+              ...(to && { lte: new Date(to) }),
+            },
+          }),
+        },
+        orderBy: { date: "desc" },
+      }),
+    );
     return NextResponse.json({ expenses });
-  } catch {
+  } catch (err) {
+    console.error("List expenses error:", err);
     return NextResponse.json({ error: "Failed to load expenses." }, { status: 500 });
   }
 }
@@ -34,42 +39,33 @@ export async function POST(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = (await request.json().catch(() => ({}))) as {
-    category?: string;
-    description?: string;
-    amountCents?: number;
-    date?: string;
-    notes?: string;
-  };
-
-  const category = (body.category || "").trim();
-  const description = (body.description || "").trim();
-  const amountCents = Number(body.amountCents ?? 0);
-  const date = body.date ? new Date(body.date) : null;
-
-  if (!category) return NextResponse.json({ error: "Category is required." }, { status: 400 });
-  if (!description)
-    return NextResponse.json({ error: "Description is required." }, { status: 400 });
-  if (!Number.isInteger(amountCents) || amountCents <= 0)
-    return NextResponse.json(
-      { error: "Amount must be a positive integer in cents." },
-      { status: 400 },
-    );
-  if (!date || Number.isNaN(date.getTime()))
-    return NextResponse.json({ error: "A valid date is required." }, { status: 400 });
+  const body = await request.json().catch(() => ({}));
+  const parsed = expenseCreateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+  }
+  const { category, description, amountCents, date, notes, isRecurring, recurrenceInterval } =
+    parsed.data;
 
   try {
     const createdBy = admin.fullName;
-    const expense = await prisma.expense.create({
-      data: {
-        category,
-        description,
-        amountCents,
-        date,
-        notes: body.notes?.trim() || null,
-        createdBy,
-      },
-    });
+    const parsedDate = new Date(date);
+    const expense = await withAdminContext((tx) =>
+      tx.expense.create({
+        data: {
+          category,
+          description,
+          amountCents,
+          date: parsedDate,
+          notes: notes || null,
+          createdBy,
+          isRecurring: isRecurring ?? false,
+          recurrenceInterval: isRecurring ? recurrenceInterval : null,
+          nextOccurrenceAt:
+            isRecurring && recurrenceInterval ? advance(parsedDate, recurrenceInterval) : null,
+        },
+      }),
+    );
     logAdminActivity(admin, "expense.create", "Expense", {
       entityId: expense.id,
       entityLabel: expense.description,

@@ -3,17 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Wallet, Plus } from "lucide-react";
-import { formatRand } from "@/lib/marketing/format";
+import { Wallet, Plus, Repeat, Paperclip } from "lucide-react";
+import { formatCents, centsToRand, randToCents } from "@/lib/money";
 import { Card, CardHeader, StatCard } from "@/components/admin/Card";
 import { Table, Thead, Tbody, Tr, Th, Td } from "@/components/admin/Table";
 import { TableEmptyRow } from "@/components/admin/EmptyState";
 import { TableSkeletonRows } from "@/components/admin/Skeleton";
 import { Pagination } from "@/components/admin/Pagination";
 import { Button } from "@/components/admin/Button";
-import { Input, Textarea } from "@/components/admin/Field";
+import { Input, Select, Textarea } from "@/components/admin/Field";
 import { Modal } from "@/components/admin/Modal";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { ExpenseByCategoryChart } from "@/components/admin/charts/ExpenseByCategoryChart";
+
+type RecurrenceInterval = "MONTHLY" | "QUARTERLY" | "ANNUAL";
 
 type ExpenseRow = {
   id: string;
@@ -22,6 +25,10 @@ type ExpenseRow = {
   amountCents: number;
   date: string;
   notes: string | null;
+  receiptUrl: string | null;
+  isRecurring: boolean;
+  recurrenceInterval: RecurrenceInterval | null;
+  parentExpenseId: string | null;
 };
 
 const SUGGESTED_CATEGORIES = [
@@ -49,13 +56,34 @@ function ExpenseModal({
 }) {
   const [category, setCategory] = useState(expense?.category ?? "");
   const [description, setDescription] = useState(expense?.description ?? "");
-  const [amountRand, setAmountRand] = useState(expense ? String(expense.amountCents / 100) : "");
+  const [amountRand, setAmountRand] = useState(
+    expense ? String(centsToRand(expense.amountCents)) : "",
+  );
   const [date, setDate] = useState(
     expense ? expense.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
   );
   const [notes, setNotes] = useState(expense?.notes ?? "");
+  const [isRecurring, setIsRecurring] = useState(expense?.isRecurring ?? false);
+  const [recurrenceInterval, setRecurrenceInterval] = useState<RecurrenceInterval>(
+    expense?.recurrenceInterval ?? "MONTHLY",
+  );
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  async function uploadReceipt(expenseId: string) {
+    if (!receiptFile) return;
+    const form = new FormData();
+    form.set("file", receiptFile);
+    const res = await fetch(`/api/admin/expenses/${expenseId}/receipt`, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.error || "Expense saved, but the receipt upload failed.");
+    }
+  }
 
   async function save() {
     setError("");
@@ -63,13 +91,19 @@ function ExpenseModal({
       setError("Category and description are required.");
       return;
     }
+    if (isRecurring && !recurrenceInterval) {
+      setError("Choose how often this expense recurs.");
+      return;
+    }
     setSaving(true);
     const payload = {
       category: category.trim(),
       description: description.trim(),
-      amountCents: Math.round(Number(amountRand || 0) * 100),
+      amountCents: randToCents(Number(amountRand || 0)),
       date,
       notes: notes.trim() || undefined,
+      isRecurring,
+      recurrenceInterval: isRecurring ? recurrenceInterval : undefined,
     };
     try {
       const res = await fetch(
@@ -85,6 +119,7 @@ function ExpenseModal({
         setError(data.error || "Failed to save.");
         return;
       }
+      await uploadReceipt(data.expense.id);
       if (expense) onSaved(data.expense);
       else onCreated(data.expense);
       toast.success(expense ? "Expense updated." : "Expense created.");
@@ -159,6 +194,49 @@ function ExpenseModal({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
+
+        <div className="space-y-3 rounded-lg border border-navy-100 p-3">
+          <label className="flex items-center gap-2 text-sm font-semibold text-navy-500">
+            <input
+              type="checkbox"
+              checked={isRecurring}
+              onChange={(e) => setIsRecurring(e.target.checked)}
+              className="h-4 w-4 rounded border-navy-100 text-navy-600 focus:ring-2 focus:ring-navy-600/15"
+            />
+            <Repeat size={14} /> Recurring expense
+          </label>
+          {isRecurring && (
+            <Select
+              label="Repeats"
+              value={recurrenceInterval}
+              onChange={(e) => setRecurrenceInterval(e.target.value as RecurrenceInterval)}
+            >
+              <option value="MONTHLY">Monthly</option>
+              <option value="QUARTERLY">Quarterly</option>
+              <option value="ANNUAL">Annually</option>
+            </Select>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-navy-500">Receipt (optional)</label>
+          {expense?.receiptUrl && (
+            <a
+              href={`/api/admin/expenses/${expense.id}/receipt`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 text-sm text-green hover:underline"
+            >
+              <Paperclip size={14} /> View current receipt
+            </a>
+          )}
+          <input
+            type="file"
+            accept="application/pdf,image/jpeg,image/png,image/webp"
+            onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
+            className="block w-full text-sm text-navy-500 file:mr-3 file:rounded-lg file:border-0 file:bg-navy-25 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-navy-600 hover:file:bg-navy-50"
+          />
+        </div>
       </div>
     </Modal>
   );
@@ -229,6 +307,14 @@ export default function AdminExpensesPage() {
   const total = expenses.reduce((sum, e) => sum + e.amountCents, 0);
   const pagedExpenses = expenses.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const categoryMap = new Map<string, number>();
+  for (const e of expenses) {
+    categoryMap.set(e.category, (categoryMap.get(e.category) ?? 0) + e.amountCents);
+  }
+  const categoryTotals = [...categoryMap.entries()]
+    .map(([category, totalCents]) => ({ category, totalCents }))
+    .sort((a, b) => b.totalCents - a.totalCents);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -253,12 +339,21 @@ export default function AdminExpensesPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
           label="Total Expenses"
-          value={formatRand(total / 100)}
+          value={formatCents(total)}
           icon={<Wallet size={18} />}
           accent="navy"
           hint={`${expenses.length} record${expenses.length === 1 ? "" : "s"}${fromDate || toDate ? " in range" : ""}`}
         />
       </div>
+
+      {!loading && categoryTotals.length > 0 && (
+        <Card>
+          <CardHeader title="Expenses by Category" />
+          <div className="p-4 pt-0">
+            <ExpenseByCategoryChart categories={categoryTotals} />
+          </div>
+        </Card>
+      )}
 
       <Card>
         <CardHeader
@@ -313,8 +408,18 @@ export default function AdminExpensesPage() {
                 <Tr key={e.id}>
                   <Td>{new Date(e.date).toLocaleDateString("en-ZA")}</Td>
                   <Td className="font-semibold text-navy-600">{e.category}</Td>
-                  <Td>{e.description}</Td>
-                  <Td className="font-bold">{formatRand(e.amountCents / 100)}</Td>
+                  <Td>
+                    <div className="flex items-center gap-1.5">
+                      {e.description}
+                      {e.isRecurring && (
+                        <Repeat size={12} className="shrink-0 text-navy-300" aria-label="Recurring" />
+                      )}
+                      {e.receiptUrl && (
+                        <Paperclip size={12} className="shrink-0 text-navy-300" aria-label="Has receipt" />
+                      )}
+                    </div>
+                  </Td>
+                  <Td className="font-bold">{formatCents(e.amountCents)}</Td>
                   <Td>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" onClick={() => setEditTarget(e)}>
