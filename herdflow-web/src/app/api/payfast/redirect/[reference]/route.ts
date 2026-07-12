@@ -5,7 +5,7 @@
 // src/lib/payfast/initiate.ts), and returns a tiny auto-submitting HTML
 // page that POSTs them to PayFast on load.
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { buildPayFastInitializePayload, getPayFastProcessUrl } from "@/lib/payfast/client";
 import { getPayFastConfig } from "@/lib/payfast/config";
 
@@ -21,7 +21,10 @@ function escapeHtml(value: string) {
 
 export async function GET(request: Request, ctx: Ctx) {
   const { reference } = await ctx.params;
-  const payment = await prisma.payment.findUnique({ where: { reference } });
+  // Payment has FORCE ROW LEVEL SECURITY — this is a public, unauthenticated
+  // GET (a clicked email link), so it must bypass RLS explicitly rather than
+  // scope to a session that doesn't exist here.
+  const payment = await withAdminContext((tx) => tx.payment.findUnique({ where: { reference } }));
 
   if (!payment) {
     return new NextResponse("Payment link not found.", { status: 404 });

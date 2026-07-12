@@ -23,6 +23,14 @@ const FEE_GROUPS: { title: string; keys: string[] }[] = [
     title: "Transport",
     keys: ["transport_booking", "transport_partner_fee"],
   },
+  {
+    title: "Classifieds",
+    keys: ["classified_equipment", "classified_equipment_featured", "classified_job", "classified_grazing", "classified_wanted"],
+  },
+  {
+    title: "Services Directory",
+    keys: ["directory_standard", "directory_premium"],
+  },
 ];
 
 const FAQS = [

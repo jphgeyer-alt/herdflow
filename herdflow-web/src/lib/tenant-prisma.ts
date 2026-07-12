@@ -15,13 +15,14 @@ type Tx = Prisma.TransactionClient;
 async function withContext<T>(
   vars: Array<[string, string]>,
   fn: (tx: Tx) => Promise<T>,
+  options?: { timeout?: number; maxWait?: number },
 ): Promise<T> {
   return prisma.$transaction(async (tx) => {
     for (const [key, value] of vars) {
       await tx.$executeRaw`SELECT set_config(${key}, ${value}, true)`;
     }
     return fn(tx);
-  });
+  }, options);
 }
 
 export const withFarmerContext = <T>(farmerId: string, fn: (tx: Tx) => Promise<T>) =>
@@ -41,5 +42,7 @@ export const withUserContext = <T>(userId: string, fn: (tx: Tx) => Promise<T>) =
  * already gated by isValidAdminSession() — never derive the decision to call
  * this from client-supplied input.
  */
-export const withAdminContext = <T>(fn: (tx: Tx) => Promise<T>) =>
-  withContext([["app.bypass_rls", "on"]], fn);
+export const withAdminContext = <T>(
+  fn: (tx: Tx) => Promise<T>,
+  options?: { timeout?: number; maxWait?: number },
+) => withContext([["app.bypass_rls", "on"]], fn, options);

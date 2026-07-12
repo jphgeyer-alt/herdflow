@@ -2,6 +2,7 @@
 // models (see Seller.balance, OrderItem.releasedAt added this change)
 // rather than a new parallel payout system.
 import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { getNextDocumentNumber } from "@/lib/document-number";
 import { sendPayoutRemittanceEmail } from "@/lib/email";
 import { formatRand } from "@/lib/marketing/format";
@@ -18,20 +19,24 @@ const MIN_PAYOUT_CENTS = 10000; // R100
 export async function releaseFunds(): Promise<{ released: number; totalCents: number }> {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const eligibleOrders = await prisma.order.findMany({
-    where: {
-      OR: [
-        { status: { in: ["SHIPPED", "COMPLETED"] } },
-        { status: "PAID", updatedAt: { lte: sevenDaysAgo } },
-      ],
-    },
-    select: {
-      items: {
-        where: { releasedAt: null },
-        select: { id: true, lineTotalCents: true, commissionCents: true, productId: true },
+  // Order has FORCE ROW LEVEL SECURITY — this cron job has no session
+  // context, so reads/writes on it must go through withAdminContext.
+  const eligibleOrders = await withAdminContext((tx) =>
+    tx.order.findMany({
+      where: {
+        OR: [
+          { status: { in: ["SHIPPED", "COMPLETED"] } },
+          { status: "PAID", updatedAt: { lte: sevenDaysAgo } },
+        ],
       },
-    },
-  });
+      select: {
+        items: {
+          where: { releasedAt: null },
+          select: { id: true, lineTotalCents: true, commissionCents: true, productId: true },
+        },
+      },
+    }),
+  );
 
   let released = 0;
   let totalCents = 0;
@@ -73,22 +78,25 @@ export async function releaseFunds(): Promise<{ released: number; totalCents: nu
  * cron's 7-day PAID window.
  */
 export async function confirmOrderReceived(orderId: string): Promise<void> {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: {
-      status: true,
-      items: {
-        where: { releasedAt: null },
-        select: { id: true, lineTotalCents: true, commissionCents: true, productId: true },
+  // Order has FORCE ROW LEVEL SECURITY — see releaseFunds() above.
+  const order = await withAdminContext((tx) =>
+    tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        status: true,
+        items: {
+          where: { releasedAt: null },
+          select: { id: true, lineTotalCents: true, commissionCents: true, productId: true },
+        },
       },
-    },
-  });
+    }),
+  );
 
   if (!order || order.status !== "SHIPPED") {
     throw new Error("Order is not eligible to be confirmed as received.");
   }
 
-  await prisma.order.update({ where: { id: orderId }, data: { status: "COMPLETED" } });
+  await withAdminContext((tx) => tx.order.update({ where: { id: orderId }, data: { status: "COMPLETED" } }));
 
   const bySeller = new Map<string, number>();
   for (const item of order.items) {
@@ -133,7 +141,8 @@ export async function createSellerPayout(
     select: { id: true },
   });
 
-  const payout = await prisma.$transaction(async (tx) => {
+  // SellerPayout has FORCE ROW LEVEL SECURITY — see releaseFunds() above.
+  const payout = await withAdminContext(async (tx) => {
     const number = await getNextDocumentNumber(tx, "payout");
     const created = await tx.sellerPayout.create({
       data: { number, sellerId, amountCents, createdBy },
@@ -199,11 +208,14 @@ export async function createPayoutBatch(
 
 /** Admin confirms an EFT was done — marks the payout PAID and emails the vendor a remittance summary. */
 export async function markPayoutPaid(payoutId: string, paymentReference?: string): Promise<void> {
-  const payout = await prisma.sellerPayout.update({
-    where: { id: payoutId },
-    data: { status: "PAID", paidAt: new Date(), paymentReference },
-    include: { seller: { include: { user: { select: { email: true } } } } },
-  });
+  // SellerPayout has FORCE ROW LEVEL SECURITY — see releaseFunds() above.
+  const payout = await withAdminContext((tx) =>
+    tx.sellerPayout.update({
+      where: { id: payoutId },
+      data: { status: "PAID", paidAt: new Date(), paymentReference },
+      include: { seller: { include: { user: { select: { email: true } } } } },
+    }),
+  );
 
   if (payout.seller.user.email) {
     await sendPayoutRemittanceEmail({

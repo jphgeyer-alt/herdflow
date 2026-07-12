@@ -21,6 +21,11 @@ import {
   UserCog,
   TrendingUp,
   Palette,
+  HandCoins,
+  ListChecks,
+  BookOpen,
+  FileDown,
+  Link2,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -91,6 +96,17 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: "Invoices", href: "/admin/marketing/invoices", description: "Sponsor invoices", icon: Megaphone },
       { label: "Creative", href: "/admin/marketing/creative", description: "Sponsor ad banners", icon: Megaphone },
       { label: "Ad Studio", href: "/admin/ad-studio", description: "Campaign builder, PNG export, performance", icon: Palette },
+      { label: "Email & Push Slots", href: "/admin/marketing/email-slots", description: "Weekly sponsor slot bookings", icon: Megaphone },
+    ],
+  },
+  {
+    label: "Passive Revenue",
+    items: [
+      { label: "Finance Leads", href: "/admin/leads", description: "Finance & insurance referral leads", icon: HandCoins },
+      { label: "Classifieds", href: "/admin/classifieds", description: "Equipment, jobs, grazing & wanted ads", icon: ListChecks },
+      { label: "Services Directory", href: "/admin/directory", description: "Vets, shearers, contractors & more", icon: BookOpen },
+      { label: "Digital Products", href: "/admin/digital-products", description: "Templates, guides, and downloads", icon: FileDown },
+      { label: "Affiliates", href: "/admin/affiliates", description: "Affiliate links and click tracking", icon: Link2 },
     ],
   },
   {

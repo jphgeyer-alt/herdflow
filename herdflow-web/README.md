@@ -80,3 +80,17 @@ A second Render Cron Job sends day-ahead reminder emails:
 - **Env**: requires `CRON_SECRET` to match the value set on the web service.
 
 This emails sellers whose listing expires in 3 days, and subscribers whose 30-day trial ends in 7 days (day 23). See `src/lib/reminders.ts`.
+
+A third Render Cron Job sends the weekly farmer market-price email:
+
+- **Command**: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://www.herdflow.co.za/api/cron/weekly-price-email`
+- **Schedule**: weekly, Thursdays (e.g. `0 8 * * 4`)
+- **Env**: requires `CRON_SECRET` to match the value set on the web service.
+
+Emails current RPO/ABSA + Digikraal market prices to every farmer (`User.marketingConsent = true`), embedding that week's `THURSDAY_PRICE_EMAIL` sponsor slot if one is booked (`/admin/marketing/email-slots`). See `src/app/api/cron/weekly-price-email/route.ts`.
+
+A fourth Render Cron Job expires classifieds, directory subscriptions, and livestock listings past their `expiresAt`/`renewsAt`:
+
+- **Command**: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://www.herdflow.co.za/api/cron/housekeeping`
+- **Schedule**: daily (e.g. `0 3 * * *`)
+- **Env**: requires `CRON_SECRET` to match the value set on the web service.

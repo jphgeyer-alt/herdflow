@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 import { sendListingExpiringEmail, sendTrialEndingEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 
@@ -34,13 +35,15 @@ export async function sendDailyReminders(): Promise<{ listingReminders: number; 
     listingReminders++;
   }
 
-  const endingTrials = await prisma.subscription.findMany({
-    where: {
-      status: "TRIAL",
-      trialEndsAt: { gte: new Date(now + 6 * DAY), lt: new Date(now + 7 * DAY) },
-    },
-    include: { user: { select: { fullName: true, email: true } }, plan: { select: { displayName: true } } },
-  });
+  const endingTrials = await withAdminContext((tx) =>
+    tx.subscription.findMany({
+      where: {
+        status: "TRIAL",
+        trialEndsAt: { gte: new Date(now + 6 * DAY), lt: new Date(now + 7 * DAY) },
+      },
+      include: { user: { select: { fullName: true, email: true } }, plan: { select: { displayName: true } } },
+    }),
+  );
 
   let trialReminders = 0;
   for (const sub of endingTrials) {

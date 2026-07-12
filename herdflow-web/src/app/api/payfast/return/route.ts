@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 function readOrderNumber(url: URL) {
   return (
@@ -17,13 +17,17 @@ export async function GET(request: Request) {
 
   if (orderNumber) {
     try {
-      await prisma.order.update({
-        where: { orderNumber },
-        data: {
-          status: "PAID",
-          paymentReference: paymentReference || orderNumber,
-        },
-      });
+      // Order has FORCE ROW LEVEL SECURITY — this is the buyer's unauthenticated
+      // browser redirect back from PayFast, so it must bypass RLS explicitly.
+      await withAdminContext((tx) =>
+        tx.order.update({
+          where: { orderNumber },
+          data: {
+            status: "PAID",
+            paymentReference: paymentReference || orderNumber,
+          },
+        }),
+      );
     } catch {
       // Keep redirect flow even if order update fails.
     }

@@ -1,7 +1,17 @@
 import type { ReactNode } from "react";
 import { StoreHeader } from "@/components/store-header";
+import { prisma } from "@/lib/prisma";
 
-export default function StoreLayout({ children }: { children: ReactNode }) {
+export default async function StoreLayout({ children }: { children: ReactNode }) {
+  const partnerLinks = await prisma.affiliateLink
+    .findMany({
+      where: { placement: "FOOTER", isActive: true },
+      select: { id: true, name: true },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+    })
+    .catch(() => []);
+
   return (
     <>
       <StoreHeader />
@@ -114,6 +124,27 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
                 </li>
               </ul>
             </div>
+
+            {/* Partners (affiliate links) */}
+            {partnerLinks.length > 0 && (
+              <div>
+                <h4 className="text-brand-green mb-4 font-bold">Partners</h4>
+                <ul className="space-y-2 text-sm text-white/70">
+                  {partnerLinks.map((link) => (
+                    <li key={link.id}>
+                      <a
+                        href={`/api/go/${link.id}`}
+                        target="_blank"
+                        rel="sponsored nofollow"
+                        className="transition hover:text-white"
+                      >
+                        {link.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Divider */}

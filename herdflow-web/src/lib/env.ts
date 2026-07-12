@@ -11,4 +11,12 @@ export const env = {
   PAYFAST_SANDBOX: process.env.PAYFAST_SANDBOX !== "false",
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || "",
   CRON_SECRET: process.env.CRON_SECRET || "",
+  // S3-compatible object storage for digital product files (never public).
+  // S3_ENDPOINT is optional — omit for real AWS S3, set it for Cloudflare
+  // R2 / MinIO / any other S3-compatible provider.
+  S3_ENDPOINT: process.env.S3_ENDPOINT || "",
+  S3_BUCKET: process.env.S3_BUCKET || "",
+  S3_REGION: process.env.S3_REGION || "auto",
+  S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID || "",
+  S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY || "",
 };

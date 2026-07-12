@@ -49,6 +49,18 @@ export function HomeNav() {
             <Link href="/auction" className="whitespace-nowrap text-white transition hover:text-white/80">
               Auctions
             </Link>
+            <Link href="/finance" className="whitespace-nowrap text-white transition hover:text-white/80">
+              Farm Finance
+            </Link>
+            <Link href="/classifieds" className="whitespace-nowrap text-white transition hover:text-white/80">
+              Classifieds
+            </Link>
+            <Link href="/directory" className="whitespace-nowrap text-white transition hover:text-white/80">
+              Directory
+            </Link>
+            <Link href="/resources" className="whitespace-nowrap text-white transition hover:text-white/80">
+              Resources
+            </Link>
             <Link
               href="/register/logistics"
               className="whitespace-nowrap text-white transition hover:text-white/80"
@@ -136,6 +148,34 @@ export function HomeNav() {
               onClick={() => setMenuOpen(false)}
             >
               Auctions
+            </Link>
+            <Link
+              href="/finance"
+              className="block rounded-lg px-4 py-2.5 text-sm text-white hover:bg-white/10"
+              onClick={() => setMenuOpen(false)}
+            >
+              Farm Finance
+            </Link>
+            <Link
+              href="/classifieds"
+              className="block rounded-lg px-4 py-2.5 text-sm text-white hover:bg-white/10"
+              onClick={() => setMenuOpen(false)}
+            >
+              Classifieds
+            </Link>
+            <Link
+              href="/directory"
+              className="block rounded-lg px-4 py-2.5 text-sm text-white hover:bg-white/10"
+              onClick={() => setMenuOpen(false)}
+            >
+              Directory
+            </Link>
+            <Link
+              href="/resources"
+              className="block rounded-lg px-4 py-2.5 text-sm text-white hover:bg-white/10"
+              onClick={() => setMenuOpen(false)}
+            >
+              Resources
             </Link>
             <Link
               href="/register/logistics"

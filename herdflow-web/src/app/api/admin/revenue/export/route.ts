@@ -1,18 +1,20 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getAdminFromRequest } from "@/lib/admin-auth";
-import { prisma } from "@/lib/prisma";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const payments = await prisma.payment.findMany({
-      where: { status: "COMPLETE" },
-      orderBy: { paidAt: "desc" },
-      include: { user: { select: { email: true } } },
-    });
+    const payments = await withAdminContext((tx) =>
+      tx.payment.findMany({
+        where: { status: "COMPLETE" },
+        orderBy: { paidAt: "desc" },
+        include: { user: { select: { email: true } } },
+      }),
+    );
 
     const rows = ["Date,Type,Reference,Email,Amount (R)"];
     for (const p of payments) {
