@@ -3,7 +3,29 @@
 // src/app/api/app/market-prices/route.ts (which is now a thin caller) so
 // the weekly price email cron can reuse the exact same logic.
 import * as cheerio from "cheerio";
+import type { Element } from "domhandler";
 import { prisma } from "@/lib/prisma";
+
+type RPOResult = {
+  beefA23: number | null;
+  beefB23: number | null;
+  beefC23: number | null;
+  weanerCalves: number | null;
+  muttonA23: number | null;
+  muttonB23: number | null;
+  muttonC23: number | null;
+  feederLamb: number | null;
+  safexMaize: number | null;
+  weekEnded: string | null;
+};
+
+type DigikraalResult = {
+  cattle: number | null;
+  sheep: number | null;
+  goats: number | null;
+  byProvince: Record<string, number>;
+  listingsCount: number;
+};
 
 const CACHE_MS = 6 * 60 * 60 * 1000; // 6 hours
 
@@ -73,36 +95,36 @@ export async function getMarketPrices() {
 
     const [rpoResult, digiResult] = await Promise.allSettled([scrapeRPO(), scrapeDigikraal()]);
 
-    const rpo = rpoResult.status === "fulfilled" ? rpoResult.value : {};
-    const digi = digiResult.status === "fulfilled" ? digiResult.value : {};
+    const rpo: Partial<RPOResult> = rpoResult.status === "fulfilled" ? rpoResult.value : {};
+    const digi: Partial<DigikraalResult> = digiResult.status === "fulfilled" ? digiResult.value : {};
 
     const payload = {
       beef: {
-        a23: (rpo as any).beefA23 ?? FALLBACK.beef.a23,
-        b23: (rpo as any).beefB23 ?? FALLBACK.beef.b23,
-        c23: (rpo as any).beefC23 ?? FALLBACK.beef.c23,
-        weanerCalves: (rpo as any).weanerCalves ?? FALLBACK.beef.weanerCalves,
+        a23: rpo.beefA23 ?? FALLBACK.beef.a23,
+        b23: rpo.beefB23 ?? FALLBACK.beef.b23,
+        c23: rpo.beefC23 ?? FALLBACK.beef.c23,
+        weanerCalves: rpo.weanerCalves ?? FALLBACK.beef.weanerCalves,
         unit: "R/kg carcass weight",
-        weekEnded: (rpo as any).weekEnded ?? null,
+        weekEnded: rpo.weekEnded ?? null,
       },
       mutton: {
-        a23: (rpo as any).muttonA23 ?? FALLBACK.mutton.a23,
-        b23: (rpo as any).muttonB23 ?? FALLBACK.mutton.b23,
-        c23: (rpo as any).muttonC23 ?? FALLBACK.mutton.c23,
-        feederLamb: (rpo as any).feederLamb ?? FALLBACK.mutton.feederLamb,
+        a23: rpo.muttonA23 ?? FALLBACK.mutton.a23,
+        b23: rpo.muttonB23 ?? FALLBACK.mutton.b23,
+        c23: rpo.muttonC23 ?? FALLBACK.mutton.c23,
+        feederLamb: rpo.feederLamb ?? FALLBACK.mutton.feederLamb,
         unit: "R/kg carcass weight",
-        weekEnded: (rpo as any).weekEnded ?? null,
+        weekEnded: rpo.weekEnded ?? null,
       },
       feed: {
-        safexMaize: (rpo as any).safexMaize ?? FALLBACK.feed.safexMaize,
+        safexMaize: rpo.safexMaize ?? FALLBACK.feed.safexMaize,
         unit: "R/ton",
       },
       marketplace: {
-        cattleAvgPerHead: (digi as any).cattle ?? FALLBACK.marketplace.cattleAvgPerHead,
-        sheepAvgPerHead: (digi as any).sheep ?? FALLBACK.marketplace.sheepAvgPerHead,
-        goatsAvgPerHead: (digi as any).goats ?? FALLBACK.marketplace.goatsAvgPerHead,
-        byProvince: (digi as any).byProvince ?? FALLBACK.marketplace.byProvince,
-        listingsCount: (digi as any).listingsCount ?? 0,
+        cattleAvgPerHead: digi.cattle ?? FALLBACK.marketplace.cattleAvgPerHead,
+        sheepAvgPerHead: digi.sheep ?? FALLBACK.marketplace.sheepAvgPerHead,
+        goatsAvgPerHead: digi.goats ?? FALLBACK.marketplace.goatsAvgPerHead,
+        byProvince: digi.byProvince ?? FALLBACK.marketplace.byProvince,
+        listingsCount: digi.listingsCount ?? 0,
       },
       updatedAt: new Date().toISOString(),
       sources: [
@@ -162,7 +184,7 @@ export async function getMarketPrices() {
 }
 
 // ── RPO/ABSA scraper ──────────────────────────────────────────────────────────
-async function scrapeRPO() {
+async function scrapeRPO(): Promise<RPOResult> {
   const res = await fetch("https://rpo.co.za/carcass-prices/", {
     headers: { "User-Agent": "Mozilla/5.0 HerdFlow/1.2" },
     signal: AbortSignal.timeout(10000),
@@ -170,20 +192,20 @@ async function scrapeRPO() {
   const html = await res.text();
   const $ = cheerio.load(html);
 
-  const result = {
-    beefA23: null as number | null,
-    beefB23: null as number | null,
-    beefC23: null as number | null,
-    weanerCalves: null as number | null,
-    muttonA23: null as number | null,
-    muttonB23: null as number | null,
-    muttonC23: null as number | null,
-    feederLamb: null as number | null,
-    safexMaize: null as number | null,
-    weekEnded: null as string | null,
+  const result: RPOResult = {
+    beefA23: null,
+    beefB23: null,
+    beefC23: null,
+    weanerCalves: null,
+    muttonA23: null,
+    muttonB23: null,
+    muttonC23: null,
+    feederLamb: null,
+    safexMaize: null,
+    weekEnded: null,
   };
 
-  const parseCell = (el: any): number | null => {
+  const parseCell = (el: Element): number | null => {
     const t = $(el)
       .text()
       .trim()
@@ -213,7 +235,7 @@ async function scrapeRPO() {
     }
   });
 
-  $("*").each((_: any, el: any) => {
+  $("*").each((_i, el) => {
     const text = $(el).text();
     if (!result.safexMaize && (text.includes("SAFEX") || text.includes("YMAZ"))) {
       const m = text.match(/R[\s]*([\d\s,]+)\/t/i);
@@ -225,7 +247,7 @@ async function scrapeRPO() {
 }
 
 // ── Digikraal scraper ─────────────────────────────────────────────────────────
-async function scrapeDigikraal() {
+async function scrapeDigikraal(): Promise<DigikraalResult> {
   const res = await fetch("https://digikraal.co.za/market-prices", {
     headers: { "User-Agent": "Mozilla/5.0 HerdFlow/1.2" },
     signal: AbortSignal.timeout(10000),
@@ -247,7 +269,7 @@ async function scrapeDigikraal() {
   ];
 
   PROVINCES.forEach((province) => {
-    $("*").each((_: any, el: any) => {
+    $("*").each((_i, el) => {
       if (byProvince[province]) return;
       const text = $(el).text();
       if (text.includes(province)) {
