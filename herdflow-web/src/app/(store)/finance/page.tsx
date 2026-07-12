@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Get quotes from trusted, FSCA-licensed finance and insurance providers.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export default async function FinancePage() {
   const categories = await prisma.leadCategory.findMany({
