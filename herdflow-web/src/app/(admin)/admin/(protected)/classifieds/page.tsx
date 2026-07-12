@@ -41,7 +41,6 @@ export default function AdminClassifiedsPage() {
   const [removeTarget, setRemoveTarget] = useState<ClassifiedRow | null>(null);
 
   function load() {
-    setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (category !== "ALL") params.set("category", category);
@@ -55,6 +54,16 @@ export default function AdminClassifiedsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(load, [category, status]);
 
+  function selectCategory(value: string) {
+    setCategory(value);
+    setLoading(true);
+  }
+
+  function selectStatus(value: string) {
+    setStatus(value);
+    setLoading(true);
+  }
+
   async function updateStatus(item: ClassifiedRow, newStatus: string, reason?: string) {
     const res = await fetch(`/api/admin/classifieds/${item.id}`, {
       method: "PATCH",
@@ -63,6 +72,7 @@ export default function AdminClassifiedsPage() {
     });
     if (res.ok) {
       toast.success(`Ad marked ${newStatus.toLowerCase()}.`);
+      setLoading(true);
       load();
     } else {
       toast.error("Failed to update ad.");
@@ -92,14 +102,14 @@ export default function AdminClassifiedsPage() {
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-48"
               />
-              <Select value={category} onChange={(e) => setCategory(e.target.value)} className="w-auto!">
+              <Select value={category} onChange={(e) => selectCategory(e.target.value)} className="w-auto!">
                 <option value="ALL">All categories</option>
                 <option value="FARM_EQUIPMENT">Equipment</option>
                 <option value="FARM_JOBS">Jobs</option>
                 <option value="GRAZING_LAND">Grazing & Land</option>
                 <option value="WANTED">Wanted</option>
               </Select>
-              <Select value={status} onChange={(e) => setStatus(e.target.value)} className="w-auto!">
+              <Select value={status} onChange={(e) => selectStatus(e.target.value)} className="w-auto!">
                 <option value="ALL">All statuses</option>
                 <option value="ACTIVE">Active</option>
                 <option value="DRAFT">Draft (unpaid)</option>

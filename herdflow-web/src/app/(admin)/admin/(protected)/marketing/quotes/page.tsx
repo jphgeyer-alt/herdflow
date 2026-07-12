@@ -153,7 +153,6 @@ export default function QuotesAdminPage() {
   const [page, setPage] = useState(1);
 
   function load(status: string) {
-    setLoading(true);
     const qs = status === "ALL" ? "" : `?status=${status}`;
     fetch(`/api/admin/marketing/quotes${qs}`)
       .then((r) => r.json())
@@ -189,11 +188,18 @@ export default function QuotesAdminPage() {
     );
   }, [quotes, search]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [filter, search]);
-
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  function selectFilter(tab: (typeof TABS)[number]) {
+    setFilter(tab);
+    setLoading(true);
+    setPage(1);
+  }
+
+  function updateSearch(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
 
   if (createdId) {
     return (
@@ -214,7 +220,7 @@ export default function QuotesAdminPage() {
             <button
               key={tab}
               type="button"
-              onClick={() => setFilter(tab)}
+              onClick={() => selectFilter(tab)}
               className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
                 filter === tab
                   ? "bg-navy-600 text-white"
@@ -230,7 +236,7 @@ export default function QuotesAdminPage() {
             type="search"
             placeholder="Search number, sponsor…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => updateSearch(e.target.value)}
             className="w-56"
           />
           <Button onClick={() => setShowNew(true)}>

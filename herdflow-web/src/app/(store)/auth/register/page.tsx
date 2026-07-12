@@ -211,7 +211,7 @@ function RegisterForm() {
                 className="mt-0.5 h-4 w-4 rounded border-[#cdd8e7] text-[#2E7D32] focus:ring-[#2E7D32]"
               />
               <span className="text-xs text-[#5d7497]">
-                I'd like to receive marketing emails and offers from HerdFlow
+                I&apos;d like to receive marketing emails and offers from HerdFlow
               </span>
             </label>
 

@@ -174,7 +174,6 @@ export default function AdminExpensesPage() {
   const [toDate, setToDate] = useState("");
 
   function load() {
-    setLoading(true);
     const params = new URLSearchParams();
     if (fromDate) params.set("from", fromDate);
     if (toDate) params.set("to", toDate);
@@ -187,10 +186,28 @@ export default function AdminExpensesPage() {
   }
 
   useEffect(() => {
-    setPage(1);
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromDate, toDate]);
+
+  function updateFromDate(value: string) {
+    setFromDate(value);
+    setLoading(true);
+    setPage(1);
+  }
+
+  function updateToDate(value: string) {
+    setToDate(value);
+    setLoading(true);
+    setPage(1);
+  }
+
+  function clearDateFilter() {
+    setFromDate("");
+    setToDate("");
+    setLoading(true);
+    setPage(1);
+  }
 
   async function confirmDelete() {
     if (!deleteTarget) return;
@@ -252,10 +269,7 @@ export default function AdminExpensesPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  setFromDate("");
-                  setToDate("");
-                }}
+                onClick={clearDateFilter}
               >
                 Clear
               </Button>
@@ -267,13 +281,13 @@ export default function AdminExpensesPage() {
             label="From"
             type="date"
             value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
+            onChange={(e) => updateFromDate(e.target.value)}
           />
           <Input
             label="To"
             type="date"
             value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
+            onChange={(e) => updateToDate(e.target.value)}
           />
         </div>
       </Card>

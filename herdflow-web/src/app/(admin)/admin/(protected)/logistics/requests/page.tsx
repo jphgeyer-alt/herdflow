@@ -331,7 +331,6 @@ export default function LogisticsRequestsPage() {
   const [showNew, setShowNew] = useState(false);
 
   function load(status: string) {
-    setLoading(true);
     const qs = status === "ALL" ? "" : `?status=${status}`;
     fetch(`/api/admin/logistics/requests${qs}`)
       .then((r) => r.json())
@@ -342,6 +341,11 @@ export default function LogisticsRequestsPage() {
   useEffect(() => {
     load(filter);
   }, [filter]);
+
+  function selectFilter(tab: (typeof TABS)[number]) {
+    setFilter(tab);
+    setLoading(true);
+  }
 
   useEffect(() => {
     fetch("/api/admin/logistics?status=APPROVED")
@@ -357,7 +361,7 @@ export default function LogisticsRequestsPage() {
             <button
               key={tab}
               type="button"
-              onClick={() => setFilter(tab)}
+              onClick={() => selectFilter(tab)}
               className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
                 filter === tab
                   ? "bg-[#1B3A6B] text-white"

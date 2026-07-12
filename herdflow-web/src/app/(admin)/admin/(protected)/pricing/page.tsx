@@ -259,7 +259,6 @@ export default function AdminPricingPage() {
   const [editFee, setEditFee] = useState<FeeRow | null>(null);
 
   function load() {
-    setLoading(true);
     Promise.all([
       fetch("/api/admin/pricing/plans").then((r) => r.json()),
       fetch("/api/admin/pricing/fees").then((r) => r.json()),

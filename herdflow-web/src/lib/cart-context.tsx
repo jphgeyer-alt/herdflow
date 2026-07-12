@@ -39,16 +39,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage on mount. Deferred to a microtask (rather
+  // than reading synchronously here) only to keep this async relative to
+  // the effect itself — localStorage is unavailable during SSR, which is
+  // why this is a useEffect at all rather than a useState initializer.
   useEffect(() => {
-    const stored = localStorage.getItem(CART_STORAGE_KEY);
-    if (stored) {
-      try {
-        setItems(JSON.parse(stored));
-      } catch {
-        // Invalid data, ignore
+    Promise.resolve().then(() => {
+      const stored = localStorage.getItem(CART_STORAGE_KEY);
+      if (stored) {
+        try {
+          setItems(JSON.parse(stored));
+        } catch {
+          // Invalid data, ignore
+        }
       }
-    }
+    });
   }, []);
 
   // Save cart to localStorage whenever it changes

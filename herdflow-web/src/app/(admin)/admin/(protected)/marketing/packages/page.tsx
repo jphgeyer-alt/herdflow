@@ -173,7 +173,6 @@ export default function PackagesAdminPage() {
   const [editTarget, setEditTarget] = useState<PackageRow | null | "new">(null);
 
   function load() {
-    setLoading(true);
     fetch("/api/admin/marketing/packages")
       .then((r) => r.json())
       .then((d) => setPackages(d.packages || []))

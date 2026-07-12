@@ -202,6 +202,7 @@ export default async function BuyerDashboard() {
                   key={product.id}
                   className="overflow-hidden rounded-2xl border border-[#e4ebf5] bg-white shadow-lg transition hover:shadow-xl"
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={product.photos[0] || "/placeholder-product.jpg"}
                     alt={product.name}

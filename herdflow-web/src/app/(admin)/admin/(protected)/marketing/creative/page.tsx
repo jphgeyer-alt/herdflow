@@ -207,7 +207,6 @@ export default function AdminCreativePage() {
   const [deleteTarget, setDeleteTarget] = useState<CreativeRow | null>(null);
 
   function load() {
-    setLoading(true);
     fetch("/api/admin/marketing/creatives")
       .then((r) => r.json())
       .then((d) => setCreatives(d.creatives || []))

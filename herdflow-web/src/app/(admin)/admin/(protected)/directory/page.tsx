@@ -32,7 +32,6 @@ export default function AdminDirectoryPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
 
   function load() {
-    setLoading(true);
     const qs = statusFilter === "ALL" ? "" : `?status=${statusFilter}`;
     fetch(`/api/admin/directory${qs}`)
       .then((r) => r.json())
@@ -40,8 +39,12 @@ export default function AdminDirectoryPage() {
       .finally(() => setLoading(false));
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(load, [statusFilter]);
+
+  function selectStatusFilter(value: string) {
+    setStatusFilter(value);
+    setLoading(true);
+  }
 
   async function patch(listing: ListingRow, body: Record<string, unknown>) {
     const res = await fetch(`/api/admin/directory/${listing.id}`, {
@@ -51,6 +54,7 @@ export default function AdminDirectoryPage() {
     });
     if (res.ok) {
       toast.success("Listing updated.");
+      setLoading(true);
       load();
     } else {
       toast.error("Failed to update listing.");
@@ -70,7 +74,7 @@ export default function AdminDirectoryPage() {
         <CardHeader
           title="All Listings"
           action={
-            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-auto!">
+            <Select value={statusFilter} onChange={(e) => selectStatusFilter(e.target.value)} className="w-auto!">
               <option value="ALL">All statuses</option>
               <option value="PENDING">Pending</option>
               <option value="APPROVED">Approved</option>

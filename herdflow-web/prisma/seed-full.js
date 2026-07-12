@@ -19,7 +19,7 @@ async function seed() {
   console.log("🌱 Seeding HerdFlow test data...");
 
   // 1. Seed admin user
-  const adminUser = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: "admin@herdflow.co.za" },
     update: {},
     create: {
@@ -198,7 +198,7 @@ async function seed() {
       });
     }
 
-    const order = await prisma.order.create({
+    await prisma.order.create({
       data: {
         orderNumber: `ORD-${Date.now()}-${i}`,
         user: { connect: { id: customerUser.id } },

@@ -38,12 +38,16 @@ export function ClassifiedsClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
     fetch(`/api/classifieds?category=${tab}`)
       .then((r) => r.json())
       .then((d) => setItems(d.classifieds || []))
       .finally(() => setLoading(false));
   }, [tab]);
+
+  function selectTab(value: string) {
+    setTab(value);
+    setLoading(true);
+  }
 
   return (
     <div>
@@ -52,7 +56,7 @@ export function ClassifiedsClient() {
           <button
             key={t.value}
             type="button"
-            onClick={() => setTab(t.value)}
+            onClick={() => selectTab(t.value)}
             className={`rounded-full px-5 py-2 text-sm font-bold transition ${
               tab === t.value
                 ? "bg-[#1B3A6B] text-white"

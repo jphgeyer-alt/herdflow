@@ -55,7 +55,6 @@ export default function EmailSlotsPage() {
   const [saving, setSaving] = useState(false);
 
   function load() {
-    setLoading(true);
     Promise.all([
       fetch("/api/admin/marketing/email-slots").then((r) => r.json()),
       fetch("/api/admin/marketing").then((r) => r.json()),
@@ -65,11 +64,13 @@ export default function EmailSlotsPage() {
         setSlots(slotData.slots || []);
         setSponsors((sponsorData.sponsors || []).filter((s: SponsorOption) => s.status === "ACTIVE"));
         setCreatives(
-          (creativeData.creatives || []).map((c: any) => ({
-            id: c.id,
-            headline: c.headline,
-            sponsorId: c.sponsorId,
-          })),
+          (creativeData.creatives || []).map(
+            (c: { id: string; headline: string; sponsorId: string }) => ({
+              id: c.id,
+              headline: c.headline,
+              sponsorId: c.sponsorId,
+            }),
+          ),
         );
       })
       .finally(() => setLoading(false));

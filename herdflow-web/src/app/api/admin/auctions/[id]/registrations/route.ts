@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 export async function PATCH(request: NextRequest, { params }: Params) {
   const admin = await getAdminFromRequest(request);
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { id: sessionId } = await params;
+  await params;
 
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const registrationId = body.id as string;

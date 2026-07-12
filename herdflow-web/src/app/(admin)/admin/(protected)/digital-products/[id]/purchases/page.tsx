@@ -27,14 +27,12 @@ export default function DigitalProductPurchasesPage() {
   const [loading, setLoading] = useState(true);
 
   function load() {
-    setLoading(true);
     fetch(`/api/admin/digital-products/${params.id}/purchases`)
       .then((r) => r.json())
       .then((d) => setPurchases(d.purchases || []))
       .finally(() => setLoading(false));
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(load, [params.id]);
 
   async function resend(id: string) {
@@ -47,6 +45,7 @@ export default function DigitalProductPurchasesPage() {
     const res = await fetch(`/api/admin/digital-purchases/${id}/regenerate`, { method: "POST" });
     if (res.ok) {
       toast.success("Token regenerated and emailed.");
+      setLoading(true);
       load();
     } else {
       toast.error("Failed to regenerate token.");

@@ -57,6 +57,7 @@ export function CartDrawer() {
                 <div key={item.productId} className="flex gap-4 rounded-xl bg-[#f5f8fd] p-4">
                   <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#e8eef9] to-[#dce6f6]">
                     {item.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={item.imageUrl}
                         alt={item.productName}

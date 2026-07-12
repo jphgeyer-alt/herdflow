@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     });
     if (!session) return NextResponse.json({ error: "Session not found" }, { status: 404 });
     return NextResponse.json({ session });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Failed to load session" }, { status: 500 });
   }
 }

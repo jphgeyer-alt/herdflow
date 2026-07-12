@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { StoreHeader } from "@/components/store-header";
 import { prisma } from "@/lib/prisma";
 
@@ -46,9 +47,9 @@ export default async function StoreLayout({ children }: { children: ReactNode })
                   </a>
                 </li>
                 <li>
-                  <a href="/listings" className="transition hover:text-white">
+                  <Link href="/listings" className="transition hover:text-white">
                     Livestock
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a href="/auction" className="transition hover:text-white">

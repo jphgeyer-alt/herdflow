@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
+import { withAdminContext } from "@/lib/tenant-prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +26,18 @@ export async function GET(request: Request) {
   });
   const userIds = [farmOwnerId, ...staffProfiles.map((s) => s.userId)];
 
-  // Fetch activity logs from FarmerActivityLog table
+  // Fetch activity logs from FarmerActivityLog table. FarmerActivityLog has
+  // FORCE ROW LEVEL SECURITY and this route reads across every staff
+  // member's rows (not just the caller's own), so it must bypass RLS
+  // explicitly rather than scope to a single user/farmer context.
   try {
-    const logs = await (prisma as any).farmerActivityLog.findMany({
-      where: { userId: { in: userIds } },
-      orderBy: { createdAt: "desc" },
-      take: 100,
-    });
+    const logs = await withAdminContext((tx) =>
+      tx.farmerActivityLog.findMany({
+        where: { userId: { in: userIds } },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+      }),
+    );
     return NextResponse.json(logs);
   } catch {
     // Table may not exist yet — return empty
@@ -56,20 +62,22 @@ export async function POST(request: Request) {
   const farmId = profile?.ownerUserId ?? auth.id;
 
   try {
-    const log = await (prisma as any).farmerActivityLog.create({
-      data: {
-        userId: auth.id,
-        userName: auth.fullName,
-        userRole: profile?.mobileRole ?? "FARMER",
-        farmId,
-        activityType: String(b.activityType ?? "UNKNOWN"),
-        description: String(b.description ?? ""),
-        entityId: (b.entityId as string | undefined) ?? null,
-        entityType: (b.entityType as string | undefined) ?? null,
-        entityName: (b.entityName as string | undefined) ?? null,
-        metadata: b.metadata ? JSON.stringify(b.metadata) : null,
-      },
-    });
+    const log = await withAdminContext((tx) =>
+      tx.farmerActivityLog.create({
+        data: {
+          userId: auth.id,
+          userName: auth.fullName,
+          userRole: profile?.mobileRole ?? "FARMER",
+          farmId,
+          activityType: String(b.activityType ?? "UNKNOWN"),
+          description: String(b.description ?? ""),
+          entityId: (b.entityId as string | undefined) ?? null,
+          entityType: (b.entityType as string | undefined) ?? null,
+          entityName: (b.entityName as string | undefined) ?? null,
+          metadata: b.metadata ? JSON.stringify(b.metadata) : null,
+        },
+      }),
+    );
     return NextResponse.json(log, { status: 201 });
   } catch (err) {
     // Silently fail — activity logging should never block main operations

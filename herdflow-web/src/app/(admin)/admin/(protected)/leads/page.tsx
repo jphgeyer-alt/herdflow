@@ -211,7 +211,6 @@ export default function AdminLeadsPage() {
   const [editCategory, setEditCategory] = useState<CategoryRow | null>(null);
 
   function load() {
-    setLoading(true);
     const qs = statusFilter === "ALL" ? "" : `?status=${statusFilter}`;
     Promise.all([
       fetch(`/api/admin/leads${qs}`).then((r) => r.json()),
@@ -225,8 +224,12 @@ export default function AdminLeadsPage() {
       .finally(() => setLoading(false));
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(load, [statusFilter]);
+
+  function selectStatusFilter(value: string) {
+    setStatusFilter(value);
+    setLoading(true);
+  }
 
   async function markStatus(lead: LeadRow, status: string) {
     const res = await fetch(`/api/admin/leads/${lead.id}`, {
@@ -236,6 +239,7 @@ export default function AdminLeadsPage() {
     });
     if (res.ok) {
       toast.success(`Lead marked ${status.replace(/_/g, " ").toLowerCase()}.`);
+      setLoading(true);
       load();
     } else {
       toast.error("Failed to update lead.");
@@ -269,7 +273,7 @@ export default function AdminLeadsPage() {
         <CardHeader
           title="Leads"
           action={
-            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-auto!">
+            <Select value={statusFilter} onChange={(e) => selectStatusFilter(e.target.value)} className="w-auto!">
               <option value="ALL">All statuses</option>
               <option value="NEW">New</option>
               <option value="SENT_TO_PARTNER">Sent to Partner</option>

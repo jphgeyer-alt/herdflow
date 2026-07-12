@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminToken, isMobileUser } from "@/lib/mobile-auth";
 import { withAdminContext } from "@/lib/tenant-prisma";
+import type { Prisma } from "@prisma/client";
 import Expo from "expo-server-sdk";
 
 export const dynamic = "force-dynamic";
@@ -19,20 +20,18 @@ export async function GET(request: Request) {
   const page = Math.max(1, Number(url.searchParams.get("page") ?? "1"));
   const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") ?? "20")));
 
-  const where: Record<string, unknown> = { isDeleted: false };
+  const where: Prisma.AppContentWhereInput = { isDeleted: false };
   if (type) where.type = type.toUpperCase();
   if (status) where.status = status.toUpperCase();
 
   const [items, total] = await Promise.all([
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prisma.appContent.findMany({
-      where: where as any,
+      where,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
     }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    prisma.appContent.count({ where: where as any }),
+    prisma.appContent.count({ where }),
   ]);
 
   return NextResponse.json({ items, total, page, limit, totalPages: Math.ceil(total / limit) });

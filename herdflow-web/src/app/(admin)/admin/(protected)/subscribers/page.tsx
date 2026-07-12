@@ -4,7 +4,7 @@ import { Table, Thead, Tbody, Tr, Th, Td } from "@/components/admin/Table";
 import { TableEmptyRow } from "@/components/admin/EmptyState";
 import { StatusBadge } from "@/components/admin/Badge";
 import { Pagination } from "@/components/admin/Pagination";
-import { Users, TrendingUp, Clock, XCircle } from "lucide-react";
+import { TrendingUp, Clock, XCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
