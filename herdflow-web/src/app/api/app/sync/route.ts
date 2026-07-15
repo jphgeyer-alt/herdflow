@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
+import { getAnimalForFarmer } from "@/lib/tenant-lookups";
 
 export const dynamic = "force-dynamic";
 
@@ -87,8 +88,14 @@ export async function POST(request: Request) {
 
         case "CREATE_HEALTH": {
           const d = change.data;
-          const record = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
-            tx.farmerHealthRecord.create({
+          const record = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+            const animal = await getAnimalForFarmer(
+              tx,
+              d.animalId as string,
+              auth.effectiveFarmerId,
+            );
+            if (!animal) throw new Error("Animal not found");
+            return tx.farmerHealthRecord.create({
               data: {
                 animalId: d.animalId as string,
                 farmerId: auth.effectiveFarmerId,
@@ -100,8 +107,8 @@ export async function POST(request: Request) {
                 documents: [],
                 eventDate: d.eventDate ? new Date(d.eventDate as string) : new Date(),
               },
-            }),
-          );
+            });
+          });
           results.push({ localId: change.localId, serverId: record.id, success: true });
           break;
         }
@@ -109,6 +116,12 @@ export async function POST(request: Request) {
         case "CREATE_WEIGHT": {
           const d = change.data;
           const record = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+            const animal = await getAnimalForFarmer(
+              tx,
+              d.animalId as string,
+              auth.effectiveFarmerId,
+            );
+            if (!animal) throw new Error("Animal not found");
             const created = await tx.farmerWeightRecord.create({
               data: {
                 animalId: d.animalId as string,
@@ -132,8 +145,14 @@ export async function POST(request: Request) {
 
         case "CREATE_VACCINATION": {
           const d = change.data;
-          const vacc = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
-            tx.farmerVaccination.create({
+          const vacc = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+            const animal = await getAnimalForFarmer(
+              tx,
+              d.animalId as string,
+              auth.effectiveFarmerId,
+            );
+            if (!animal) throw new Error("Animal not found");
+            return tx.farmerVaccination.create({
               data: {
                 animalId: d.animalId as string,
                 farmerId: auth.effectiveFarmerId,
@@ -142,8 +161,8 @@ export async function POST(request: Request) {
                 status: (d.status as string | undefined) ?? "SCHEDULED",
                 notes: (d.note as string | undefined) ?? null,
               },
-            }),
-          );
+            });
+          });
           results.push({ localId: change.localId, serverId: vacc.id, success: true });
           break;
         }

@@ -2,26 +2,18 @@
 import { NextResponse } from "next/server";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
-import type { Prisma } from "@prisma/client";
+import { getAnimalForFarmer } from "@/lib/tenant-lookups";
 
 export const dynamic = "force-dynamic";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-// The mobile app's local animal id (a per-device SQLite autoincrement
-// integer) is never learned back after sync creates the real cuid `id` —
-// every later PATCH/DELETE/GET still targets the local id. Fall back to
-// matching on `localId` (stored at create time) so those requests resolve
-// instead of 404ing. NOTE: FarmerHealthRecord/FarmerWeightRecord/
-// FarmerVaccination.animalId are populated by mobile using that SAME local
-// id (mobile has no way to send the real cuid there either), so those child
-// lookups must keep using the raw path param, not the resolved record's
-// real id — only the FarmerAnimal row's own primary key has this problem.
-async function getAnimalForFarmer(tx: Prisma.TransactionClient, id: string, farmerId: string) {
-  const byId = await tx.farmerAnimal.findFirst({ where: { id, farmerId, isDeleted: false } });
-  if (byId) return byId;
-  return tx.farmerAnimal.findFirst({ where: { localId: id, farmerId, isDeleted: false } });
-}
+// NOTE: FarmerHealthRecord/FarmerWeightRecord/FarmerVaccination.animalId are
+// populated by mobile using the animal's local id (mobile has no way to send
+// the real cuid there either), so those child lookups below must keep using
+// the raw path param, not the resolved animal's real id — only the
+// FarmerAnimal row's own primary key has the id-vs-localId problem that
+// getAnimalForFarmer resolves.
 
 export async function GET(request: Request, ctx: Ctx) {
   const auth = await requireMobileUser(request);
@@ -33,12 +25,18 @@ export async function GET(request: Request, ctx: Ctx) {
     if (!animal) return null;
 
     const [health, weights, vaccinations] = await Promise.all([
-      tx.farmerHealthRecord.findMany({ where: { animalId: id }, orderBy: { eventDate: "desc" } }),
+      tx.farmerHealthRecord.findMany({
+        where: { animalId: id, farmerId: auth.effectiveFarmerId },
+        orderBy: { eventDate: "desc" },
+      }),
       tx.farmerWeightRecord.findMany({
-        where: { animalId: id },
+        where: { animalId: id, farmerId: auth.effectiveFarmerId },
         orderBy: { recordedDate: "desc" },
       }),
-      tx.farmerVaccination.findMany({ where: { animalId: id }, orderBy: { nextDueDate: "asc" } }),
+      tx.farmerVaccination.findMany({
+        where: { animalId: id, farmerId: auth.effectiveFarmerId },
+        orderBy: { nextDueDate: "asc" },
+      }),
     ]);
 
     return { ...animal, health, weights, vaccinations };
