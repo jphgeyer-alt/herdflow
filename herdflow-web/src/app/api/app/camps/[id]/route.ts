@@ -2,24 +2,11 @@
 import { NextResponse } from "next/server";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
-import type { Prisma } from "@prisma/client";
+import { getCampForFarmer as findCampByIdOrLocalId } from "@/lib/tenant-lookups";
 
 export const dynamic = "force-dynamic";
 
 type Ctx = { params: Promise<{ id: string }> };
-
-// The mobile app generates its own local UUID as a camp's primary key, then
-// the backend generates a DIFFERENT id (cuid) when the create syncs. The
-// mobile app has no way to learn that server id back — every PATCH/DELETE
-// it later sends still targets its own local id. So: look up by the real
-// `id` first, and if nothing matches, fall back to matching on `localId`
-// (which POST already stores) — this is what actually makes edits/deletes
-// from the app reach the backend at all instead of silently 404ing.
-async function findCampByIdOrLocalId(tx: Prisma.TransactionClient, id: string, farmerId: string) {
-  const byId = await tx.farmerCamp.findFirst({ where: { id, farmerId, isDeleted: false } });
-  if (byId) return byId;
-  return tx.farmerCamp.findFirst({ where: { localId: id, farmerId, isDeleted: false } });
-}
 
 export async function GET(request: Request, ctx: Ctx) {
   const auth = await requireMobileUser(request);
@@ -61,6 +48,9 @@ export async function PATCH(request: Request, ctx: Ctx) {
         ...(b.status != null && { currentStatus: String(b.status) }),
         ...(b.currentStatus != null && { currentStatus: String(b.currentStatus) }),
         ...(b.maxCapacity != null && { maxCarryingCapacity: Number(b.maxCapacity) }),
+        ...(b.restingDaysRequired != null && {
+          restingDaysRequired: Number(b.restingDaysRequired),
+        }),
         ...(b.notes != null && { notes: String(b.notes) }),
         ...(b.gpsCoordinates != null && { gpsCoordinates: String(b.gpsCoordinates) }),
       },

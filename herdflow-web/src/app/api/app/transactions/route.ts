@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
+import { getAnimalForFarmer } from "@/lib/tenant-lookups";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,11 @@ export async function POST(request: Request) {
   const localId = (b.localId as string | undefined) ?? null;
 
   const transaction = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+    if (b.animalId) {
+      const animal = await getAnimalForFarmer(tx, String(b.animalId), auth.effectiveFarmerId);
+      if (!animal) return "not-found" as const;
+    }
+
     if (localId) {
       const existing = await tx.farmerTransaction.findUnique({ where: { localId } });
       if (existing) return existing;
@@ -81,5 +87,8 @@ export async function POST(request: Request) {
     });
   });
 
+  if (transaction === "not-found") {
+    return NextResponse.json({ error: "Animal not found" }, { status: 404 });
+  }
   return NextResponse.json(transaction, { status: 201 });
 }
