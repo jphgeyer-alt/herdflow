@@ -65,34 +65,53 @@ export async function PATCH(request: Request, ctx: Ctx) {
   }
   const b = body as Record<string, unknown>;
 
-  const updated = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
-    tx.farmerAnimal.update({
-      where: { id: existing.id },
-      data: {
-        ...(b.tag != null && { tagNumber: String(b.tag) }),
-        ...(b.name != null && { name: String(b.name) }),
-        ...(b.species != null && { species: String(b.species) }),
-        ...(b.breed != null && { breed: String(b.breed) }),
-        ...(b.gender != null && { gender: String(b.gender) }),
-        ...(b.birthDate != null && { dateOfBirth: new Date(b.birthDate as string) }),
-        ...(b.weight != null && { weight: Number(b.weight) }),
-        ...(b.campId != null && { camp: String(b.campId) }),
-        ...(b.campId == null &&
-          b.assignedCampId != null && { camp: String(b.assignedCampId) }),
-        ...(b.note != null && { notes: String(b.note) }),
-        ...(b.status != null && { status: String(b.status) }),
-        ...(b.healthStatus != null && { healthStatus: String(b.healthStatus) }),
-        ...(b.source != null && { source: String(b.source) }),
-        ...(b.purchasePrice != null && { purchasePrice: Number(b.purchasePrice) }),
-        ...(b.dateAcquired != null && { dateAcquired: new Date(b.dateAcquired as string) }),
-        ...(b.auctionHouse != null && { auctionHouse: String(b.auctionHouse) }),
-        ...(b.sellerName != null && { sellerName: String(b.sellerName) }),
-        ...(b.prevFarm != null && { prevFarm: String(b.prevFarm) }),
-      },
-    }),
-  );
+  const data = {
+    ...(b.tag != null && { tagNumber: String(b.tag) }),
+    ...(b.name != null && { name: String(b.name) }),
+    ...(b.species != null && { species: String(b.species) }),
+    ...(b.breed != null && { breed: String(b.breed) }),
+    ...(b.gender != null && { gender: String(b.gender) }),
+    ...(b.birthDate != null && { dateOfBirth: new Date(b.birthDate as string) }),
+    ...(b.weight != null && { weight: Number(b.weight) }),
+    ...(b.campId != null && { camp: String(b.campId) }),
+    ...(b.campId == null && b.assignedCampId != null && { camp: String(b.assignedCampId) }),
+    ...(b.note != null && { notes: String(b.note) }),
+    ...(b.status != null && { status: String(b.status) }),
+    ...(b.healthStatus != null && { healthStatus: String(b.healthStatus) }),
+    ...(b.source != null && { source: String(b.source) }),
+    ...(b.purchasePrice != null && { purchasePrice: Number(b.purchasePrice) }),
+    ...(b.dateAcquired != null && { dateAcquired: new Date(b.dateAcquired as string) }),
+    ...(b.auctionHouse != null && { auctionHouse: String(b.auctionHouse) }),
+    ...(b.sellerName != null && { sellerName: String(b.sellerName) }),
+    ...(b.prevFarm != null && { prevFarm: String(b.prevFarm) }),
+  };
 
-  return NextResponse.json(updated);
+  // expectedVersion is optional — omitted by older app builds or any entity
+  // type not yet migrated to conflict detection, in which case this behaves
+  // exactly as an unconditional update always has.
+  if (b.expectedVersion == null) {
+    const updated = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+      tx.farmerAnimal.update({ where: { id: existing.id }, data }),
+    );
+    return NextResponse.json(updated);
+  }
+
+  const result = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+    const { count } = await tx.farmerAnimal.updateMany({
+      where: { id: existing.id, version: Number(b.expectedVersion) },
+      data: { ...data, version: { increment: 1 } },
+    });
+    if (count === 0) {
+      const current = await tx.farmerAnimal.findUnique({ where: { id: existing.id } });
+      return { conflict: true as const, current };
+    }
+    return { conflict: false as const, current: await tx.farmerAnimal.findUnique({ where: { id: existing.id } }) };
+  });
+
+  if (result.conflict) {
+    return NextResponse.json({ conflict: true, current: result.current }, { status: 409 });
+  }
+  return NextResponse.json(result.current);
 }
 
 export async function DELETE(request: Request, ctx: Ctx) {

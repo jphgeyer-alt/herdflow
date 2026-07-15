@@ -37,26 +37,45 @@ export async function PATCH(request: Request, ctx: Ctx) {
   }
   const b = body as Record<string, unknown>;
 
-  const camp = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
-    tx.farmerCamp.update({
-      where: { id: existing.id },
-      data: {
-        ...(b.name != null && { name: String(b.name) }),
-        ...(b.number != null && { number: String(b.number) }),
-        ...(b.hectares != null && { hectares: Number(b.hectares) }),
-        ...(b.forageType != null && { forageType: String(b.forageType) }),
-        ...(b.status != null && { currentStatus: String(b.status) }),
-        ...(b.currentStatus != null && { currentStatus: String(b.currentStatus) }),
-        ...(b.maxCapacity != null && { maxCarryingCapacity: Number(b.maxCapacity) }),
-        ...(b.restingDaysRequired != null && {
-          restingDaysRequired: Number(b.restingDaysRequired),
-        }),
-        ...(b.notes != null && { notes: String(b.notes) }),
-        ...(b.gpsCoordinates != null && { gpsCoordinates: String(b.gpsCoordinates) }),
-      },
-    }),
-  );
-  return NextResponse.json(camp);
+  const data = {
+    ...(b.name != null && { name: String(b.name) }),
+    ...(b.number != null && { number: String(b.number) }),
+    ...(b.hectares != null && { hectares: Number(b.hectares) }),
+    ...(b.forageType != null && { forageType: String(b.forageType) }),
+    ...(b.status != null && { currentStatus: String(b.status) }),
+    ...(b.currentStatus != null && { currentStatus: String(b.currentStatus) }),
+    ...(b.maxCapacity != null && { maxCarryingCapacity: Number(b.maxCapacity) }),
+    ...(b.restingDaysRequired != null && { restingDaysRequired: Number(b.restingDaysRequired) }),
+    ...(b.notes != null && { notes: String(b.notes) }),
+    ...(b.gpsCoordinates != null && { gpsCoordinates: String(b.gpsCoordinates) }),
+  };
+
+  // expectedVersion is optional — omitted by older app builds or any entity
+  // type not yet migrated to conflict detection, in which case this behaves
+  // exactly as an unconditional update always has.
+  if (b.expectedVersion == null) {
+    const camp = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+      tx.farmerCamp.update({ where: { id: existing.id }, data }),
+    );
+    return NextResponse.json(camp);
+  }
+
+  const result = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+    const { count } = await tx.farmerCamp.updateMany({
+      where: { id: existing.id, version: Number(b.expectedVersion) },
+      data: { ...data, version: { increment: 1 } },
+    });
+    if (count === 0) {
+      const current = await tx.farmerCamp.findUnique({ where: { id: existing.id } });
+      return { conflict: true as const, current };
+    }
+    return { conflict: false as const, current: await tx.farmerCamp.findUnique({ where: { id: existing.id } }) };
+  });
+
+  if (result.conflict) {
+    return NextResponse.json({ conflict: true, current: result.current }, { status: 409 });
+  }
+  return NextResponse.json(result.current);
 }
 
 export async function DELETE(request: Request, ctx: Ctx) {
