@@ -928,6 +928,7 @@ model FarmerAnimal {
   isDeleted          Boolean   @default(false)
   photos             String[]
   healthStatus       String    @default("HEALTHY")
+  version            Int       @default(1)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -1049,6 +1050,7 @@ model FarmerCamp {
   gpsCoordinates      String?
   notes               String?
   isDeleted           Boolean  @default(false)
+  version             Int      @default(1)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -1188,6 +1190,55 @@ model FarmerTreatment {
   @@index([animalId])
   @@index([farmerId])
   @@index([withdrawalEndDate])
+}
+
+// Individual-animal breeding/mating tracking (as distinct from
+// FarmerBullTurnout, which records a whole camp's exposure window). The
+// mobile app's local SQLite table and a service.ts for this existed but
+// were never wired to any screen or backend route — this closes that gap.
+model FarmerBreedingRecord {
+  id              String    @id @default(cuid())
+  localId         String?   @unique
+  farmerId        String
+  femaleAnimalId  String
+  femaleAnimalTag String
+  maleAnimalId    String?
+  maleAnimalTag   String?
+  species         String
+  breedingDate    DateTime
+  expectedDueDate DateTime?
+  outcome         String    @default("PENDING")
+  calvingDate     DateTime?
+  offspringCount  Int?
+  notes           String?
+  isDeleted       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([farmerId])
+  @@index([femaleAnimalId])
+}
+
+// Feed/ration tracking per camp — the feedlot-relevant record this app
+// didn't have at all (Average Daily Gain, added earlier, covers the growth
+// side using existing weight_records; this covers feed cost, the other
+// half of a feedlot's core numbers: cost per kg gained).
+model FarmerFeedLog {
+  id         String    @id @default(cuid())
+  localId    String?   @unique
+  farmerId   String
+  campId     String
+  campName   String
+  feedType   String
+  quantityKg Decimal
+  costTotal  Decimal?
+  feedDate   DateTime
+  notes      String?
+  isDeleted  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  @@index([farmerId])
+  @@index([campId])
 }
 
 // ─── Commercial system: subscriptions + unified payments ────────────────────
