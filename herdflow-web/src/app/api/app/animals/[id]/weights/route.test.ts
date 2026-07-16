@@ -68,7 +68,9 @@ describe("POST/GET /api/app/animals/[id]/weights — localId fallback", () => {
     const res = await postWeight(localId, { weight: 250 });
     expect(res.status).toBe(201);
     const body = await res.json();
-    expect(body.weight).toBe(250);
+    // Prisma Decimal fields serialize as strings through NextResponse.json
+    // (Decimal.toJSON() returns a string), not plain numbers.
+    expect(Number(body.weight)).toBe(250);
 
     const animal = await prisma.farmerAnimal.findUniqueOrThrow({ where: { id: realId } });
     expect(Number(animal.weight)).toBe(250);
