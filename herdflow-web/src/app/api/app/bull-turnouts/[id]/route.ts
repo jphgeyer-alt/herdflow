@@ -36,14 +36,37 @@ export async function PATCH(request: Request, ctx: Ctx) {
   });
   if (!existing) return NextResponse.json({ error: "Turnout not found" }, { status: 404 });
 
-  const updated = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
-    tx.farmerBullTurnout.update({
-      where: { id: existing.id },
-      data: {
-        ...(b.dateOut != null && { dateOut: new Date(b.dateOut as string) }),
-        ...(b.notes != null && { notes: String(b.notes) }),
-      },
-    }),
-  );
-  return NextResponse.json(updated);
+  const data = {
+    ...(b.dateOut != null && { dateOut: new Date(b.dateOut as string) }),
+    ...(b.notes != null && { notes: String(b.notes) }),
+  };
+
+  // expectedVersion is optional — omitted by older app builds, in which case
+  // this behaves exactly as an unconditional update always has.
+  if (b.expectedVersion == null) {
+    const updated = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+      tx.farmerBullTurnout.update({ where: { id: existing.id }, data }),
+    );
+    return NextResponse.json(updated);
+  }
+
+  const result = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+    const { count } = await tx.farmerBullTurnout.updateMany({
+      where: { id: existing.id, version: Number(b.expectedVersion) },
+      data: { ...data, version: { increment: 1 } },
+    });
+    if (count === 0) {
+      const current = await tx.farmerBullTurnout.findUnique({ where: { id: existing.id } });
+      return { conflict: true as const, current };
+    }
+    return {
+      conflict: false as const,
+      current: await tx.farmerBullTurnout.findUnique({ where: { id: existing.id } }),
+    };
+  });
+
+  if (result.conflict) {
+    return NextResponse.json({ conflict: true, current: result.current }, { status: 409 });
+  }
+  return NextResponse.json(result.current);
 }

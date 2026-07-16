@@ -951,6 +951,7 @@ model FarmerHealthRecord {
   documents    String[]
   eventDate    DateTime
   status       String    @default("pending")
+  version      Int       @default(1)
   createdAt    DateTime  @default(now())
 
   @@index([animalId])
@@ -1006,6 +1007,7 @@ model FarmerVaccination {
   nextDueDate    DateTime?
   status         String    @default("SCHEDULED")
   notes          String?
+  version        Int       @default(1)
   createdAt      DateTime  @default(now())
 
   @@index([animalId])
@@ -1127,6 +1129,7 @@ model FarmerBullTurnout {
   recordedByRole       String
   notes                String?
   isDeleted            Boolean   @default(false)
+  version              Int       @default(1)
   createdAt            DateTime  @default(now())
 
   @@index([farmerId])
@@ -1212,6 +1215,7 @@ model FarmerBreedingRecord {
   offspringCount  Int?
   notes           String?
   isDeleted       Boolean   @default(false)
+  version         Int       @default(1)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
