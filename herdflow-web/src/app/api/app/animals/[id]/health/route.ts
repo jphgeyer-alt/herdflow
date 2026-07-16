@@ -2,20 +2,24 @@
 import { NextResponse } from "next/server";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
+import { getAnimalForFarmer } from "@/lib/tenant-lookups";
 
 export const dynamic = "force-dynamic";
 
 type Ctx = { params: Promise<{ id: string }> };
 
+// NOTE: FarmerHealthRecord.animalId is populated by mobile using the
+// animal's local id (mobile has no way to send the real cuid), so the
+// create below stores the raw path param `id`, not the resolved animal's
+// real id — mirrors animals/[id]/route.ts's GET handler. Only the
+// ownership check needs the id-or-localId fallback.
 export async function GET(request: Request, ctx: Ctx) {
   const auth = await requireMobileUser(request);
   if (!isMobileUser(auth)) return auth;
 
   const { id } = await ctx.params;
   const records = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
-    const animal = await tx.farmerAnimal.findFirst({
-      where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
-    });
+    const animal = await getAnimalForFarmer(tx, id, auth.effectiveFarmerId);
     if (!animal) return null;
 
     return tx.farmerHealthRecord.findMany({
@@ -35,9 +39,7 @@ export async function POST(request: Request, ctx: Ctx) {
 
   const { id } = await ctx.params;
   const animal = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
-    tx.farmerAnimal.findFirst({
-      where: { id, farmerId: auth.effectiveFarmerId, isDeleted: false },
-    }),
+    getAnimalForFarmer(tx, id, auth.effectiveFarmerId),
   );
   if (!animal) return NextResponse.json({ error: "Animal not found" }, { status: 404 });
 
