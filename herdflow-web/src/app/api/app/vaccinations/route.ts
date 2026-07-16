@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
+import { getAnimalForFarmer } from "@/lib/tenant-lookups";
 
 export const dynamic = "force-dynamic";
 
@@ -71,10 +72,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "animalId and vaccineName are required" }, { status: 400 });
 
   const vaccination = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
-    // Verify the animal belongs to this farmer
-    const animal = await tx.farmerAnimal.findFirst({
-      where: { id: b.animalId as string, farmerId: auth.effectiveFarmerId, isDeleted: false },
-    });
+    // Verify the animal belongs to this farmer (id-or-localId, same as
+    // every other child-record route — mobile addresses animals by their
+    // local id, which never matches the real cuid on a raw lookup).
+    const animal = await getAnimalForFarmer(tx, b.animalId as string, auth.effectiveFarmerId);
     if (!animal) return null;
 
     return tx.farmerVaccination.create({
