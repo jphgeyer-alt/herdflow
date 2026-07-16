@@ -1146,6 +1146,15 @@ model FarmerMedicine {
   withdrawalPeriodDays Int?
   dosageUnit           String?
   standardDosage       Decimal?
+  // Per-kg body-weight dosing rate (e.g. 1.5 = 1.5ml per kg) — most
+  // veterinary medicines are dosed this way rather than as a flat amount.
+  // When set, treatment recording computes dosage = dosagePerKg * animal's
+  // weight instead of using the flat standardDosage. Null means this
+  // medicine is a fixed dose regardless of the animal's weight.
+  dosagePerKg          Decimal?
+  // Running stock count, in dosageUnit. Decremented by each treatment's
+  // dosage when this medicine is selected (see treatments/route.ts).
+  quantityInStock      Decimal  @default(0)
   storageInstructions  String?
   notes                String?
   isActive             Boolean  @default(true)

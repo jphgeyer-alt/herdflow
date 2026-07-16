@@ -88,6 +88,19 @@ export async function POST(request: Request) {
         followUpDate: b.followUpDate ? new Date(b.followUpDate as string) : null,
       },
     });
+
+    // Deduct the dosage actually used from the medicine's running stock —
+    // idempotency-safe because this only runs when a *new* treatment row
+    // was just created above (a retried/duplicate POST hits the localId
+    // short-circuit and never reaches here).
+    const dosageUsed = b.dosage != null ? Number(b.dosage) : 0;
+    if (b.medicineId && dosageUsed > 0) {
+      await tx.farmerMedicine.updateMany({
+        where: { id: String(b.medicineId), farmerId: auth.effectiveFarmerId },
+        data: { quantityInStock: { decrement: dosageUsed } },
+      });
+    }
+
     return { record: created, created: true };
   });
 
