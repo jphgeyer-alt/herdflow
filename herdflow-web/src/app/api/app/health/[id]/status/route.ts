@@ -29,12 +29,32 @@ export async function PATCH(request: Request, ctx: Ctx) {
 
   if (!b.status) return NextResponse.json({ error: "status is required" }, { status: 400 });
 
-  const updated = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
-    tx.farmerHealthRecord.update({
-      where: { id },
-      data: { status: String(b.status) },
-    }),
-  );
+  // expectedVersion is optional — omitted by older app builds, in which case
+  // this behaves exactly as an unconditional update always has.
+  if (b.expectedVersion == null) {
+    const updated = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+      tx.farmerHealthRecord.update({ where: { id }, data: { status: String(b.status) } }),
+    );
+    return NextResponse.json(updated);
+  }
 
-  return NextResponse.json(updated);
+  const result = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+    const { count } = await tx.farmerHealthRecord.updateMany({
+      where: { id, version: Number(b.expectedVersion) },
+      data: { status: String(b.status), version: { increment: 1 } },
+    });
+    if (count === 0) {
+      const current = await tx.farmerHealthRecord.findUnique({ where: { id } });
+      return { conflict: true as const, current };
+    }
+    return {
+      conflict: false as const,
+      current: await tx.farmerHealthRecord.findUnique({ where: { id } }),
+    };
+  });
+
+  if (result.conflict) {
+    return NextResponse.json({ conflict: true, current: result.current }, { status: 409 });
+  }
+  return NextResponse.json(result.current);
 }

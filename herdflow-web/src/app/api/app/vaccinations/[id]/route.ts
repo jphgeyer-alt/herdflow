@@ -28,18 +28,37 @@ export async function PATCH(request: Request, ctx: Ctx) {
   }
   const b = body as Record<string, unknown>;
 
-  const updated = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
-    tx.farmerVaccination.update({
-      where: { id },
-      data: {
-        ...(b.status != null && { status: String(b.status) }),
-        ...(b.status === "COMPLETED" && { vaccinatedDate: new Date() }),
-        ...(b.vaccinatedDate != null && { vaccinatedDate: new Date(b.vaccinatedDate as string) }),
-        ...(b.notes != null && { notes: String(b.notes) }),
-        ...(b.nextDueDate != null && { nextDueDate: new Date(b.nextDueDate as string) }),
-      },
-    }),
-  );
+  const data = {
+    ...(b.status != null && { status: String(b.status) }),
+    ...(b.status === "COMPLETED" && { vaccinatedDate: new Date() }),
+    ...(b.vaccinatedDate != null && { vaccinatedDate: new Date(b.vaccinatedDate as string) }),
+    ...(b.notes != null && { notes: String(b.notes) }),
+    ...(b.nextDueDate != null && { nextDueDate: new Date(b.nextDueDate as string) }),
+  };
 
-  return NextResponse.json(updated);
+  // expectedVersion is optional — omitted by older app builds, in which case
+  // this behaves exactly as an unconditional update always has.
+  if (b.expectedVersion == null) {
+    const updated = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+      tx.farmerVaccination.update({ where: { id }, data }),
+    );
+    return NextResponse.json(updated);
+  }
+
+  const result = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
+    const { count } = await tx.farmerVaccination.updateMany({
+      where: { id, version: Number(b.expectedVersion) },
+      data: { ...data, version: { increment: 1 } },
+    });
+    if (count === 0) {
+      const current = await tx.farmerVaccination.findUnique({ where: { id } });
+      return { conflict: true as const, current };
+    }
+    return { conflict: false as const, current: await tx.farmerVaccination.findUnique({ where: { id } }) };
+  });
+
+  if (result.conflict) {
+    return NextResponse.json({ conflict: true, current: result.current }, { status: 409 });
+  }
+  return NextResponse.json(result.current);
 }
