@@ -130,12 +130,21 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json();
-    const text = data?.content?.[0]?.text ?? "";
+    const rawText = data?.content?.[0]?.text ?? "";
+    // The prompts explicitly say "no markdown code fences", but Claude wraps
+    // its JSON in ```json ... ``` fairly often regardless -- stripping them
+    // defensively is the standard, robust fix rather than relying on the
+    // model to always comply with that instruction.
+    const text = rawText
+      .trim()
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/, "")
+      .trim();
     let parsed: unknown;
     try {
       parsed = JSON.parse(text);
     } catch {
-      console.error("Vision API returned non-JSON:", text);
+      console.error("Vision API returned non-JSON:", rawText);
       return NextResponse.json({ error: "Could not parse the vision analysis result." }, { status: 502 });
     }
 
