@@ -1182,15 +1182,30 @@ model FarmerMedicine {
   withdrawalPeriodDays Int?
   dosageUnit           String?
   standardDosage       Decimal?
-  // Per-kg body-weight dosing rate (e.g. 1.5 = 1.5ml per kg) — most
-  // veterinary medicines are dosed this way rather than as a flat amount.
-  // When set, treatment recording computes dosage = dosagePerKg * animal's
-  // weight instead of using the flat standardDosage. Null means this
-  // medicine is a fixed dose regardless of the animal's weight.
+  // Weight-based dosing rate — most veterinary products are dosed this way
+  // rather than as a flat amount, but the label rarely reads as a strict
+  // per-1kg rate: many are "1ml per 25kg" or "1 tablet per 50kg" rather than
+  // "0.04ml per kg". dosagePerKg stores the raw label amount (e.g. 1) and
+  // dosageWeightBasis stores the kg increment it applies to (e.g. 25) — the
+  // farmer types both exactly as printed, no manual division required.
+  // Actual dose = dosagePerKg * (animal's weight / dosageWeightBasis).
+  // dosageWeightBasis defaults to 1, so existing per-kg medicines (and any
+  // record from before this field existed) compute identically to before.
+  // Null dosagePerKg means this medicine is a fixed dose regardless of the
+  // animal's weight (standardDosage applies instead).
   dosagePerKg          Decimal?
+  dosageWeightBasis    Decimal  @default(1)
   // Running stock count, in dosageUnit. Decremented by each treatment's
   // dosage when this medicine is selected (see treatments/route.ts).
   quantityInStock      Decimal  @default(0)
+  // Price per unit of dosageUnit — derived from a purchase/restock cost
+  // divided by the quantity it bought ("latest cost wins", not a weighted
+  // average). Null until a cost has ever been entered. Used for stock
+  // valuation (quantityInStock * costPerUnit) on the inventory list.
+  costPerUnit          Decimal?
+  // Optional farmer-set threshold — when quantityInStock drops to or below
+  // this, the inventory list flags it as low stock. Null means no warning.
+  reorderLevel         Decimal?
   storageInstructions  String?
   notes                String?
   isActive             Boolean  @default(true)

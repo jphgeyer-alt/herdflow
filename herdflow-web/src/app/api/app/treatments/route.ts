@@ -92,13 +92,22 @@ export async function POST(request: Request) {
     // Deduct the dosage actually used from the medicine's running stock —
     // idempotency-safe because this only runs when a *new* treatment row
     // was just created above (a retried/duplicate POST hits the localId
-    // short-circuit and never reaches here).
+    // short-circuit and never reaches here). Reads current stock first and
+    // clamps at 0 — a plain Prisma `decrement` has no floor, so a treatment
+    // using more than what's on hand would otherwise leave quantityInStock
+    // negative.
     const dosageUsed = b.dosage != null ? Number(b.dosage) : 0;
     if (b.medicineId && dosageUsed > 0) {
-      await tx.farmerMedicine.updateMany({
+      const medicine = await tx.farmerMedicine.findFirst({
         where: { id: String(b.medicineId), farmerId: auth.effectiveFarmerId },
-        data: { quantityInStock: { decrement: dosageUsed } },
       });
+      if (medicine) {
+        const remaining = Math.max(0, Number(medicine.quantityInStock) - dosageUsed);
+        await tx.farmerMedicine.update({
+          where: { id: medicine.id },
+          data: { quantityInStock: remaining },
+        });
+      }
     }
 
     return { record: created, created: true };
