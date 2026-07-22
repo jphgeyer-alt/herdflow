@@ -1288,21 +1288,52 @@ model FarmerBreedingRecord {
 // side using existing weight_records; this covers feed cost, the other
 // half of a feedlot's core numbers: cost per kg gained).
 model FarmerFeedLog {
-  id         String   @id @default(cuid())
-  localId    String?  @unique
-  farmerId   String
-  campId     String
-  campName   String
-  feedType   String
-  quantityKg Decimal
-  costTotal  Decimal?
-  feedDate   DateTime
-  notes      String?
-  isDeleted  Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  id               String   @id @default(cuid())
+  localId          String?  @unique
+  farmerId         String
+  campId           String
+  campName         String
+  feedType         String
+  quantityKg       Decimal
+  costTotal        Decimal?
+  feedDate         DateTime
+  notes            String?
+  // Optional link to a tracked FarmerNutritionItem (e.g. a salt/mineral
+  // lick) -- null for untracked/ad-hoc entries (Maize Silage, Hay, etc),
+  // which behave exactly as before this field existed. When set, the
+  // linked item's quantityInStock is decremented by quantityKg.
+  nutritionItemId  String?
+  recordedByUserId String?
+  recordedByName   String?
+  recordedByRole   String?
+  isDeleted        Boolean  @default(false)
+  createdAt        DateTime @default(now())
 
   @@index([farmerId])
   @@index([campId])
+}
+
+// Nutrition/mineral supplementation inventory (phosphate/salt/protein/urea
+// licks, loose mineral, creep feed) -- twin of FarmerMedicine, simpler (no
+// dosage/withdrawal fields, not applicable to these products). Usage is
+// logged via FarmerFeedLog.nutritionItemId rather than a separate table, so
+// a camp's history (hay, silage, salt block) stays in one timeline.
+model FarmerNutritionItem {
+  id              String   @id @default(cuid())
+  localId         String?  @unique
+  farmerId        String
+  name            String
+  category        String
+  unit            String?
+  quantityInStock Decimal  @default(0)
+  costPerUnit     Decimal?
+  reorderLevel    Decimal?
+  notes           String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([farmerId])
 }
 
 // ─── Commercial system: subscriptions + unified payments ────────────────────
