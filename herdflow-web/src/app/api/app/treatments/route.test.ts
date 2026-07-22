@@ -87,6 +87,25 @@ describe("POST /api/app/treatments — medicine stock deduction", () => {
     expect(Number(medicine.quantityInStock)).toBe(100);
   });
 
+  it("clamps stock at 0 instead of going negative when dosage exceeds what's on hand", async () => {
+    await prisma.farmerMedicine.update({
+      where: { id: medicineId },
+      data: { quantityInStock: 3 },
+    });
+
+    const res = await postTreatment({
+      animalId: animalLocalId,
+      medicineId,
+      medicineName: "Terramycin",
+      treatmentType: "INJECTION",
+      dosage: 10,
+    });
+    expect(res.status).toBe(201);
+
+    const medicine = await prisma.farmerMedicine.findUniqueOrThrow({ where: { id: medicineId } });
+    expect(Number(medicine.quantityInStock)).toBe(0);
+  });
+
   it("does not double-deduct on a retried (idempotent) POST with the same localId", async () => {
     const body = {
       localId: "retry-1",
