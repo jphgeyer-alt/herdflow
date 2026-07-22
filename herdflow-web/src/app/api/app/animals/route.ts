@@ -76,6 +76,7 @@ export async function POST(request: Request) {
           auctionHouse: (b.auctionHouse as string | undefined) ?? null,
           sellerName: (b.sellerName as string | undefined) ?? null,
           prevFarm: (b.prevFarm as string | undefined) ?? null,
+          electronicId: (b.electronicId as string | undefined) ?? null,
         },
       });
       return { record: created, created: true };
