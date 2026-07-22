@@ -2,14 +2,82 @@ import { prisma } from "@/lib/prisma";
 import { withAdminContext } from "@/lib/tenant-prisma";
 import { sendListingExpiringEmail, sendTrialEndingEmail } from "@/lib/email";
 import { env } from "@/lib/env";
+import Expo from "expo-server-sdk";
+
+const expo = new Expo();
 
 /**
- * Cron-callable (daily): each finder uses a ~24h window (matching the
- * intended once-a-day cron cadence) instead of a "reminder sent" flag, so a
- * listing/subscription naturally gets exactly one reminder as it passes
- * through the window on a single day's run.
+ * Push-notify farmers (and their farm team — managers/workers under the
+ * same owner) about health events due in the next 2 days. Complements the
+ * mobile app's own local scheduling (notification.service.ts,
+ * scheduleHealthEventReminder) rather than replacing it: local scheduling
+ * fires from the device that recorded the event; this reaches every device
+ * on the farm, and still fires even if local scheduling never ran (e.g.
+ * notification permission granted after the event was saved).
  */
-export async function sendDailyReminders(): Promise<{ listingReminders: number; trialReminders: number }> {
+async function sendHealthDueReminders(): Promise<number> {
+  const now = Date.now();
+  const DAY = 24 * 60 * 60 * 1000;
+
+  const dueRecords = await withAdminContext((tx) =>
+    tx.farmerHealthRecord.findMany({
+      where: {
+        status: "pending",
+        followUpDate: { gte: new Date(now), lt: new Date(now + 2 * DAY) },
+      },
+      select: { farmerId: true, eventType: true },
+    }),
+  );
+  if (dueRecords.length === 0) return 0;
+
+  const farmerIds = [...new Set(dueRecords.map((r) => r.farmerId))];
+  // Notify the farm owner plus any manager/worker whose account points at
+  // that owner (mirrors mobile-auth.ts's effectiveFarmerId resolution, in
+  // reverse — here we're going from owner ID back out to the whole team).
+  const teamProfiles = await withAdminContext((tx) =>
+    tx.farmerProfile.findMany({
+      where: { OR: [{ userId: { in: farmerIds } }, { ownerUserId: { in: farmerIds } }] },
+      select: { userId: true },
+    }),
+  );
+  const userIds = [...new Set([...farmerIds, ...teamProfiles.map((p) => p.userId)])];
+
+  const tokenRecords = await withAdminContext((tx) =>
+    tx.deviceToken.findMany({ where: { userId: { in: userIds }, isActive: true } }),
+  );
+  const validTokens = tokenRecords.map((t) => t.token).filter((t) => Expo.isExpoPushToken(t));
+  if (validTokens.length === 0) return 0;
+
+  const body =
+    dueRecords.length === 1
+      ? `${dueRecords[0].eventType} due in the next 2 days`
+      : `${dueRecords.length} health events due in the next 2 days`;
+  const messages = validTokens.map((token) => ({
+    to: token,
+    sound: "default" as const,
+    title: "🔔 Health reminder",
+    body,
+  }));
+
+  let sentCount = 0;
+  for (const chunk of expo.chunkPushNotifications(messages)) {
+    const receipts = await expo.sendPushNotificationsAsync(chunk);
+    sentCount += receipts.filter((r) => r.status === "ok").length;
+  }
+  return sentCount;
+}
+
+/**
+ * Cron-callable (daily): each finder uses a ~24h-to-48h window (matching the
+ * intended once-a-day cron cadence) instead of a "reminder sent" flag, so a
+ * listing/subscription/health event naturally gets exactly one reminder as
+ * it passes through the window on a single day's run.
+ */
+export async function sendDailyReminders(): Promise<{
+  listingReminders: number;
+  trialReminders: number;
+  healthReminders: number;
+}> {
   const siteUrl = env.NEXT_PUBLIC_SITE_URL || "";
   const now = Date.now();
   const DAY = 24 * 60 * 60 * 1000;
@@ -58,5 +126,10 @@ export async function sendDailyReminders(): Promise<{ listingReminders: number; 
     trialReminders++;
   }
 
-  return { listingReminders, trialReminders };
+  const healthReminders = await sendHealthDueReminders().catch((err) => {
+    console.error("Health due reminders failed:", err);
+    return 0;
+  });
+
+  return { listingReminders, trialReminders, healthReminders };
 }
