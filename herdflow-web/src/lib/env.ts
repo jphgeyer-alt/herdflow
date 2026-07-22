@@ -19,4 +19,7 @@ export const env = {
   S3_REGION: process.env.S3_REGION || "auto",
   S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID || "",
   S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY || "",
+  // Server-side only — never exposed to the mobile bundle. Used by
+  // /api/app/vision/analyze (receipt scanning, sick-animal photo triage).
+  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || "",
 };
