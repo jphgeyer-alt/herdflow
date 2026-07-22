@@ -3,36 +3,15 @@ import type { NextRequest } from "next/server";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-// ── Simple in-memory rate limiting ────────────────────────────────────────────
-// Resets on server restart — good enough for MVP without Redis
-const ipRequests = new Map<string, { count: number; resetAt: number }>();
-const emailRequests = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(
-  key: string,
-  store: Map<string, { count: number; resetAt: number }>,
-  maxRequests: number,
-  windowMs: number,
-): boolean {
-  const now = Date.now();
-  const entry = store.get(key);
-  if (!entry || entry.resetAt < now) {
-    store.set(key, { count: 1, resetAt: now + windowMs });
-    return false; // not rate limited
-  }
-  if (entry.count >= maxRequests) return true; // rate limited
-  entry.count++;
-  return false;
-}
-
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = getClientIp(request);
 
   // Rate limit: 10 req/IP per hour, 3 req/email per 15 min
-  if (checkRateLimit(ip, ipRequests, 10, 60 * 60 * 1000)) {
+  if (checkRateLimit("forgot-password-ip", ip, 10, 60 * 60 * 1000)) {
     return NextResponse.json(
       { error: "Too many requests. Please wait before trying again." },
       { status: 429 },
@@ -58,7 +37,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Per-email rate limit: 3 per 15 min
-  if (checkRateLimit(email, emailRequests, 3, 15 * 60 * 1000)) {
+  if (checkRateLimit("forgot-password-email", email, 3, 15 * 60 * 1000)) {
     return NextResponse.json(
       { error: "Too many requests for this email. Please wait 15 minutes." },
       { status: 429 },
