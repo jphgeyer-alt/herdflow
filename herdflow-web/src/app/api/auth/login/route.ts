@@ -6,8 +6,29 @@ import {
   SESSION_COOKIE_OPTIONS,
   USER_SESSION_COOKIE,
 } from "@/lib/user-auth";
+import {
+  checkRateLimit,
+  getClientIp,
+  isLockedOut,
+  recordFailedAttempt,
+  clearFailedAttempts,
+} from "@/lib/rate-limit";
+
+const LOGIN_LOCKOUT_MSG =
+  "Too many failed attempts. Please wait 15 minutes before trying again.";
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  // Blanket per-IP throttle against flooding (any outcome counts) — 30
+  // attempts/hour is generous for a shared office/farm IP with several
+  // legitimate users, while still bounding brute-force volume.
+  if (checkRateLimit("login-ip", ip, 30, 60 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait before trying again." },
+      { status: 429 },
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -22,6 +43,14 @@ export async function POST(request: Request) {
   if (!email || !password)
     return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
 
+  // Per-account lockout on FAILED attempts only — a correct password never
+  // gets throttled, but repeated wrong-password attempts against one email
+  // (credential stuffing) get locked out regardless of which IP they come
+  // from.
+  if (isLockedOut("login-email", email)) {
+    return NextResponse.json({ error: LOGIN_LOCKOUT_MSG }, { status: 429 });
+  }
+
   let user;
   try {
     user = await prisma.user.findUnique({ where: { email } });
@@ -32,11 +61,20 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!user || !user.passwordHash)
+  if (!user || !user.passwordHash) {
+    recordFailedAttempt("login-email", email, 5, 15 * 60 * 1000, 15 * 60 * 1000);
     return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+  }
 
   const valid = await verifyPassword(password, user.passwordHash);
-  if (!valid) return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+  if (!valid) {
+    const lockedNow = recordFailedAttempt("login-email", email, 5, 15 * 60 * 1000, 15 * 60 * 1000);
+    return NextResponse.json(
+      { error: lockedNow ? LOGIN_LOCKOUT_MSG : "Invalid email or password" },
+      { status: lockedNow ? 429 : 401 },
+    );
+  }
+  clearFailedAttempts("login-email", email);
 
   const sessionValue = await createUserSession(user.id, request.headers.get("user-agent") ?? undefined);
 
