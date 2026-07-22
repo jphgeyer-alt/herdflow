@@ -37,6 +37,18 @@ export async function getMedicineForFarmer(
   return tx.farmerMedicine.findFirst({ where: { localId: id, farmerId, isActive: true } });
 }
 
+export async function getNutritionItemForFarmer(
+  tx: Prisma.TransactionClient,
+  id: string,
+  farmerId: string,
+) {
+  const byId = await tx.farmerNutritionItem.findFirst({ where: { id, farmerId, isActive: true } });
+  if (byId) return byId;
+  return tx.farmerNutritionItem.findFirst({
+    where: { localId: id, farmerId, isActive: true },
+  });
+}
+
 export async function getCampForFarmer(
   tx: Prisma.TransactionClient,
   id: string,
