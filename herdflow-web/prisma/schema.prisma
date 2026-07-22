@@ -1039,22 +1039,29 @@ model MarketPriceCache {
 // ── Mobile App: Camp Management ───────────────────────────────────────────────
 
 model FarmerCamp {
-  id                  String   @id @default(cuid())
-  localId             String?  @unique // mobile-generated UUID for dedup
-  farmerId            String
-  name                String
-  number              String?
-  hectares            Decimal?
-  forageType          String?
-  currentStatus       String   @default("RESTING")
-  maxCarryingCapacity Int?
-  restingDaysRequired Int      @default(42)
-  gpsCoordinates      String?
-  notes               String?
-  isDeleted           Boolean  @default(false)
-  version             Int      @default(1)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                      String    @id @default(cuid())
+  localId                 String?   @unique // mobile-generated UUID for dedup
+  farmerId                String
+  name                    String
+  number                  String?
+  hectares                Decimal?
+  forageType              String?
+  currentStatus           String    @default("RESTING")
+  maxCarryingCapacity     Int?
+  restingDaysRequired     Int       @default(42)
+  // When the camp most recently transitioned to RESTING, and the date its
+  // rest window ends (lastGrazedDate + restingDaysRequired) — set together
+  // by the mobile app on that status transition. Both nullable: a camp
+  // that has never gone through a tracked RESTING transition (e.g.
+  // GRAZING since creation) has neither.
+  lastGrazedDate          DateTime?
+  availableForGrazingDate DateTime?
+  gpsCoordinates          String?
+  notes                   String?
+  isDeleted               Boolean   @default(false)
+  version                 Int       @default(1)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   @@index([farmerId])
   @@index([farmerId, isDeleted])
@@ -1237,8 +1244,8 @@ model FarmerBreedingRecord {
 // side using existing weight_records; this covers feed cost, the other
 // half of a feedlot's core numbers: cost per kg gained).
 model FarmerFeedLog {
-  id         String    @id @default(cuid())
-  localId    String?   @unique
+  id         String   @id @default(cuid())
+  localId    String?  @unique
   farmerId   String
   campId     String
   campName   String
@@ -1247,8 +1254,8 @@ model FarmerFeedLog {
   costTotal  Decimal?
   feedDate   DateTime
   notes      String?
-  isDeleted  Boolean   @default(false)
-  createdAt  DateTime  @default(now())
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   @@index([farmerId])
   @@index([campId])
