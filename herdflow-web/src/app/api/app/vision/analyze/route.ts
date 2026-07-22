@@ -36,6 +36,21 @@ Look at the image (and any symptom description provided) and return ONLY a JSON 
 }
 If the image doesn't show a clear enough view of an animal to say anything useful, return {"error": "unclear_image"} instead.`;
 
+// No image involved -- takes HerdFlow's own structured camp/weather data
+// (never invents figures it wasn't given) and returns a plain-language
+// grazing recommendation. Not a life-safety domain like the triage prompt
+// above, so the framing can be directly useful rather than deliberately
+// hedged -- but it still must stay grounded in only the data provided.
+const PASTURE_ADVISORY_PROMPT = `You are a pasture/grazing advisor helping a South African livestock farmer decide how to rotate their camps (paddocks). You will be given, as JSON, a list of the farmer's camps (each with a name, current status, how many days into its rest period it is versus how many days rest it needs, and its carrying capacity as a percentage) and current weather conditions (temperature, humidity, and a short rainfall/precipitation-chance forecast).
+
+Only use the figures given to you -- never invent a rainfall amount, temperature, or camp detail that wasn't provided. If weather data is missing, base your recommendation on camp data alone and say so.
+
+Return ONLY a JSON object (no other text, no markdown code fences) with this exact shape:
+{
+  "recommendations": an array with one object per camp given, each { "campName": string (must match a name you were given), "recommendation": a short 1-2 sentence plain-language recommendation, "priority": one of "info" | "consider_soon" | "act_now" },
+  "summary": a short 1-2 sentence overall summary across all camps
+}`;
+
 export async function POST(request: Request) {
   const auth = await requireMobileUser(request);
   if (!isMobileUser(auth)) return auth;
@@ -57,22 +72,40 @@ export async function POST(request: Request) {
   const mediaType = (b.mediaType as string) || "image/jpeg";
   const context = typeof b.context === "string" ? b.context.trim() : "";
 
-  if (!imageBase64) {
-    return NextResponse.json({ error: "imageBase64 is required" }, { status: 400 });
-  }
-  if (promptType !== "receipt" && promptType !== "animal_triage") {
+  if (!["receipt", "animal_triage", "pasture_advisory"].includes(promptType)) {
     return NextResponse.json(
-      { error: "promptType must be 'receipt' or 'animal_triage'" },
+      { error: "promptType must be 'receipt', 'animal_triage', or 'pasture_advisory'" },
       { status: 400 },
     );
   }
+  if (promptType !== "pasture_advisory" && !imageBase64) {
+    return NextResponse.json({ error: "imageBase64 is required" }, { status: 400 });
+  }
+  if (promptType === "pasture_advisory" && !b.campData) {
+    return NextResponse.json({ error: "campData is required" }, { status: 400 });
+  }
 
-  const systemPrompt = promptType === "receipt" ? RECEIPT_PROMPT : ANIMAL_TRIAGE_PROMPT;
-  const userText = context
-    ? `Additional context from the farmer: ${context}`
-    : promptType === "receipt"
-      ? "Extract the receipt data."
-      : "What might be going on with this animal?";
+  const systemPrompt =
+    promptType === "receipt"
+      ? RECEIPT_PROMPT
+      : promptType === "animal_triage"
+        ? ANIMAL_TRIAGE_PROMPT
+        : PASTURE_ADVISORY_PROMPT;
+
+  const content =
+    promptType === "pasture_advisory"
+      ? [{ type: "text", text: JSON.stringify({ camps: b.campData, weather: b.weatherData ?? null }) }]
+      : [
+          { type: "image", source: { type: "base64", media_type: mediaType, data: imageBase64 } },
+          {
+            type: "text",
+            text: context
+              ? `Additional context from the farmer: ${context}`
+              : promptType === "receipt"
+                ? "Extract the receipt data."
+                : "What might be going on with this animal?",
+          },
+        ];
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -86,15 +119,7 @@ export async function POST(request: Request) {
         model: "claude-sonnet-5",
         max_tokens: 1024,
         system: systemPrompt,
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "image", source: { type: "base64", media_type: mediaType, data: imageBase64 } },
-              { type: "text", text: userText },
-            ],
-          },
-        ],
+        messages: [{ role: "user", content }],
       }),
     });
 

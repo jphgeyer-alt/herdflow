@@ -22,4 +22,8 @@ export const env = {
   // Server-side only — never exposed to the mobile bundle. Used by
   // /api/app/vision/analyze (receipt scanning, sick-animal photo triage).
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || "",
+  // Server-side only. OpenWeatherMap (self-serve, free tier) — SAWS/AfriGIS
+  // is the official SA source but requires a paid commercial subscription,
+  // not something obtainable here. Used by /api/app/weather.
+  WEATHER_API_KEY: process.env.WEATHER_API_KEY || "",
 };
