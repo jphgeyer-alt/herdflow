@@ -56,6 +56,10 @@ export async function POST(request: Request) {
         restingDaysRequired: b.restingDaysRequired != null ? Number(b.restingDaysRequired) : 42,
         gpsCoordinates: (b.gpsCoordinates as string | undefined) ?? null,
         notes: (b.notes as string | undefined) ?? null,
+        lastGrazedDate: b.lastGrazedDate ? new Date(b.lastGrazedDate as string) : null,
+        availableForGrazingDate: b.availableForGrazingDate
+          ? new Date(b.availableForGrazingDate as string)
+          : null,
       },
     });
     return { record: created, created: true };

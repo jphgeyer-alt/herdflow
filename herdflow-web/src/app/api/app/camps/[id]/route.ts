@@ -48,6 +48,18 @@ export async function PATCH(request: Request, ctx: Ctx) {
     ...(b.restingDaysRequired != null && { restingDaysRequired: Number(b.restingDaysRequired) }),
     ...(b.notes != null && { notes: String(b.notes) }),
     ...(b.gpsCoordinates != null && { gpsCoordinates: String(b.gpsCoordinates) }),
+    // Unlike the fields above, these two are legitimately set to null (a
+    // camp that just left RESTING clears its rest window) — so presence in
+    // the body is what matters, not truthiness. Always sent together by the
+    // mobile app's computeCampRestDates.
+    ...(b.lastGrazedDate !== undefined && {
+      lastGrazedDate: b.lastGrazedDate ? new Date(b.lastGrazedDate as string) : null,
+    }),
+    ...(b.availableForGrazingDate !== undefined && {
+      availableForGrazingDate: b.availableForGrazingDate
+        ? new Date(b.availableForGrazingDate as string)
+        : null,
+    }),
   };
 
   // expectedVersion is optional — omitted by older app builds or any entity
