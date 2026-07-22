@@ -783,16 +783,21 @@ model DocumentCounter {
 // ─── Mobile App Models ───────────────────────────────────────────────────────
 
 model FarmerProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  farmName    String   @default("")
-  province    String   @default("")
-  species     String[]
-  farmCode    String?  @unique
-  mobileRole  String   @default("FARMER")
-  ownerUserId String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  farmName        String   @default("")
+  province        String   @default("")
+  species         String[]
+  farmCode        String?  @unique
+  mobileRole      String   @default("FARMER")
+  ownerUserId     String?
+  // Global Location Number — assigned by RMIS/GS1 when a farmer registers
+  // their farm for SA livestock traceability. Optional; farmer-entered once
+  // RMIS registration happens outside HerdFlow, shown on the compliance
+  // export so the two records line up.
+  traceabilityGln String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([farmCode])
   @@index([ownerUserId])
@@ -916,6 +921,7 @@ model FarmerAnimal {
   bodyConditionScore Int?
   colour             String?
   microchipId        String?
+  electronicId       String?
   source             String?
   purchasePrice      Decimal?
   dateAcquired       DateTime?
@@ -934,6 +940,29 @@ model FarmerAnimal {
 
   @@index([farmerId, isDeleted])
   @@index([farmerId, species])
+}
+
+// Auditable record of an animal's departure from the herd (sale, death, or
+// other removal) — the "arrivals, departures, and mortalities" stock-sheet
+// the July 2026 Animal Diseases Act traceability regulations require.
+// Arrivals are already captured on FarmerAnimal itself (source/dateAcquired/
+// purchasePrice/etc) so only departures needed a new table.
+model FarmerAnimalEvent {
+  id           String   @id @default(cuid())
+  localId      String?  @unique
+  animalId     String
+  farmerId     String
+  eventType    String // SOLD | DIED | REMOVED
+  eventDate    DateTime
+  salePrice    Decimal?
+  buyerName    String?
+  causeOfDeath String?
+  notes        String?
+  isDeleted    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([animalId])
+  @@index([farmerId])
 }
 
 model FarmerHealthRecord {

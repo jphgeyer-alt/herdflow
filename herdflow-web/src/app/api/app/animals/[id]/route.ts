@@ -84,6 +84,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
     ...(b.auctionHouse != null && { auctionHouse: String(b.auctionHouse) }),
     ...(b.sellerName != null && { sellerName: String(b.sellerName) }),
     ...(b.prevFarm != null && { prevFarm: String(b.prevFarm) }),
+    ...(b.electronicId != null && { electronicId: String(b.electronicId) }),
   };
 
   // expectedVersion is optional — omitted by older app builds or any entity
