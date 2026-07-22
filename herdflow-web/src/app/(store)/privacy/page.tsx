@@ -68,15 +68,19 @@ export default function PrivacyPage() {
             <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">5. Third-Party Services</h2>
             <p>
               HerdFlow uses PayFast for payment processing — their privacy policy governs how they
-              handle your payment data. We use OpenWeatherMap to provide weather forecasts, sending
-              only the GPS coordinates needed for that forecast (a camp&apos;s tagged location, or
-              your device&apos;s current location), never your name or account details. Where you
-              choose to use the app&apos;s AI-assisted features (receipt scanning, sick-animal photo
-              triage, pasture grazing advice), the photo or farm data you submit for that one
-              request is sent to Anthropic (our AI provider) for analysis and is not retained by
-              HerdFlow afterwards — only the information you review and choose to save (e.g. the
-              transaction or treatment record) is stored. We may also use analytics tools to
-              understand platform usage.
+              handle your payment data. We use OpenWeatherMap to provide weather forecasts, and the
+              Copernicus Data Space Ecosystem (an EU public satellite-data service) to provide
+              vegetation-health readings for camps with a location set — both sent only the GPS
+              coordinates needed for that lookup (a camp&apos;s tagged location, or your
+              device&apos;s current location), never your name or account details. Where you choose
+              to use the app&apos;s AI-assisted features (receipt scanning, sick-animal photo triage,
+              pasture grazing advice), the photo or farm data you submit for that one request is sent
+              to Anthropic (our AI provider) for analysis and is not retained by HerdFlow afterwards
+              — only the information you review and choose to save (e.g. the transaction or
+              treatment record) is stored. Livestock market price indicators shown in the app are
+              sourced from published third-party industry data (RPO/ABSA, Digikraal) — this is public
+              market data displayed to you, not your personal data being shared with them. We may
+              also use analytics tools to understand platform usage.
             </p>
           </section>
           <section>
