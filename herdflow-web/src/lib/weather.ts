@@ -59,14 +59,29 @@ export interface WeatherResult {
 }
 
 export async function getWeather(lat: number, lon: number): Promise<WeatherResult | null> {
-  if (!env.WEATHER_API_KEY) return null;
+  if (!env.WEATHER_API_KEY) {
+    console.error("[getWeather] WEATHER_API_KEY is not configured -- set it in Render's env vars");
+    return null;
+  }
 
   try {
     const [currentRes, forecastRes] = await Promise.all([
       fetch(`${CURRENT_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${env.WEATHER_API_KEY}`),
       fetch(`${FORECAST_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${env.WEATHER_API_KEY}`),
     ]);
-    if (!currentRes.ok || !forecastRes.ok) return null;
+    if (!currentRes.ok || !forecastRes.ok) {
+      const [currentBody, forecastBody] = await Promise.all([
+        currentRes.text().catch(() => ""),
+        forecastRes.text().catch(() => ""),
+      ]);
+      console.error("[getWeather] OpenWeatherMap request failed", {
+        currentStatus: currentRes.status,
+        currentBody,
+        forecastStatus: forecastRes.status,
+        forecastBody,
+      });
+      return null;
+    }
 
     const current = await currentRes.json();
     const forecast = await forecastRes.json();
