@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { withAdminContext } from "@/lib/tenant-prisma";
 import { sendListingExpiringEmail, sendTrialEndingEmail } from "@/lib/email";
 import { env } from "@/lib/env";
+import { getWeather } from "@/lib/weather";
 import Expo from "expo-server-sdk";
 
 const expo = new Expo();
@@ -109,6 +110,50 @@ async function sendCampRestReminders(): Promise<number> {
 }
 
 /**
+ * Extreme heat or an extended no-rain stretch, checked against one
+ * representative camp location per farm (the first camp with GPS set —
+ * one weather call per farm per day, not per camp, to keep API usage
+ * bounded). Farms with no camp GPS set are silently skipped rather than
+ * guessed at, same as sendCampRestReminders' precedent for untracked data.
+ * Thresholds are conservative on purpose (35°C, 7 days all under 20%
+ * rain chance) — this is a heads-up, not a substitute for an official
+ * SAWS severe-weather warning.
+ */
+async function sendSevereWeatherAlerts(): Promise<number> {
+  const campsWithGps = await withAdminContext((tx) =>
+    tx.farmerCamp.findMany({
+      where: { isDeleted: false, gpsCoordinates: { not: null } },
+      select: { farmerId: true, gpsCoordinates: true },
+      distinct: ["farmerId"],
+    }),
+  );
+  if (campsWithGps.length === 0) return 0;
+
+  let alerted = 0;
+  for (const camp of campsWithGps) {
+    const parts = (camp.gpsCoordinates ?? "").split(",").map((s) => parseFloat(s.trim()));
+    if (parts.length !== 2 || parts.some((n) => Number.isNaN(n))) continue;
+    const [lat, lon] = parts;
+
+    const weather = await getWeather(lat, lon).catch(() => null);
+    if (!weather) continue;
+
+    const extremeHeat = weather.current.tempC >= 35;
+    const noRainStretch =
+      weather.daily.length >= 5 && weather.daily.every((d) => d.precipitationChance < 20);
+
+    if (!extremeHeat && !noRainStretch) continue;
+
+    const body = extremeHeat
+      ? `${weather.current.tempC}°C today — check livestock have shade and water`
+      : "No significant rain forecast this week — plan grazing accordingly";
+    const sent = await notifyFarmTeams([camp.farmerId], "🌡️ Weather alert", body);
+    if (sent > 0) alerted++;
+  }
+  return alerted;
+}
+
+/**
  * Cron-callable (daily): each finder uses a ~24h-to-48h window (matching the
  * intended once-a-day cron cadence) instead of a "reminder sent" flag, so a
  * listing/subscription/health event naturally gets exactly one reminder as
@@ -119,6 +164,7 @@ export async function sendDailyReminders(): Promise<{
   trialReminders: number;
   healthReminders: number;
   campRestReminders: number;
+  weatherAlerts: number;
 }> {
   const siteUrl = env.NEXT_PUBLIC_SITE_URL || "";
   const now = Date.now();
@@ -178,5 +224,10 @@ export async function sendDailyReminders(): Promise<{
     return 0;
   });
 
-  return { listingReminders, trialReminders, healthReminders, campRestReminders };
+  const weatherAlerts = await sendSevereWeatherAlerts().catch((err) => {
+    console.error("Severe weather alerts failed:", err);
+    return 0;
+  });
+
+  return { listingReminders, trialReminders, healthReminders, campRestReminders, weatherAlerts };
 }
