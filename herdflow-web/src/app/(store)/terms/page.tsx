@@ -21,9 +21,12 @@ export default function TermsPage() {
           <section>
             <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">2. Use of the Platform</h2>
             <p>
-              HerdFlow is a marketplace for agricultural trade. Users must be 18 years or older and
-              legally authorized to conduct transactions in South Africa. All listings must be
-              accurate and comply with South African law.
+              HerdFlow operates two things under one account: a marketplace for agricultural trade,
+              and the HerdFlow mobile app, a farm-management tool for recording and tracking your own
+              livestock, health records, camps, nutrition, and finances. Users must be 18 years or
+              older and legally authorized to conduct transactions and operate a farm business in
+              South Africa. All marketplace listings must be accurate and comply with South African
+              law.
             </p>
           </section>
           <section>
@@ -35,14 +38,64 @@ export default function TermsPage() {
             </p>
           </section>
           <section>
-            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">4. Payments</h2>
+            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">
+              4. Farm Data You Enter — Accuracy Is Your Responsibility
+            </h2>
             <p>
-              All payments are processed through PayFast, a secure South African payment gateway.
-              HerdFlow does not store your payment card details. Transaction fees may apply.
+              The mobile app is a record-keeping and decision-support tool. You are solely
+              responsible for the accuracy of the animal, health, financial, and camp data you enter
+              — HerdFlow does not verify it. Reminders, stock levels, dosage calculations, and
+              reports are only as accurate as the data and settings you provide, and are provided as
+              a convenience, not a guarantee.
             </p>
           </section>
           <section>
-            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">5. Dispute Resolution</h2>
+            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">
+              5. AI-Assisted Features — Not Professional Advice
+            </h2>
+            <p>
+              HerdFlow includes optional AI-assisted features: a sick-animal photo triage tool, a
+              receipt-scanning tool, and a pasture/grazing advisory tool. These use a third-party AI
+              model to analyse a photo or your own farm data and suggest possibilities — they are{" "}
+              <strong>not a diagnosis, not veterinary advice, and not a substitute for consulting a
+              qualified veterinarian, agronomist, or professional advisor.</strong> The sick-animal
+              triage tool in particular is deliberately designed to present multiple possibilities
+              and general first-step guidance only — it will never recommend a specific drug, dosage,
+              or procedure, and always requires you to consult a vet before acting. You remain solely
+              responsible for all animal-health, grazing, and financial decisions you make, whether
+              or not informed by these tools. HerdFlow is not liable for outcomes resulting from
+              reliance on AI-generated suggestions.
+            </p>
+          </section>
+          <section>
+            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">
+              6. Traceability &amp; Regulatory Compliance
+            </h2>
+            <p>
+              HerdFlow provides tools to help you record and export the animal identification,
+              movement, and mortality data South African livestock traceability regulations may
+              require. HerdFlow is not an official government or industry traceability registry
+              (such as RMIS or a SAWS-linked system), does not submit data to any such registry on
+              your behalf, and using HerdFlow does not by itself satisfy any legal traceability or
+              disease-control obligation you may have. You remain responsible for registering with
+              and reporting to the correct official body where required by law.
+            </p>
+          </section>
+          <section>
+            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">7. Subscriptions &amp; Payments</h2>
+            <p>
+              The mobile app is offered under the subscription plans described on our Pricing page,
+              including any free trial period stated at signup. Marketplace payments (buyer/seller
+              transactions) and app subscription payments are both processed through PayFast, a
+              secure South African payment gateway — HerdFlow does not store your payment card
+              details. Subscription fees are billed in advance for the period selected and, except
+              where required by law, are non-refundable for partial periods. You may cancel a
+              subscription at any time from your account settings; cancellation takes effect at the
+              end of the current billing period.
+            </p>
+          </section>
+          <section>
+            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">8. Dispute Resolution</h2>
             <p>
               Disputes between buyers and sellers must first be attempted to resolve directly. If
               unresolved, contact HerdFlow support at support@herdflow.co.za. HerdFlow reserves the
@@ -50,22 +103,27 @@ export default function TermsPage() {
             </p>
           </section>
           <section>
-            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">6. Limitation of Liability</h2>
+            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">9. Limitation of Liability</h2>
             <p>
-              HerdFlow is a marketplace platform and is not liable for the quality, safety, or
-              legality of items listed, the truth or accuracy of listings, or the ability of sellers
-              to sell or buyers to purchase items.
+              HerdFlow is a marketplace and farm-management platform. To the maximum extent
+              permitted by law, HerdFlow is not liable for: the quality, safety, or legality of
+              marketplace listings, or the truth of listings; the accuracy of farm data you enter or
+              of any AI-generated suggestion; loss of livestock, income, or business arising from
+              reliance on the app's reminders, calculations, or advisory tools; or outages, sync
+              delays, or data unavailable due to your device or internet connection (the app is
+              designed to store your data locally first and sync when connectivity allows, but we
+              do not guarantee sync will always succeed immediately).
             </p>
           </section>
           <section>
-            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">7. Changes to Terms</h2>
+            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">10. Changes to Terms</h2>
             <p>
               We reserve the right to modify these terms at any time. Continued use of the platform
               constitutes acceptance of revised terms.
             </p>
           </section>
           <section>
-            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">8. Contact</h2>
+            <h2 className="mb-4 text-xl font-black text-[#1B3A6B]">11. Contact</h2>
             <p>
               For questions about these terms, contact us at{" "}
               <a href="mailto:support@herdflow.co.za" className="font-semibold text-[#2E7D32]">
