@@ -1,23 +1,36 @@
 // WEBSITE — herdflow-web/src/lib/weather.ts
-// OpenWeatherMap (self-serve, free tier: 1,000 calls/day) rather than
-// SAWS/AfriGIS -- the official SA source requires a paid commercial
-// subscription (only a 50-credits/day, 60-day evaluation pilot exists
-// without one), a business relationship this code can't establish. This is
-// the realistic, honest substitute, not silently passed off as the same
-// thing.
+// OpenWeatherMap's classic Current Weather + 5 Day/3 Hour Forecast APIs
+// (data/2.5/weather, data/2.5/forecast) -- NOT the One Call API 3.0.
+// Deliberately chosen: One Call 3.0 requires a credit card on file even
+// though it stays free under 1,000 calls/day; these classic endpoints need
+// no card at all and are free up to 1,000,000 calls/month, which is what
+// the user explicitly chose given how much they cared about zero payment
+// risk. Also NOT SAWS/AfriGIS -- the official SA source requires a paid
+// commercial subscription, a business relationship this code can't
+// establish.
 //
-// Deliberately does NOT aggregate "last 7 days of rainfall" -- that needs
-// OpenWeatherMap's separate historical/time-machine endpoint, one paid call
-// per day requested (7 calls for a week), which is expensive per farmer per
-// screen-load. What matters more for a grazing decision anyway is the
-// forecast, which the daily forecast's `pop`/`rain` fields already cover in
-// a single call.
+// Commercial use is explicitly permitted under OpenWeatherMap's free-tier
+// license (ODbL), CONDITIONAL on visible attribution -- "Weather data
+// provided by OpenWeather" linked to openweathermap.org, shown on-screen
+// wherever this data appears. That's not decorative copy, it's the actual
+// license term that makes free commercial use legal, so `attribution`/
+// `attributionUrl` below must actually be rendered by every screen that
+// shows this data (see herdflow-app WeatherScreen.tsx / HomeScreen.tsx).
+//
+// The 5-day/3-hour forecast is aggregated into daily buckets here (min/max
+// temp, a midday-representative condition, max precipitation chance, and
+// summed rain) since the mobile app wants one row per day, not 40 raw
+// 3-hour entries.
 import { env } from "@/lib/env";
 
-const BASE_URL = "https://api.openweathermap.org/data/3.0/onecall";
+const CURRENT_URL = "https://api.openweathermap.org/data/2.5/weather";
+const FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast";
+
+export const WEATHER_ATTRIBUTION = "Weather data provided by OpenWeather";
+export const WEATHER_ATTRIBUTION_URL = "https://openweathermap.org/";
 
 export const WEATHER_DISCLAIMER =
-  "Forecast data from OpenWeatherMap, not the SA Weather Service (SAWS) -- " +
+  `${WEATHER_ATTRIBUTION} (${WEATHER_ATTRIBUTION_URL}) -- not the SA Weather Service (SAWS); ` +
   "SAWS access requires a paid commercial subscription. Use as a general guide, not for " +
   "severe-weather decisions; consult SAWS/local advisories for official warnings.";
 
@@ -41,35 +54,66 @@ export interface WeatherResult {
   };
   daily: WeatherDay[];
   disclaimer: string;
+  attribution: string;
+  attributionUrl: string;
 }
 
 export async function getWeather(lat: number, lon: number): Promise<WeatherResult | null> {
   if (!env.WEATHER_API_KEY) return null;
 
   try {
-    const url = `${BASE_URL}?lat=${lat}&lon=${lon}&units=metric&exclude=minutely,hourly,alerts&appid=${env.WEATHER_API_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
+    const [currentRes, forecastRes] = await Promise.all([
+      fetch(`${CURRENT_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${env.WEATHER_API_KEY}`),
+      fetch(`${FORECAST_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${env.WEATHER_API_KEY}`),
+    ]);
+    if (!currentRes.ok || !forecastRes.ok) return null;
+
+    const current = await currentRes.json();
+    const forecast = await forecastRes.json();
+
+    // Bucket the 3-hourly list (up to 40 entries / 5 days) by calendar date.
+    const byDate = new Map<string, any[]>();
+    for (const entry of forecast.list ?? []) {
+      const date = new Date(entry.dt * 1000).toISOString().slice(0, 10);
+      if (!byDate.has(date)) byDate.set(date, []);
+      byDate.get(date)!.push(entry);
+    }
+
+    const daily: WeatherDay[] = [...byDate.entries()].map(([date, entries]) => {
+      // The entry closest to midday is the most representative single
+      // "condition" for the day (rather than whichever 3-hour slot happens
+      // to be first/last).
+      const midday = entries.reduce((best, e) => {
+        const hour = new Date(e.dt * 1000).getUTCHours();
+        const bestHour = new Date(best.dt * 1000).getUTCHours();
+        return Math.abs(hour - 12) < Math.abs(bestHour - 12) ? e : best;
+      }, entries[0]);
+
+      const totalRain = entries.reduce((sum, e) => sum + (e.rain?.["3h"] ?? 0), 0);
+
+      return {
+        date,
+        minTemp: Math.round(Math.min(...entries.map((e) => e.main.temp_min))),
+        maxTemp: Math.round(Math.max(...entries.map((e) => e.main.temp_max))),
+        condition: midday.weather?.[0]?.main ?? "Unknown",
+        icon: midday.weather?.[0]?.icon ?? "01d",
+        precipitationChance: Math.round(Math.max(...entries.map((e) => e.pop ?? 0)) * 100),
+        rainMm: totalRain > 0 ? Math.round(totalRain) : null,
+      };
+    });
 
     return {
       current: {
-        tempC: Math.round(data.current.temp),
-        condition: data.current.weather?.[0]?.main ?? "Unknown",
-        icon: data.current.weather?.[0]?.icon ?? "01d",
-        humidity: data.current.humidity,
-        windKph: Math.round((data.current.wind_speed ?? 0) * 3.6),
+        tempC: Math.round(current.main.temp),
+        condition: current.weather?.[0]?.main ?? "Unknown",
+        icon: current.weather?.[0]?.icon ?? "01d",
+        humidity: current.main.humidity,
+        windKph: Math.round((current.wind?.speed ?? 0) * 3.6),
       },
-      daily: (data.daily ?? []).slice(0, 7).map((d: any) => ({
-        date: new Date(d.dt * 1000).toISOString().slice(0, 10),
-        minTemp: Math.round(d.temp.min),
-        maxTemp: Math.round(d.temp.max),
-        condition: d.weather?.[0]?.main ?? "Unknown",
-        icon: d.weather?.[0]?.icon ?? "01d",
-        precipitationChance: Math.round((d.pop ?? 0) * 100),
-        rainMm: d.rain != null ? Math.round(d.rain) : null,
-      })),
+      daily,
       disclaimer: WEATHER_DISCLAIMER,
+      attribution: WEATHER_ATTRIBUTION,
+      attributionUrl: WEATHER_ATTRIBUTION_URL,
     };
   } catch (err) {
     console.error("[getWeather]", err);
