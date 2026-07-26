@@ -59,6 +59,19 @@ export async function POST(request: Request) {
   // this row, and so a retried queued POST doesn't create a duplicate.
   const localId = (b.localId as string | undefined) ?? null;
 
+  const PAYMENT_METHODS = ["CASH", "BANK_TRANSFER", "CARD", "OTHER"] as const;
+  const RECURRENCES = ["WEEKLY", "MONTHLY", "ANNUALLY"] as const;
+  const paymentMethod = PAYMENT_METHODS.includes(b.paymentMethod as any)
+    ? (b.paymentMethod as (typeof PAYMENT_METHODS)[number])
+    : null;
+  const recurrence = RECURRENCES.includes(b.recurrence as any)
+    ? (b.recurrence as (typeof RECURRENCES)[number])
+    : null;
+  const isRecurring = b.isRecurring === true && recurrence != null;
+  const unitCost = b.unitCost != null ? Number(b.unitCost) : null;
+  const quantity = b.quantity != null ? Number(b.quantity) : null;
+  const isDepreciableAsset = b.isDepreciableAsset === true;
+
   const transaction = await withFarmerContext(auth.effectiveFarmerId, async (tx) => {
     if (b.animalId) {
       const animal = await getAnimalForFarmer(tx, String(b.animalId), auth.effectiveFarmerId);
@@ -83,6 +96,12 @@ export async function POST(request: Request) {
         supplier: (b.supplier as string | undefined) ?? null,
         invoiceNumber: (b.invoiceNumber as string | undefined) ?? null,
         date: new Date(b.date as string),
+        paymentMethod,
+        isRecurring,
+        recurrence,
+        unitCost,
+        quantity,
+        isDepreciableAsset,
       },
     });
   });

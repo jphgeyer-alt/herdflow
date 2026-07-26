@@ -423,6 +423,22 @@ enum RecurrenceInterval {
   ANNUAL
 }
 
+// F3 (farmer-facing finance upgrade): deliberately separate from
+// RecurrenceInterval above, which belongs to the unrelated internal Expense
+// model and doesn't offer WEEKLY.
+enum FarmerTransactionPaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CARD
+  OTHER
+}
+
+enum FarmerTransactionRecurrence {
+  WEEKLY
+  MONTHLY
+  ANNUALLY
+}
+
 model AuctionSession {
   id          String               @id @default(cuid())
   slug        String               @unique
@@ -1005,6 +1021,31 @@ model FarmerTransaction {
   date          DateTime
   isDeleted     Boolean  @default(false)
   createdAt     DateTime @default(now())
+
+  // F3: a bookkeeper reconciling against a bank statement needs to know
+  // which transactions actually went through the bank vs. cash-in-hand.
+  // Nullable/no default so every existing row (recorded before this field
+  // existed) reads as "not recorded" rather than a guessed value.
+  paymentMethod FarmerTransactionPaymentMethod?
+  // F3: marks a transaction as one that recurs (insurance, levies, loan
+  // repayments) so it displays with a repeat indicator and the farmer isn't
+  // stuck re-entering it every period. Deliberately informational only, not
+  // a scheduler -- this migration does not add auto-generation of future
+  // transactions (a separate, much larger feature: a cron job, a
+  // "next occurrence" date, skip/pause handling). If that's wanted later,
+  // it's a follow-up proposal on top of this.
+  isRecurring   Boolean                         @default(false)
+  recurrence    FarmerTransactionRecurrence?
+
+  // F6: Equipment & Other purchases tab. Only meaningful for asset-style
+  // purchases (category "equipment") -- a farmer can optionally record how
+  // many units, the per-unit cost, and whether it's a depreciable asset.
+  // Left null/false for every ordinary expense row, same as F3's additive
+  // fields above; no new table, so spend still lives in exactly one ledger
+  // instead of risking two purchase records drifting apart.
+  unitCost           Decimal?
+  quantity           Int?
+  isDepreciableAsset Boolean  @default(false)
 
   @@index([farmerId])
   @@index([farmerId, date])
