@@ -21,7 +21,13 @@ function recurrenceLabelKey(id: string): string {
   return `recurrence_${id.toLowerCase()}`;
 }
 
-export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoiceNumber: string }) {
+export function AddTransactionForm({
+  suggestedInvoiceNumber,
+  country,
+}: {
+  suggestedInvoiceNumber: string;
+  country: string;
+}) {
   const t = useTranslations("finance");
   const [state, formAction, isPending] = useActionState(addTransaction, initialState);
   const [step, setStep] = useState<"form" | "review">("form");
@@ -43,7 +49,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
 
   const cats = type === "income" ? INCOME_CATS : EXPENSE_CATS;
   const numAmt = parseFloat(amount) || 0;
-  const vatRate = getComplianceConfig().vatRate;
+  const vatRate = getComplianceConfig(country).vatRate;
   const vatRatePct = vatRate * 100;
   const vatAmt = vatOn ? Math.round(numAmt * vatRate * 100) / 100 : 0;
   const totalAmt = numAmt + vatAmt;

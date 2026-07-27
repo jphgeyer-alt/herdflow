@@ -19,7 +19,7 @@ export default async function NewTransactionPage() {
         <h1 className="text-navy-600 text-2xl font-semibold">{t("add_transaction_title")}</h1>
         <p className="text-sm text-navy-300">{t("add_transaction_subtitle")}</p>
       </header>
-      <AddTransactionForm suggestedInvoiceNumber={suggestedInvoiceNumber} />
+      <AddTransactionForm suggestedInvoiceNumber={suggestedInvoiceNumber} country={user.country} />
     </div>
   );
 }

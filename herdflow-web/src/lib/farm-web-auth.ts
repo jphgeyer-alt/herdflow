@@ -18,6 +18,7 @@ export interface FarmWebUser {
   role: string;
   mobileRole: string; // FARMER | FARM_MANAGER | FARM_WORKER
   farmName: string;
+  country: string; // ISO country code, e.g. "ZA" -- see config/complianceConfig.ts
   effectiveFarmerId: string;
 }
 
@@ -38,7 +39,7 @@ export const getFarmWebUser = cache(async (): Promise<FarmWebUser | null> => {
       }),
       prisma.farmerProfile.findFirst({
         where: { userId },
-        select: { ownerUserId: true, mobileRole: true, farmName: true },
+        select: { ownerUserId: true, mobileRole: true, farmName: true, country: true },
       }),
     ]);
 
@@ -54,6 +55,7 @@ export const getFarmWebUser = cache(async (): Promise<FarmWebUser | null> => {
       role: user.role,
       mobileRole: profile.mobileRole,
       farmName: profile.farmName,
+      country: profile.country,
       effectiveFarmerId: profile.ownerUserId ?? userId,
     };
   } catch {
