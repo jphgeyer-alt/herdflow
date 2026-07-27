@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { AlertCircle } from "lucide-react";
 import { INCOME_CATS, EXPENSE_CATS, categoryLabelKey } from "@/lib/farm-finance/categories";
 import { formatCurrency, formatDate } from "@/lib/farm-finance/format";
+import { getComplianceConfig } from "@/lib/farm-finance/complianceConfig";
 import { Card } from "@/components/farm/Card";
 import { addTransaction, type AddTransactionState } from "./actions";
 
@@ -42,7 +43,9 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
 
   const cats = type === "income" ? INCOME_CATS : EXPENSE_CATS;
   const numAmt = parseFloat(amount) || 0;
-  const vatAmt = vatOn ? Math.round(numAmt * 0.15 * 100) / 100 : 0;
+  const vatRate = getComplianceConfig().vatRate;
+  const vatRatePct = vatRate * 100;
+  const vatAmt = vatOn ? Math.round(numAmt * vatRate * 100) / 100 : 0;
   const totalAmt = numAmt + vatAmt;
   const isEquipment = type === "expense" && category === "equipment";
 
@@ -91,7 +94,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
           <div className="divide-y divide-navy-50 text-sm">
             <ReviewRow label={type === "income" ? t("income_type") : t("expense_type")} value={formatCurrency(totalAmt)} big />
             {vatOn && (
-              <ReviewRow label={t("vat_amount", { rate: 15 })} value={`${formatCurrency(numAmt)} + ${formatCurrency(vatAmt)} VAT`} />
+              <ReviewRow label={t("vat_amount", { rate: vatRatePct })} value={`${formatCurrency(numAmt)} + ${formatCurrency(vatAmt)} VAT`} />
             )}
             <ReviewRow label={t("category")} value={t(categoryLabelKey(category))} />
             <ReviewRow label={t("date")} value={formatDate(effectiveDate)} />
@@ -201,7 +204,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
             onChange={(e) => setVatOn(e.target.checked)}
             className="h-4 w-4 rounded border-navy-100"
           />
-          {t("include_vat", { rate: 15 })}
+          {t("include_vat", { rate: vatRatePct })}
         </label>
         {vatOn && numAmt > 0 && (
           <div className="mt-3 space-y-1.5 rounded-lg bg-navy-25 p-3 text-sm">
@@ -210,7 +213,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
               <span className="font-medium text-navy-600">{formatCurrency(numAmt)}</span>
             </div>
             <div className="flex justify-between text-navy-500">
-              <span>{t("vat_amount", { rate: 15 })}</span>
+              <span>{t("vat_amount", { rate: vatRatePct })}</span>
               <span className="font-medium text-navy-600">{formatCurrency(vatAmt)}</span>
             </div>
             <div className="flex justify-between border-t border-navy-100 pt-1.5 font-semibold text-navy-600">

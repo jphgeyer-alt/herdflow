@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
+import { getComplianceConfig } from "@/lib/farm-finance/complianceConfig";
 
 export interface AddTransactionState {
   error?: string;
@@ -48,7 +49,7 @@ export async function addTransaction(
     return { error: t("select_recurrence") };
   }
 
-  const vatAmount = vatOn ? Math.round(amount * 0.15 * 100) / 100 : 0;
+  const vatAmount = vatOn ? Math.round(amount * getComplianceConfig().vatRate * 100) / 100 : 0;
   // Unit cost/quantity/depreciable-asset only apply to equipment purchases
   // (F6) -- kept null/false for every other category, same as every
   // existing row recorded before this feature existed.
