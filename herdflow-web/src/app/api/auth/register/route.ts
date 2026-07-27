@@ -84,6 +84,7 @@ export async function POST(request: Request) {
           userId: string;
           farmName: string;
           province: string;
+          country: string;
           species: string[];
         } | null = null;
         let inviteId: string | null = null;
@@ -152,6 +153,7 @@ export async function POST(request: Request) {
               userId: created.id,
               farmName: ownerProfile!.farmName,
               province: ownerProfile!.province,
+              country: ownerProfile!.country,
               species: ownerProfile!.species,
               mobileRole: resolvedMobileRole,
               ownerUserId: ownerProfile!.userId,
@@ -183,6 +185,7 @@ export async function POST(request: Request) {
             isAdmin: false,
             farmName: ownerProfile!.farmName,
             province: ownerProfile!.province,
+            country: ownerProfile!.country,
             farmCode: null,
             ownerUserId: ownerProfile.userId,
             createdAt: user.createdAt,
@@ -193,6 +196,7 @@ export async function POST(request: Request) {
       // Farmer registration — create farm and generate unique farm code
       const farmName = (b.farmName as string | undefined)?.trim() ?? "";
       const province = (b.province as string | undefined)?.trim() ?? "";
+      const country = (b.country as string | undefined)?.trim() || "ZA";
       const species = Array.isArray(b.species) ? (b.species as string[]) : [];
 
       // Generate a unique farm code (retry up to 10 times on collision)
@@ -217,7 +221,7 @@ export async function POST(request: Request) {
           data: { email, fullName, phone: phone || null, passwordHash, role: "FARMER" },
         });
         const profile = await tx.farmerProfile.create({
-          data: { userId: created.id, farmName, province, species, farmCode, mobileRole: "FARMER" },
+          data: { userId: created.id, farmName, province, country, species, farmCode, mobileRole: "FARMER" },
         });
         return { created, profile };
       });
@@ -234,6 +238,7 @@ export async function POST(request: Request) {
           isAdmin: false,
           farmName,
           province,
+          country,
           farmCode,
           ownerUserId: null,
           createdAt: user.createdAt,

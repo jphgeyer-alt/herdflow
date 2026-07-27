@@ -803,6 +803,7 @@ model FarmerProfile {
   userId          String   @unique
   farmName        String   @default("")
   province        String   @default("")
+  country         String   @default("ZA")
   species         String[]
   farmCode        String?  @unique
   mobileRole      String   @default("FARMER")

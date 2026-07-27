@@ -93,6 +93,7 @@ export async function POST(request: Request) {
   let farmerProfile: {
     farmName: string;
     province: string;
+    country: string;
     mobileRole: string;
     farmCode: string | null;
     ownerUserId: string | null;
@@ -115,6 +116,7 @@ export async function POST(request: Request) {
     isAdmin: user.role === "ADMIN",
     farmName: farmerProfile?.farmName ?? "",
     province: farmerProfile?.province ?? "",
+    country: farmerProfile?.country ?? "ZA",
     farmCode: farmerProfile?.farmCode ?? null,
     ownerUserId: farmerProfile?.ownerUserId ?? null,
     createdAt: user.createdAt,
