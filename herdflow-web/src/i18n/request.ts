@@ -4,13 +4,14 @@
 // finance routes (/app/finance/*) were already built without a locale
 // prefix during the Finance upgrade, and restructuring every route under
 // /[locale]/... would be a large, unrelated change this task doesn't call
-// for. Locale is resolved per-request instead: a saved cookie first, then
-// the browser's Accept-Language header (first-visit auto-detect), else
-// en-ZA. G4's LocaleConfig will take priority over both once that schema
-// lands (see the TODO below) -- deliberately not built here since DB
-// schema changes are G4's task, not G2's.
+// for. Locale is resolved per-request: a signed-in farmer's saved
+// LocaleConfig first (G4 -- shared farm-wide, see schema.prisma), then a
+// saved cookie, then the browser's Accept-Language header (first-visit
+// auto-detect), else en-ZA.
 import { getRequestConfig } from "next-intl/server";
 import { cookies, headers } from "next/headers";
+import { prisma } from "@/lib/prisma";
+import { getFarmWebUser } from "@/lib/farm-web-auth";
 
 import enZACommon from "../locales/en-ZA/common.json";
 import enZAFinance from "../locales/en-ZA/finance.json";
@@ -51,9 +52,18 @@ export function resolveFromAcceptLanguage(header: string | null): SupportedLocal
 }
 
 export default getRequestConfig(async () => {
-  // TODO(G4): once LocaleConfig lands, check the signed-in farmer's saved
-  // language preference here first (via getFarmWebUser()), ahead of the
-  // cookie/header fallback below, so it syncs across devices as required.
+  const farmUser = await getFarmWebUser();
+  if (farmUser) {
+    const config = await prisma.localeConfig.findUnique({
+      where: { farmerId: farmUser.effectiveFarmerId },
+      select: { locale: true },
+    });
+    if (config && (SUPPORTED_LOCALES as readonly string[]).includes(config.locale)) {
+      const locale = config.locale as SupportedLocale;
+      return { locale, messages: MESSAGES[locale] };
+    }
+  }
+
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value;
 
