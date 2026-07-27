@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 
 type Plan = {
@@ -17,6 +18,7 @@ type Plan = {
 };
 
 export function PricingClient({ plans }: { plans: Plan[] }) {
+  const t = useTranslations("marketing");
   const router = useRouter();
   const [annual, setAnnual] = useState(false);
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
@@ -56,11 +58,11 @@ export function PricingClient({ plans }: { plans: Plan[] }) {
       } else if (res.ok) {
         router.push("/dashboard/seller");
       } else {
-        setError(data.error || "Failed to start subscription.");
+        setError(data.error || t("subscription_start_failed"));
         setLoadingKey(null);
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("network_error_retry"));
       setLoadingKey(null);
     }
   }
@@ -70,12 +72,12 @@ export function PricingClient({ plans }: { plans: Plan[] }) {
       {/* Toggle */}
       <div className="mb-10 flex items-center justify-center gap-4">
         <span className={`text-sm font-semibold ${!annual ? "text-[#1B3A6B]" : "text-[#9aabb9]"}`}>
-          Monthly
+          {t("monthly_label")}
         </span>
         <button
           onClick={() => setAnnual((a) => !a)}
           className="relative h-8 w-16 rounded-full bg-[#1B3A6B] transition"
-          aria-label="Toggle billing cycle"
+          aria-label={t("toggle_billing_aria")}
         >
           <span
             className={`absolute top-1 h-6 w-6 rounded-full bg-white transition-transform ${
@@ -84,10 +86,10 @@ export function PricingClient({ plans }: { plans: Plan[] }) {
           />
         </button>
         <span className={`text-sm font-semibold ${annual ? "text-[#1B3A6B]" : "text-[#9aabb9]"}`}>
-          Annual
+          {t("annual_label")}
         </span>
         <span className="rounded-full bg-[#A07C3A]/15 px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#A07C3A]">
-          2 months free
+          {t("two_months_free_badge")}
         </span>
       </div>
 
@@ -111,16 +113,16 @@ export function PricingClient({ plans }: { plans: Plan[] }) {
             >
               {plan.isPopular && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#A07C3A] px-3 py-1 text-xs font-black uppercase tracking-wide text-white">
-                  Most Popular
+                  {t("most_popular_badge")}
                 </span>
               )}
               <h3 className="mb-1 text-lg font-black text-[#1B3A6B]">{plan.displayName}</h3>
               <div className="mb-4">
                 <span className="text-3xl font-black text-[#244367]">
-                  {priceNum === 0 ? "Free" : `R${priceNum.toLocaleString("en-ZA")}`}
+                  {priceNum === 0 ? t("free_label") : `R${priceNum.toLocaleString("en-ZA")}`}
                 </span>
                 {priceNum > 0 && (
-                  <span className="text-sm text-[#9aabb9]">/{annual ? "yr" : "mo"}</span>
+                  <span className="text-sm text-[#9aabb9]">{annual ? t("per_year_suffix") : t("per_month_suffix")}</span>
                 )}
               </div>
               <ul className="mb-6 flex-1 space-y-2">
@@ -141,10 +143,10 @@ export function PricingClient({ plans }: { plans: Plan[] }) {
                 }`}
               >
                 {loadingKey === plan.key
-                  ? "Processing…"
+                  ? t("processing_ellipsis")
                   : priceNum === 0
-                    ? "Get Started Free"
-                    : "Choose Plan"}
+                    ? t("get_started_free_button")
+                    : t("choose_plan_button")}
               </button>
             </div>
           );
