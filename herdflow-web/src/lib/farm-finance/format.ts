@@ -35,7 +35,11 @@ export function formatCurrency(amount: number | string | null | undefined, curre
   }).format(n);
 }
 
-// South African date convention: "23 Jul 2026".
+// G6: South African date convention: "23 Jul 2026" -- verified to produce
+// byte-identical output to the mobile app's date-fns-based formatDate
+// (herdflow-app/src/utils/formatters.ts, pattern "dd MMM yyyy") for the
+// same input, so no reconciliation was needed the way formatCurrency's
+// comma-vs-period decimal point required above.
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "-";
   const d = typeof date === "string" ? new Date(date) : date;
@@ -48,4 +52,13 @@ export function formatDateTime(date: Date | string | null | undefined): string {
   const d = typeof date === "string" ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return "-";
   return `${formatDate(d)}, ${d.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
+}
+
+// G6: shared weight formatter, kept identical to the mobile app's
+// formatWeight (herdflow-app/src/utils/formatters.ts) for platform parity --
+// no web farm-app page displays animal weight yet, but this exists so one
+// is ready when it does, rather than a page inventing its own "${kg} kg".
+export function formatWeight(kg: number | null | undefined): string {
+  if (kg == null || kg === 0) return "-";
+  return `${kg} kg`;
 }
