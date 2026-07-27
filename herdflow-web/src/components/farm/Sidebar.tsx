@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { FARM_FINANCE_NAV } from "@/lib/farm-nav";
 
@@ -20,6 +21,7 @@ export function Sidebar({
   farmName: string;
 }) {
   const pathname = usePathname();
+  const t = useTranslations("finance");
 
   return (
     <>
@@ -42,14 +44,14 @@ export function Sidebar({
               HF
             </div>
             <div className="min-w-0">
-              <p className="text-navy-600 text-sm font-bold leading-tight">Farm Financials</p>
+              <p className="text-navy-600 text-sm font-bold leading-tight">{t("farm_financials")}</p>
               <p className="truncate text-xs leading-tight text-navy-300">{farmName || "HerdFlow"}</p>
             </div>
           </Link>
           <button
             className="rounded-lg p-1.5 text-navy-300 hover:bg-navy-25 lg:hidden"
             onClick={onClose}
-            aria-label="Close menu"
+            aria-label={t("close_menu")}
             type="button"
           >
             <X size={18} />
@@ -73,7 +75,7 @@ export function Sidebar({
               >
                 <span className="flex items-center gap-2.5">
                   <Icon size={16} className={active ? "text-white" : "text-navy-300"} />
-                  {item.label}
+                  {t(item.labelKey)}
                 </span>
                 {item.shortcut && (
                   <kbd
@@ -93,7 +95,7 @@ export function Sidebar({
 
         <div className="border-t border-navy-50 px-5 py-4">
           <Link href="/" className="text-xs font-medium text-navy-300 hover:text-navy-600">
-            ← Back to HerdFlow
+            {t("back_to_herdflow")}
           </Link>
         </div>
       </aside>

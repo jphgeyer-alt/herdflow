@@ -6,13 +6,6 @@
 // year runs 1 March to end of February, not January-December.
 export type Period = "this_month" | "last_month" | "this_quarter" | "this_financial_year" | "custom";
 
-export const PERIOD_LABELS: Record<Exclude<Period, "custom">, string> = {
-  this_month: "This Month",
-  last_month: "Last Month",
-  this_quarter: "This Quarter",
-  this_financial_year: "This Financial Year",
-};
-
 export interface DateRange {
   start: Date;
   end: Date;

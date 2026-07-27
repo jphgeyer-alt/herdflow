@@ -5,9 +5,11 @@
 // itself instead, so a slow render shows a spinner and a failure shows an
 // inline message rather than a bare browser navigation to an error page.
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Download, AlertCircle, Loader2 } from "lucide-react";
 
 export function DownloadPdfButton({ href, filename }: { href: string; filename: string }) {
+  const t = useTranslations("common");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -25,7 +27,7 @@ export function DownloadPdfButton({ href, filename }: { href: string; filename: 
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setError("Failed to generate PDF. Please try again.");
+      setError(t("errors.pdf_generation_failed"));
     } finally {
       setLoading(false);
     }
@@ -41,11 +43,11 @@ export function DownloadPdfButton({ href, filename }: { href: string; filename: 
       >
         {loading ? (
           <>
-            <Loader2 size={16} className="animate-spin" /> Generating…
+            <Loader2 size={16} className="animate-spin" /> {t("actions.generating")}
           </>
         ) : (
           <>
-            <Download size={16} /> Download PDF
+            <Download size={16} /> {t("actions.download_pdf")}
           </>
         )}
       </button>

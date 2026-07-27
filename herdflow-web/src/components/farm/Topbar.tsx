@@ -2,23 +2,24 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Menu, ChevronDown, LogOut, ChevronRight } from "lucide-react";
 import { FARM_FINANCE_NAV } from "@/lib/farm-nav";
 import { Badge } from "./Card";
 
-function currentPageLabel(pathname: string) {
+function currentPageLabelKey(pathname: string) {
   const exact = FARM_FINANCE_NAV.find((i) => i.href === pathname);
-  if (exact) return exact.label;
+  if (exact) return exact.labelKey;
   const prefixMatch = [...FARM_FINANCE_NAV]
     .sort((a, b) => b.href.length - a.href.length)
     .find((i) => pathname.startsWith(`${i.href}/`));
-  return prefixMatch?.label ?? "Dashboard";
+  return prefixMatch?.labelKey ?? "nav_dashboard";
 }
 
-const ROLE_LABEL: Record<string, string> = {
-  FARMER: "Farm Owner",
-  FARM_MANAGER: "Farm Manager",
-  FARM_WORKER: "Farm Worker",
+const ROLE_LABEL_KEY: Record<string, string> = {
+  FARMER: "role_farm_owner",
+  FARM_MANAGER: "role_farm_manager",
+  FARM_WORKER: "role_farm_worker",
 };
 
 export function Topbar({
@@ -32,6 +33,7 @@ export function Topbar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("finance");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -62,17 +64,17 @@ export function Topbar({
         <button
           className="rounded-lg p-1.5 text-navy-500 hover:bg-navy-25 lg:hidden"
           onClick={onMenuClick}
-          aria-label="Open menu"
+          aria-label={t("open_menu")}
           type="button"
         >
           <Menu size={20} />
         </button>
         <nav className="flex items-center gap-1.5 text-sm text-navy-300">
-          <span>Farm Financials</span>
+          <span>{t("farm_financials")}</span>
           {pathname !== "/app/finance" && (
             <>
               <ChevronRight size={14} />
-              <span className="font-semibold text-navy-600">{currentPageLabel(pathname)}</span>
+              <span className="font-semibold text-navy-600">{t(currentPageLabelKey(pathname))}</span>
             </>
           )}
         </nav>
@@ -96,7 +98,7 @@ export function Topbar({
             <div className="border-b border-navy-50 px-3 py-2">
               <p className="text-sm font-semibold text-navy-600">{fullName}</p>
               <div className="mt-1">
-                <Badge variant="info">{ROLE_LABEL[mobileRole] ?? mobileRole}</Badge>
+                <Badge variant="info">{ROLE_LABEL_KEY[mobileRole] ? t(ROLE_LABEL_KEY[mobileRole]) : mobileRole}</Badge>
               </div>
             </div>
             <button
@@ -104,7 +106,7 @@ export function Topbar({
               onClick={handleLogout}
               type="button"
             >
-              <LogOut size={14} /> Log out
+              <LogOut size={14} /> {t("log_out")}
             </button>
           </div>
         )}
