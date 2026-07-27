@@ -1,19 +1,38 @@
 // herdflow-web/src/lib/farm-finance/format.ts
-// South African bookkeeping convention: "R 1 234.56" -- a space as the
-// thousands separator, a period as the decimal point, always 2 decimals.
-// Deliberately NOT delegated to Intl.NumberFormat("en-ZA", {style:"currency"})
-// -- the real en-ZA ICU locale formats with a COMMA decimal point
-// ("R 1 234,56"), which reads as wrong to a farmer or bookkeeper expecting
-// the convention above. Kept byte-for-byte identical to the mobile app's
-// formatCurrency (herdflow-app/src/utils/formatters.ts) so a figure looks
-// the same whether the farmer is looking at their phone or the website.
-export function formatCurrency(amount: number | string | null | undefined, currency = "R"): string {
+// G5: Currencies whose ISO code Intl.NumberFormat would otherwise render as
+// a bare code prefix ("KES 1,234.56") under a generic locale -- mapped to a
+// real-country locale so the native symbol renders instead ("KSh 1,234.56").
+// Add an entry here whenever a new country's currency is onboarded (G7-G10).
+const CURRENCY_LOCALES: Record<string, string> = {
+  KES: "en-KE",
+  NGN: "en-NG",
+};
+
+// G5: shared currency formatter (kept byte-for-byte identical to the mobile
+// app's formatCurrency in herdflow-app/src/utils/formatters.ts so a figure
+// looks the same whether the farmer is on their phone or the website).
+// ZAR is special-cased to South Africa's bookkeeping convention -- "R 1
+// 234.56", a space thousands separator and a period decimal point --
+// instead of real Intl.NumberFormat("en-ZA") output, which uses a COMMA
+// decimal point ("R 1 234,56") and would read as wrong to a farmer or
+// bookkeeper already used to the convention above. Every other currency
+// (for farmers in countries G7-G10 onboard) goes through real
+// Intl.NumberFormat so it follows that currency's actual conventions.
+export function formatCurrency(amount: number | string | null | undefined, currency = "ZAR"): string {
   const n = typeof amount === "string" ? Number(amount) : amount;
   if (n == null || Number.isNaN(n)) return "-";
-  const isNegative = n < 0;
-  const [intPart, decPart] = Math.abs(n).toFixed(2).split(".");
-  const withThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-  return `${isNegative ? "-" : ""}${currency} ${withThousands}.${decPart}`;
+
+  if (currency === "ZAR") {
+    const isNegative = n < 0;
+    const [intPart, decPart] = Math.abs(n).toFixed(2).split(".");
+    const withThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return `${isNegative ? "-" : ""}R ${withThousands}.${decPart}`;
+  }
+
+  return new Intl.NumberFormat(CURRENCY_LOCALES[currency] ?? "en", {
+    style: "currency",
+    currency,
+  }).format(n);
 }
 
 // South African date convention: "23 Jul 2026".
