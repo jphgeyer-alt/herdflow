@@ -20,7 +20,11 @@ describe("resolveFromAcceptLanguage", () => {
   });
 
   it("returns undefined for a language HerdFlow doesn't support yet", () => {
-    expect(resolveFromAcceptLanguage("fr-FR,fr;q=0.9,de;q=0.8")).toBeUndefined();
+    expect(resolveFromAcceptLanguage("de-DE,de;q=0.9,zh;q=0.8")).toBeUndefined();
+  });
+
+  it("matches a bare-language placeholder locale added in G11 (e.g. French)", () => {
+    expect(resolveFromAcceptLanguage("fr-FR,fr;q=0.9,de;q=0.8")).toBe("fr");
   });
 
   it("returns undefined for a missing header", () => {
@@ -33,8 +37,8 @@ describe("resolveFromAcceptLanguage", () => {
 });
 
 describe("locale constants", () => {
-  it("only exposes en-ZA for now (G11 adds af/sw/fr/pt as placeholders later)", () => {
-    expect(SUPPORTED_LOCALES).toEqual(["en-ZA"]);
+  it("exposes en-ZA (real content) plus G11's af-ZA/sw/fr/pt placeholders", () => {
+    expect(SUPPORTED_LOCALES).toEqual(["en-ZA", "af-ZA", "sw", "fr", "pt"]);
     expect(DEFAULT_LOCALE).toBe("en-ZA");
   });
 });

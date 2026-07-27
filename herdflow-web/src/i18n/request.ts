@@ -21,21 +21,33 @@ import enZARecords from "../locales/en-ZA/records.json";
 import enZAReports from "../locales/en-ZA/reports.json";
 import enZAMarketing from "../locales/en-ZA/marketing.json";
 
-export const SUPPORTED_LOCALES = ["en-ZA"] as const;
+export const SUPPORTED_LOCALES = ["en-ZA", "af-ZA", "sw", "fr", "pt"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE: SupportedLocale = "en-ZA";
 export const LOCALE_COOKIE = "hf_locale";
 
+// G11: af-ZA/sw/fr/pt are selectable but have no real translated content
+// yet -- unlike i18next (mobile), next-intl has no automatic per-key
+// fallback across locale message sets, so each placeholder locale
+// explicitly reuses the en-ZA message objects rather than showing a raw
+// key or throwing. Framework scaffolding only; swap a locale's entry for
+// its own imported JSON files once real translation work lands for it.
+const EN_ZA_MESSAGES = {
+  common: enZACommon,
+  finance: enZAFinance,
+  herd: enZAHerd,
+  breeding: enZABreeding,
+  records: enZARecords,
+  reports: enZAReports,
+  marketing: enZAMarketing,
+};
+
 const MESSAGES: Record<SupportedLocale, Record<string, unknown>> = {
-  "en-ZA": {
-    common: enZACommon,
-    finance: enZAFinance,
-    herd: enZAHerd,
-    breeding: enZABreeding,
-    records: enZARecords,
-    reports: enZAReports,
-    marketing: enZAMarketing,
-  },
+  "en-ZA": EN_ZA_MESSAGES,
+  "af-ZA": EN_ZA_MESSAGES,
+  sw: EN_ZA_MESSAGES,
+  fr: EN_ZA_MESSAGES,
+  pt: EN_ZA_MESSAGES,
 };
 
 export function resolveFromAcceptLanguage(header: string | null): SupportedLocale | undefined {
