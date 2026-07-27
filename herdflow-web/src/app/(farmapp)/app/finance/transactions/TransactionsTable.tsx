@@ -5,8 +5,9 @@
 // filtered -- everything happens client-side since the full transaction
 // list is already loaded, so filtering/sorting/export need no round trip.
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronUp, ChevronDown, Download } from "lucide-react";
-import { INCOME_CATS, EXPENSE_CATS, categoryLabel } from "@/lib/farm-finance/categories";
+import { INCOME_CATS, EXPENSE_CATS, categoryLabelKey } from "@/lib/farm-finance/categories";
 import { formatCurrency, formatDate } from "@/lib/farm-finance/format";
 
 export interface TxRow {
@@ -34,6 +35,7 @@ function toCsvValue(v: string | number): string {
 }
 
 export function TransactionsTable({ rows }: { rows: TxRow[] }) {
+  const t = useTranslations("finance");
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [dateFrom, setDateFrom] = useState("");
@@ -70,7 +72,7 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
         case "description":
           return r.description ?? "";
         case "category":
-          return categoryLabel(r.category);
+          return t(categoryLabelKey(r.category));
         case "supplier":
           return r.supplier ?? "";
         case "amount":
@@ -114,14 +116,25 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
   }
 
   function exportCsv() {
-    const header = ["Date", "Description", "Category", "Supplier", "Excl. VAT", "VAT", "Incl. VAT", "Invoice #", "Type", "Running Balance"];
+    const header = [
+      t("date"),
+      t("description"),
+      t("category"),
+      t("supplier"),
+      t("excl_vat"),
+      t("vat"),
+      t("incl_vat"),
+      t("invoice_number"),
+      t("type"),
+      t("running_balance"),
+    ];
     const lines = [header.join(",")];
     for (const r of sorted) {
       lines.push(
         [
           r.date.slice(0, 10),
           r.description ?? "",
-          categoryLabel(r.category),
+          t(categoryLabelKey(r.category)),
           r.supplier ?? "",
           r.amount.toFixed(2),
           r.vatAmount.toFixed(2),
@@ -170,7 +183,7 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-3 rounded-lg border border-navy-100 bg-white p-3" id="tx-filter-bar">
         <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-navy-300 uppercase">From</label>
+          <label className="text-xs font-semibold text-navy-300 uppercase">{t("from")}</label>
           <input
             ref={dateFromRef}
             type="date"
@@ -180,7 +193,7 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
           />
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-navy-300 uppercase">To</label>
+          <label className="text-xs font-semibold text-navy-300 uppercase">{t("to")}</label>
           <input
             type="date"
             value={dateTo}
@@ -195,7 +208,7 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
             onClick={() => setShowCatPicker((v) => !v)}
             className="rounded-lg border border-navy-100 px-3 py-1.5 text-sm text-navy-500 hover:bg-navy-25"
           >
-            Category {categories.size > 0 ? `(${categories.size})` : ""}
+            {t("category")} {categories.size > 0 ? `(${categories.size})` : ""}
           </button>
           {showCatPicker && (
             <div className="absolute z-10 mt-1 max-h-64 w-56 overflow-y-auto rounded-lg border border-navy-100 bg-white p-2 shadow-lg">
@@ -207,7 +220,7 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
                     onChange={() => toggleCategory(c.id)}
                     className="h-3.5 w-3.5 rounded border-navy-100"
                   />
-                  {c.label}
+                  {t(categoryLabelKey(c.id))}
                 </label>
               ))}
             </div>
@@ -219,9 +232,9 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
           onChange={(e) => setType(e.target.value as TypeFilter)}
           className="rounded-lg border border-navy-100 px-3 py-1.5 text-sm text-navy-500"
         >
-          <option value="all">All Types</option>
-          <option value="income">Income</option>
-          <option value="expense">Expense</option>
+          <option value="all">{t("all_types")}</option>
+          <option value="income">{t("income")}</option>
+          <option value="expense">{t("expenses")}</option>
         </select>
 
         <select
@@ -229,45 +242,43 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
           onChange={(e) => setVat(e.target.value as VatFilter)}
           className="rounded-lg border border-navy-100 px-3 py-1.5 text-sm text-navy-500"
         >
-          <option value="all">VAT: All</option>
-          <option value="vat">VAT Only</option>
-          <option value="no-vat">No VAT</option>
+          <option value="all">{t("vat_all")}</option>
+          <option value="vat">{t("vat_only")}</option>
+          <option value="no-vat">{t("no_vat")}</option>
         </select>
 
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-xs text-navy-300">{sorted.length} of {rows.length} shown</span>
+          <span className="text-xs text-navy-300">{t("shown_count", { shown: sorted.length, total: rows.length })}</span>
           <button
             type="button"
             onClick={exportCsv}
             disabled={sorted.length === 0}
             className="flex items-center gap-2 rounded-lg bg-navy-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Download size={14} /> Export CSV
+            <Download size={14} /> {t("export_csv")}
           </button>
         </div>
       </div>
 
       {sorted.length === 0 ? (
         <p className="rounded-lg border border-navy-100 bg-white p-6 text-center text-sm text-navy-300">
-          {rows.length === 0
-            ? 'No transactions recorded yet. Use "Add Transaction" above to record your first income or expense.'
-            : "No transactions match the current filters. Try widening the date range or clearing a filter."}
+          {rows.length === 0 ? t("no_transactions_yet") : t("no_transactions_filtered_csv")}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-navy-100 bg-white">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-navy-50 text-xs font-semibold tracking-wide text-navy-300 uppercase">
-                <SortHeader label="Date" sortKeyId="date" />
-                <SortHeader label="Description" sortKeyId="description" />
-                <SortHeader label="Category" sortKeyId="category" />
-                <SortHeader label="Supplier" sortKeyId="supplier" />
-                <SortHeader label="Excl. VAT" sortKeyId="amount" right />
-                <SortHeader label="VAT" sortKeyId="vatAmount" right />
-                <SortHeader label="Incl. VAT" sortKeyId="inclVat" right />
-                <SortHeader label="Invoice #" sortKeyId="invoiceNumber" />
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-right">Balance</th>
+                <SortHeader label={t("date")} sortKeyId="date" />
+                <SortHeader label={t("description")} sortKeyId="description" />
+                <SortHeader label={t("category")} sortKeyId="category" />
+                <SortHeader label={t("supplier")} sortKeyId="supplier" />
+                <SortHeader label={t("excl_vat")} sortKeyId="amount" right />
+                <SortHeader label={t("vat")} sortKeyId="vatAmount" right />
+                <SortHeader label={t("incl_vat")} sortKeyId="inclVat" right />
+                <SortHeader label={t("invoice_number")} sortKeyId="invoiceNumber" />
+                <th className="px-4 py-2 text-left">{t("status")}</th>
+                <th className="px-4 py-2 text-right">{t("balance")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy-50">
@@ -275,7 +286,7 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
                 <tr key={tx.id} className="hover:bg-navy-25">
                   <td className="px-4 py-2.5 whitespace-nowrap text-navy-500">{formatDate(tx.date)}</td>
                   <td className="px-4 py-2.5 text-navy-600">{tx.description || "—"}</td>
-                  <td className="px-4 py-2.5 text-navy-500">{categoryLabel(tx.category)}</td>
+                  <td className="px-4 py-2.5 text-navy-500">{t(categoryLabelKey(tx.category))}</td>
                   <td className="px-4 py-2.5 text-navy-500">{tx.supplier || "—"}</td>
                   <td className="px-4 py-2.5 text-right text-navy-500">{formatCurrency(tx.amount)}</td>
                   <td className="px-4 py-2.5 text-right text-navy-500">{formatCurrency(tx.vatAmount)}</td>
@@ -289,7 +300,7 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
                   <td className="px-4 py-2.5 text-navy-500">{tx.invoiceNumber || "—"}</td>
                   <td className="px-4 py-2.5">
                     <span className="rounded-full bg-[var(--status-success-bg)] px-2 py-0.5 text-xs font-semibold text-[var(--status-success-text)]">
-                      Recorded
+                      {t("recorded")}
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-right font-medium text-navy-600">

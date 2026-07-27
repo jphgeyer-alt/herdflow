@@ -4,6 +4,7 @@
 // non-deleted transaction and compute each row's running balance in
 // chronological order before handing off.
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { PlusCircle } from "lucide-react";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
@@ -13,6 +14,7 @@ import { TransactionsTable, type TxRow } from "./TransactionsTable";
 export const dynamic = "force-dynamic";
 
 export default async function TransactionsPage() {
+  const t = await getTranslations("finance");
   const user = await getFarmWebUser();
   if (!user) return null;
 
@@ -51,19 +53,19 @@ export default async function TransactionsPage() {
     <div className="space-y-6 pb-10">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-navy-600 text-2xl font-semibold">Transactions</h1>
-          <p className="text-sm text-navy-300">{rows.length} recorded</p>
+          <h1 className="text-navy-600 text-2xl font-semibold">{t("transactions")}</h1>
+          <p className="text-sm text-navy-300">{t("transactions_recorded_count", { count: rows.length })}</p>
         </div>
         <Link
           href="/app/finance/transactions/new"
           className="flex items-center gap-2 rounded-lg bg-navy-600 px-4 py-2 text-sm font-semibold text-white hover:bg-navy-700"
         >
-          <PlusCircle size={16} /> Add Transaction
+          <PlusCircle size={16} /> {t("add_transaction")}
         </Link>
       </header>
 
       <Card>
-        <CardHeader title="All Transactions" />
+        <CardHeader title={t("all_transactions")} />
         <div className="p-4">
           <TransactionsTable rows={rows} />
         </div>

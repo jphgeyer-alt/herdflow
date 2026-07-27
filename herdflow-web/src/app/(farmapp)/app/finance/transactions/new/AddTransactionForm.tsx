@@ -1,28 +1,27 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AlertCircle } from "lucide-react";
-import { INCOME_CATS, EXPENSE_CATS, categoryLabel } from "@/lib/farm-finance/categories";
+import { INCOME_CATS, EXPENSE_CATS, categoryLabelKey } from "@/lib/farm-finance/categories";
 import { formatCurrency, formatDate } from "@/lib/farm-finance/format";
 import { Card } from "@/components/farm/Card";
 import { addTransaction, type AddTransactionState } from "./actions";
 
 const initialState: AddTransactionState = {};
 
-const PAYMENT_METHODS = [
-  { id: "CASH", label: "Cash" },
-  { id: "BANK_TRANSFER", label: "Bank Transfer" },
-  { id: "CARD", label: "Card" },
-  { id: "OTHER", label: "Other" },
-] as const;
+const PAYMENT_METHODS = ["CASH", "BANK_TRANSFER", "CARD", "OTHER"] as const;
+const RECURRENCES = ["WEEKLY", "MONTHLY", "ANNUALLY"] as const;
 
-const RECURRENCES = [
-  { id: "WEEKLY", label: "Weekly" },
-  { id: "MONTHLY", label: "Monthly" },
-  { id: "ANNUALLY", label: "Annually" },
-] as const;
+function paymentMethodLabelKey(id: string): string {
+  return `payment_method_${id.toLowerCase()}`;
+}
+function recurrenceLabelKey(id: string): string {
+  return `recurrence_${id.toLowerCase()}`;
+}
 
 export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoiceNumber: string }) {
+  const t = useTranslations("finance");
   const [state, formAction, isPending] = useActionState(addTransaction, initialState);
   const [step, setStep] = useState<"form" | "review">("form");
   const [type, setType] = useState<"income" | "expense">("expense");
@@ -51,11 +50,11 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
   const effectiveDate = date || today;
 
   function goToReview() {
-    if (!category) return setReviewError("Select a category.");
-    if (!numAmt || numAmt <= 0) return setReviewError("Enter a valid amount.");
-    if (!description.trim()) return setReviewError("Enter a description.");
-    if (!paymentMethod) return setReviewError("Select a payment method.");
-    if (isRecurring && !recurrence) return setReviewError("Select how often this recurs.");
+    if (!category) return setReviewError(t("select_category"));
+    if (!numAmt || numAmt <= 0) return setReviewError(t("enter_valid_amount"));
+    if (!description.trim()) return setReviewError(t("enter_description"));
+    if (!paymentMethod) return setReviewError(t("select_payment_method"));
+    if (isRecurring && !recurrence) return setReviewError(t("select_recurrence"));
     setReviewError("");
     setStep("review");
   }
@@ -87,31 +86,31 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
 
         <Card className="p-5">
           <p className="mb-4 text-xs font-bold tracking-wider text-navy-300 uppercase">
-            Confirm before saving
+            {t("confirm_before_saving")}
           </p>
           <div className="divide-y divide-navy-50 text-sm">
-            <ReviewRow label={type === "income" ? "Income" : "Expense"} value={formatCurrency(totalAmt)} big />
+            <ReviewRow label={type === "income" ? t("income_type") : t("expense_type")} value={formatCurrency(totalAmt)} big />
             {vatOn && (
-              <ReviewRow label="  incl. VAT (15%)" value={`${formatCurrency(numAmt)} + ${formatCurrency(vatAmt)} VAT`} />
+              <ReviewRow label={t("vat_amount", { rate: 15 })} value={`${formatCurrency(numAmt)} + ${formatCurrency(vatAmt)} VAT`} />
             )}
-            <ReviewRow label="Category" value={categoryLabel(category)} />
-            <ReviewRow label="Date" value={formatDate(effectiveDate)} />
-            <ReviewRow label="Description" value={description} />
-            <ReviewRow label={type === "income" ? "Buyer" : "Supplier"} value={supplier || "—"} />
-            <ReviewRow label="Invoice / Reference" value={invoiceNumber || "—"} />
+            <ReviewRow label={t("category")} value={t(categoryLabelKey(category))} />
+            <ReviewRow label={t("date")} value={formatDate(effectiveDate)} />
+            <ReviewRow label={t("description")} value={description} />
+            <ReviewRow label={type === "income" ? t("buyer") : t("supplier")} value={supplier || "—"} />
+            <ReviewRow label={t("invoice_reference")} value={invoiceNumber || "—"} />
             <ReviewRow
-              label="Payment Method"
-              value={PAYMENT_METHODS.find((p) => p.id === paymentMethod)?.label ?? "—"}
+              label={t("payment_method")}
+              value={paymentMethod ? t(paymentMethodLabelKey(paymentMethod)) : "—"}
             />
             <ReviewRow
-              label="Recurring"
-              value={isRecurring ? (RECURRENCES.find((r) => r.id === recurrence)?.label ?? "Yes") : "No"}
+              label={t("recurring")}
+              value={isRecurring ? (recurrence ? t(recurrenceLabelKey(recurrence)) : t("yes")) : t("no")}
             />
             {isEquipment && (unitCost || quantity) && (
               <>
-                <ReviewRow label="Unit Cost" value={unitCost ? formatCurrency(Number(unitCost)) : "—"} />
-                <ReviewRow label="Quantity" value={quantity || "—"} />
-                <ReviewRow label="Depreciable Asset" value={isDepreciableAsset ? "Yes" : "No"} />
+                <ReviewRow label={t("unit_cost")} value={unitCost ? formatCurrency(Number(unitCost)) : "—"} />
+                <ReviewRow label={t("quantity")} value={quantity || "—"} />
+                <ReviewRow label={t("depreciable_asset")} value={isDepreciableAsset ? t("yes") : t("no")} />
               </>
             )}
           </div>
@@ -123,14 +122,14 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
             onClick={() => setStep("form")}
             className="flex-1 rounded-xl border border-navy-100 py-3.5 text-sm font-bold text-navy-500 transition hover:bg-navy-25"
           >
-            Back to Edit
+            {t("back_to_edit")}
           </button>
           <button
             type="submit"
             disabled={isPending}
             className="flex-1 rounded-xl bg-navy-600 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isPending ? "Saving…" : "Confirm & Save"}
+            {isPending ? t("saving") : t("confirm_and_save")}
           </button>
         </div>
       </form>
@@ -160,7 +159,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
               : "border-navy-100 text-navy-500 hover:bg-navy-25"
           }`}
         >
-          Income
+          {t("income")}
         </button>
         <button
           type="button"
@@ -174,14 +173,14 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
               : "border-navy-100 text-navy-500 hover:bg-navy-25"
           }`}
         >
-          Expense
+          {t("expenses")}
         </button>
       </div>
 
       {/* Amount + VAT */}
       <Card className="p-5">
         <label className="mb-2 block text-xs font-bold tracking-wider text-navy-300 uppercase">
-          Amount (excl. VAT)
+          {t("amount_excl_vat")}
         </label>
         <div className="flex items-center gap-2">
           <span className="text-2xl font-bold text-navy-600">R</span>
@@ -202,20 +201,20 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
             onChange={(e) => setVatOn(e.target.checked)}
             className="h-4 w-4 rounded border-navy-100"
           />
-          Include VAT (15%)
+          {t("include_vat", { rate: 15 })}
         </label>
         {vatOn && numAmt > 0 && (
           <div className="mt-3 space-y-1.5 rounded-lg bg-navy-25 p-3 text-sm">
             <div className="flex justify-between text-navy-500">
-              <span>Amount excl. VAT</span>
+              <span>{t("amount_excl_vat")}</span>
               <span className="font-medium text-navy-600">{formatCurrency(numAmt)}</span>
             </div>
             <div className="flex justify-between text-navy-500">
-              <span>VAT (15%)</span>
+              <span>{t("vat_amount", { rate: 15 })}</span>
               <span className="font-medium text-navy-600">{formatCurrency(vatAmt)}</span>
             </div>
             <div className="flex justify-between border-t border-navy-100 pt-1.5 font-semibold text-navy-600">
-              <span>Total incl. VAT</span>
+              <span>{t("total_incl_vat")}</span>
               <span>{formatCurrency(totalAmt)}</span>
             </div>
           </div>
@@ -224,7 +223,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
 
       {/* Category */}
       <Card className="p-5">
-        <p className="mb-3 text-xs font-bold tracking-wider text-navy-300 uppercase">Category</p>
+        <p className="mb-3 text-xs font-bold tracking-wider text-navy-300 uppercase">{t("category")}</p>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {cats.map((c) => (
             <button
@@ -237,7 +236,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
                   : "border-navy-100 text-navy-500 hover:bg-navy-25"
               }`}
             >
-              {c.label}
+              {t(categoryLabelKey(c.id))}
             </button>
           ))}
         </div>
@@ -247,7 +246,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
       <Card className="space-y-4 p-5">
         <div>
           <label className="mb-1.5 block text-xs font-bold tracking-wider text-navy-300 uppercase">
-            Date
+            {t("date")}
           </label>
           <input
             type="date"
@@ -259,19 +258,19 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
         </div>
         <div>
           <label className="mb-1.5 block text-xs font-bold tracking-wider text-navy-300 uppercase">
-            Description
+            {t("description")}
           </label>
           <input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="What was this for?"
+            placeholder={t("what_was_this_for")}
             className="w-full rounded-lg border border-navy-100 px-3 py-2 text-sm text-navy-600"
           />
         </div>
         <div>
           <label className="mb-1.5 block text-xs font-bold tracking-wider text-navy-300 uppercase">
-            {type === "income" ? "Buyer Name" : "Supplier Name"}
+            {type === "income" ? t("buyer_name") : t("supplier_name")}
           </label>
           <input
             type="text"
@@ -282,7 +281,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
         </div>
         <div>
           <label className="mb-1.5 block text-xs font-bold tracking-wider text-navy-300 uppercase">
-            Invoice / Reference Number
+            {t("invoice_reference_number")}
           </label>
           <input
             type="text"
@@ -297,7 +296,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
               onClick={() => setInvoiceNumber(suggestedInvoiceNumber)}
               className="mt-1.5 text-xs font-semibold text-navy-400 hover:text-navy-600"
             >
-              Use suggested: {suggestedInvoiceNumber}
+              {t("use_suggested_invoice", { number: suggestedInvoiceNumber })}
             </button>
           )}
         </div>
@@ -306,21 +305,21 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
       {/* Payment method */}
       <Card className="p-5">
         <p className="mb-3 text-xs font-bold tracking-wider text-navy-300 uppercase">
-          Payment Method
+          {t("payment_method")}
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {PAYMENT_METHODS.map((p) => (
             <button
-              key={p.id}
+              key={p}
               type="button"
-              onClick={() => setPaymentMethod(p.id)}
+              onClick={() => setPaymentMethod(p)}
               className={`rounded-lg border px-2 py-2.5 text-xs font-semibold transition-colors ${
-                paymentMethod === p.id
+                paymentMethod === p
                   ? "border-navy-600 bg-navy-600 text-white"
                   : "border-navy-100 text-navy-500 hover:bg-navy-25"
               }`}
             >
-              {p.label}
+              {t(paymentMethodLabelKey(p))}
             </button>
           ))}
         </div>
@@ -330,12 +329,12 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
       {isEquipment && (
         <Card className="space-y-4 p-5">
           <p className="text-xs font-bold tracking-wider text-navy-300 uppercase">
-            Equipment Details
+            {t("equipment_details")}
           </p>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1.5 block text-xs font-bold tracking-wider text-navy-300 uppercase">
-                Unit Cost
+                {t("unit_cost")}
               </label>
               <input
                 type="number"
@@ -349,7 +348,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-bold tracking-wider text-navy-300 uppercase">
-                Quantity
+                {t("quantity")}
               </label>
               <input
                 type="number"
@@ -369,7 +368,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
               onChange={(e) => setIsDepreciableAsset(e.target.checked)}
               className="h-4 w-4 rounded border-navy-100"
             />
-            This is a depreciable asset
+            {t("is_depreciable_asset")}
           </label>
         </Card>
       )}
@@ -386,22 +385,22 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
             }}
             className="h-4 w-4 rounded border-navy-100"
           />
-          This transaction recurs
+          {t("is_recurring")}
         </label>
         {isRecurring && (
           <div className="mt-3 grid grid-cols-3 gap-2">
             {RECURRENCES.map((r) => (
               <button
-                key={r.id}
+                key={r}
                 type="button"
-                onClick={() => setRecurrence(r.id)}
+                onClick={() => setRecurrence(r)}
                 className={`rounded-lg border px-2 py-2.5 text-xs font-semibold transition-colors ${
-                  recurrence === r.id
+                  recurrence === r
                     ? "border-navy-600 bg-navy-600 text-white"
                     : "border-navy-100 text-navy-500 hover:bg-navy-25"
                 }`}
               >
-                {r.label}
+                {t(recurrenceLabelKey(r))}
               </button>
             ))}
           </div>
@@ -413,7 +412,7 @@ export function AddTransactionForm({ suggestedInvoiceNumber }: { suggestedInvoic
         onClick={goToReview}
         className="w-full rounded-xl bg-navy-600 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-navy-700"
       >
-        Review Transaction
+        {t("review_transaction")}
       </button>
     </div>
   );
