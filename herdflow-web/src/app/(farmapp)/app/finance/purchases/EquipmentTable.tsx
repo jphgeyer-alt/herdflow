@@ -3,6 +3,7 @@
 // F8: click-to-sort column headers, same pattern as TransactionsTable so
 // every data grid in the finance section behaves identically.
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/farm-finance/format";
 import { Badge } from "@/components/farm/Card";
@@ -23,6 +24,7 @@ export interface EquipmentRow {
 type SortKey = "date" | "supplier" | "description" | "unitCost" | "quantity" | "vatAmount" | "amount" | "invoiceNumber";
 
 export function EquipmentTable({ rows }: { rows: EquipmentRow[] }) {
+  const t = useTranslations("finance");
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
@@ -86,15 +88,15 @@ export function EquipmentTable({ rows }: { rows: EquipmentRow[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-navy-50 text-xs font-semibold tracking-wide text-navy-300 uppercase">
-            <SortHeader label="Date" sortKeyId="date" />
-            <SortHeader label="Supplier" sortKeyId="supplier" />
-            <SortHeader label="Description" sortKeyId="description" />
-            <SortHeader label="Unit Cost" sortKeyId="unitCost" right />
-            <SortHeader label="Qty" sortKeyId="quantity" right />
-            <SortHeader label="VAT" sortKeyId="vatAmount" right />
-            <SortHeader label="Total Cost" sortKeyId="amount" right />
-            <SortHeader label="Invoice #" sortKeyId="invoiceNumber" />
-            <th className="px-4 py-2 text-left">Asset</th>
+            <SortHeader label={t("date")} sortKeyId="date" />
+            <SortHeader label={t("supplier")} sortKeyId="supplier" />
+            <SortHeader label={t("description")} sortKeyId="description" />
+            <SortHeader label={t("unit_cost")} sortKeyId="unitCost" right />
+            <SortHeader label={t("qty")} sortKeyId="quantity" right />
+            <SortHeader label={t("vat")} sortKeyId="vatAmount" right />
+            <SortHeader label={t("total_cost")} sortKeyId="amount" right />
+            <SortHeader label={t("invoice_number")} sortKeyId="invoiceNumber" />
+            <th className="px-4 py-2 text-left">{t("asset")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-navy-50">
@@ -111,7 +113,7 @@ export function EquipmentTable({ rows }: { rows: EquipmentRow[] }) {
               <td className="px-4 py-2.5 text-right font-semibold text-navy-600">{formatCurrency(r.amount)}</td>
               <td className="px-4 py-2.5 text-navy-500">{r.invoiceNumber || "—"}</td>
               <td className="px-4 py-2.5">
-                {r.isDepreciableAsset ? <Badge variant="info">Depreciable</Badge> : "—"}
+                {r.isDepreciableAsset ? <Badge variant="info">{t("depreciable")}</Badge> : "—"}
               </td>
             </tr>
           ))}

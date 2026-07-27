@@ -1,0 +1,27 @@
+{
+  "app_name": "HerdFlow",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "close": "Close",
+    "confirm": "Confirm",
+    "retry": "Retry",
+    "view_all": "View All",
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "download_pdf": "Download PDF",
+    "generating": "Generating…"
+  },
+  "status": {
+    "recorded": "Recorded"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "load_failed": "Failed to load data.",
+    "pdf_generation_failed": "Failed to generate PDF. Please try again."
+  }
+}

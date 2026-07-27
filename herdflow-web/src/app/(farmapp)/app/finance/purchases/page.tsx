@@ -6,10 +6,11 @@
 // category, which now optionally carry unitCost/quantity/
 // isDepreciableAsset (migration 20260726130000).
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
 import { formatCurrency, formatDate } from "@/lib/farm-finance/format";
-import { resolvePeriod, periodRange, PERIOD_LABELS, type Period } from "@/lib/farm-finance/periods";
+import { resolvePeriod, periodRange, type Period } from "@/lib/farm-finance/periods";
 import { Card, CardHeader } from "@/components/farm/Card";
 import { PeriodSelector } from "@/components/farm/PeriodSelector";
 import { EquipmentTable } from "./EquipmentTable";
@@ -23,19 +24,20 @@ export default async function PurchasesPage({
 }: {
   searchParams: Promise<{ tab?: string; period?: string; from?: string; to?: string }>;
 }) {
+  const t = await getTranslations("finance");
   const user = await getFarmWebUser();
   if (!user) return null;
 
   const params = await searchParams;
   const tab: Tab = params.tab === "equipment" ? "equipment" : "livestock";
   const { period, range } = resolvePeriod(params);
-  const periodLabel = period === "custom" ? "Custom Range" : PERIOD_LABELS[period as Exclude<Period, "custom">];
+  const periodLabel = period === "custom" ? t("custom_range") : t(period as Exclude<Period, "custom">);
   const ytdRange = periodRange("this_financial_year");
   const qs = new URLSearchParams(params as Record<string, string>);
 
-  function tabHref(t: Tab) {
+  function tabHref(tabId: Tab) {
     const p = new URLSearchParams(qs);
-    p.set("tab", t);
+    p.set("tab", tabId);
     return `/app/finance/purchases?${p.toString()}`;
   }
 
@@ -43,7 +45,7 @@ export default async function PurchasesPage({
     <div className="space-y-6 pb-10">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-navy-600 text-2xl font-semibold">Purchases &amp; Acquisitions</h1>
+          <h1 className="text-navy-600 text-2xl font-semibold">{t("purchases_acquisitions")}</h1>
           <p className="text-sm text-navy-300">{periodLabel}</p>
         </div>
         <PeriodSelector current={period} />
@@ -56,7 +58,7 @@ export default async function PurchasesPage({
             tab === "livestock" ? "bg-navy-600 text-white" : "text-navy-400 hover:bg-navy-25"
           }`}
         >
-          Livestock Purchases
+          {t("livestock_purchases_tab")}
         </Link>
         <Link
           href={tabHref("equipment")}
@@ -64,7 +66,7 @@ export default async function PurchasesPage({
             tab === "equipment" ? "bg-navy-600 text-white" : "text-navy-400 hover:bg-navy-25"
           }`}
         >
-          Equipment &amp; Other
+          {t("equipment_other_tab")}
         </Link>
       </div>
 
@@ -98,6 +100,7 @@ async function LivestockTab({
   ytdRange: { start: Date; end: Date };
   periodLabel: string;
 }) {
+  const t = await getTranslations("finance");
   const [periodAnimals, ytdAnimals] = await Promise.all([
     withFarmerContext(farmerId, (tx) =>
       tx.farmerAnimal.findMany({
@@ -132,38 +135,35 @@ async function LivestockTab({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <Card className="p-4">
           <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">
-            Total Spent — {periodLabel}
+            {t("total_spent_period", { period: periodLabel })}
           </p>
           <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(totalSpend)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">Purchases</p>
+          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("purchases")}</p>
           <p className="mt-2 text-2xl font-semibold text-navy-600">{periodAnimals.length}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">Avg. Cost / Unit</p>
+          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("avg_cost_unit")}</p>
           <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(avgPrice)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">YTD Total</p>
+          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("ytd_total")}</p>
           <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(ytdTotal)}</p>
         </Card>
       </div>
 
       <Card>
-        <CardHeader title="Livestock Purchases" description={periodLabel} />
+        <CardHeader title={t("livestock_purchases_tab")} description={periodLabel} />
         {periodAnimals.length === 0 ? (
-          <p className="p-6 text-center text-sm text-navy-300">
-            No livestock purchases recorded this period. Animals acquired by auction, private sale,
-            or transfer will show up here once recorded on the mobile app.
-          </p>
+          <p className="p-6 text-center text-sm text-navy-300">{t("no_livestock_purchases_period")}</p>
         ) : (
           <div className="divide-y divide-navy-50">
             {periodAnimals.map((a) => (
               <div key={a.id} className="flex items-center justify-between gap-4 px-4 py-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-navy-600">
-                    {a.tagNumber || a.name || "Unnamed"}
+                    {a.tagNumber || a.name || t("unnamed")}
                   </p>
                   <p className="text-xs text-navy-300">
                     {a.source} · {a.sellerName || a.auctionHouse || a.prevFarm || "—"} ·{" "}
@@ -193,6 +193,7 @@ async function EquipmentTab({
   ytdRange: { start: Date; end: Date };
   periodLabel: string;
 }) {
+  const t = await getTranslations("finance");
   const where = {
     farmerId,
     isDeleted: false,
@@ -229,31 +230,28 @@ async function EquipmentTab({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <Card className="p-4">
           <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">
-            Total Spent — {periodLabel}
+            {t("total_spent_period", { period: periodLabel })}
           </p>
           <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(totalSpend)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">Purchases</p>
+          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("purchases")}</p>
           <p className="mt-2 text-2xl font-semibold text-navy-600">{periodRows.length}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">Avg. Cost / Unit</p>
+          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("avg_cost_unit")}</p>
           <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(avgUnitCost)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">YTD Total</p>
+          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("ytd_total")}</p>
           <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(ytdTotal)}</p>
         </Card>
       </div>
 
       <Card>
-        <CardHeader title="Equipment & Other Purchases" description={periodLabel} />
+        <CardHeader title={t("equipment_other_purchases_title")} description={periodLabel} />
         {periodRows.length === 0 ? (
-          <p className="p-6 text-center text-sm text-navy-300">
-            No equipment purchases recorded this period. Record one via "Add Transaction" with
-            category "Equipment" to see it here, with unit cost, quantity and depreciation tracking.
-          </p>
+          <p className="p-6 text-center text-sm text-navy-300">{t("no_equipment_purchases_period")}</p>
         ) : (
           <EquipmentTable
             rows={periodRows.map((r) => ({

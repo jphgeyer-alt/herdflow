@@ -32,3 +32,10 @@ export const EXPENSE_CATS = [
 export function categoryLabel(id: string): string {
   return [...INCOME_CATS, ...EXPENSE_CATS].find((c) => c.id === id)?.label ?? id;
 }
+
+// G3: translation-key lookup for the same ids above -- category ids are
+// stored in the database and shared with the mobile app, so only the
+// display label is localized (finance.category_<id> in each locale file).
+export function categoryLabelKey(id: string): string {
+  return `category_${id}`;
+}

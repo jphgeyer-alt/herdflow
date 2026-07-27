@@ -2,11 +2,12 @@
 // On-screen Income Statement preview for the selected period, matching the
 // structure of the downloadable PDF (see reports/pdf/route.ts).
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
-import { resolvePeriod, PERIOD_LABELS, type Period } from "@/lib/farm-finance/periods";
+import { resolvePeriod, type Period } from "@/lib/farm-finance/periods";
 import { formatCurrency, formatDateTime } from "@/lib/farm-finance/format";
-import { categoryLabel } from "@/lib/farm-finance/categories";
+import { categoryLabelKey } from "@/lib/farm-finance/categories";
 import { Card, CardHeader } from "@/components/farm/Card";
 import { PeriodSelector } from "@/components/farm/PeriodSelector";
 import { DownloadPdfButton } from "@/components/farm/DownloadPdfButton";
@@ -18,12 +19,13 @@ export default async function ReportsPage({
 }: {
   searchParams: Promise<{ period?: string; from?: string; to?: string }>;
 }) {
+  const t = await getTranslations("finance");
   const user = await getFarmWebUser();
   if (!user) return null;
 
   const params = await searchParams;
   const { period, range } = resolvePeriod(params);
-  const periodLabel = period === "custom" ? "Custom Range" : PERIOD_LABELS[period as Exclude<Period, "custom">];
+  const periodLabel = period === "custom" ? t("custom_range") : t(period as Exclude<Period, "custom">);
 
   const rows = await withFarmerContext(user.effectiveFarmerId, (tx) =>
     tx.farmerTransaction.findMany({
@@ -54,8 +56,8 @@ export default async function ReportsPage({
     <div className="space-y-6 pb-10">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-navy-600 text-2xl font-semibold">Reports</h1>
-          <p className="text-sm text-navy-300">Income Statement (Profit &amp; Loss) — {periodLabel}</p>
+          <h1 className="text-navy-600 text-2xl font-semibold">{t("reports_title")}</h1>
+          <p className="text-sm text-navy-300">{t("income_statement_pl_period", { period: periodLabel })}</p>
         </div>
         <div className="flex items-center gap-3">
           <PeriodSelector current={period} />
@@ -67,45 +69,45 @@ export default async function ReportsPage({
       </header>
 
       <div className="flex gap-2 text-sm">
-        <span className="rounded-lg bg-navy-600 px-3 py-1.5 font-semibold text-white">Income Statement</span>
+        <span className="rounded-lg bg-navy-600 px-3 py-1.5 font-semibold text-white">{t("income_statement")}</span>
         <Link href={`/app/finance/vat?${qs}`} className="rounded-lg px-3 py-1.5 text-navy-400 hover:bg-navy-25">
-          VAT Summary
+          {t("vat_summary")}
         </Link>
         <Link
           href={`/app/finance/reports/cash-flow?${qs}`}
           className="rounded-lg px-3 py-1.5 text-navy-400 hover:bg-navy-25"
         >
-          Cash Flow Statement
+          {t("cash_flow_statement")}
         </Link>
       </div>
 
       <Card>
         <CardHeader
-          title="Income Statement"
-          description={`${user.farmName || "Farm"} — ${periodLabel} — Unaudited management accounts`}
+          title={t("income_statement")}
+          description={`${user.farmName || t("farm_fallback")} — ${periodLabel} — ${t("unaudited_management_accounts")}`}
         />
         <div className="divide-y divide-navy-50 p-4 text-sm">
-          <Row label="Gross Income" value={grossIncome} bold />
-          <Row label="Cost of Sales (livestock purchases)" value={-costOfSales} indent />
-          <Row label="Gross Profit" value={grossProfit} bold border />
+          <Row label={t("gross_income")} value={grossIncome} bold />
+          <Row label={t("cost_of_sales")} value={-costOfSales} indent />
+          <Row label={t("gross_profit")} value={grossProfit} bold border />
 
           <div className="pt-3 pb-1 text-xs font-bold tracking-wide text-navy-300 uppercase">
-            Operating Expenses
+            {t("operating_expenses")}
           </div>
           {opExByCategory.size === 0 ? (
-            <p className="py-2 text-navy-300">No operating expenses recorded this period.</p>
+            <p className="py-2 text-navy-300">{t("no_operating_expenses")}</p>
           ) : (
             [...opExByCategory.entries()]
               .sort((a, b) => b[1] - a[1])
-              .map(([cat, amt]) => <Row key={cat} label={categoryLabel(cat)} value={-amt} indent />)
+              .map(([cat, amt]) => <Row key={cat} label={t(categoryLabelKey(cat))} value={-amt} indent />)
           )}
-          <Row label="Total Operating Expenses" value={-totalOpEx} bold />
+          <Row label={t("total_operating_expenses")} value={-totalOpEx} bold />
 
-          <Row label={netProfit >= 0 ? "Net Profit" : "Net Loss"} value={netProfit} bold border big />
+          <Row label={netProfit >= 0 ? t("net_profit") : t("net_loss")} value={netProfit} bold border big />
         </div>
       </Card>
       <p className="text-xs text-navy-300">
-        Prepared using HerdFlow · Unaudited management accounts · Generated {formatDateTime(new Date())}
+        {t("prepared_footer", { date: formatDateTime(new Date()) })}
       </p>
     </div>
   );

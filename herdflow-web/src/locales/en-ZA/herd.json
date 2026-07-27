@@ -1,0 +1,6 @@
+{
+  "add_animal": "Add New Animal",
+  "no_animals_yet": "No animals yet",
+  "animal_count_one": "{{count}} animal",
+  "animal_count_other": "{{count}} animals"
+}

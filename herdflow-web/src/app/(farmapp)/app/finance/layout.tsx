@@ -4,6 +4,8 @@
 // site's header/nav/footer chrome (same reasoning as the (admin) section).
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { FarmShell } from "@/components/farm/FarmShell";
 
@@ -16,9 +18,16 @@ export default async function FarmFinanceLayout({ children }: { children: ReactN
     redirect("/auth/login?redirect=/app/finance");
   }
 
+  // Scoped to the finance section only -- deliberately not added to the
+  // root layout, which is shared by the public marketing site.
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <FarmShell fullName={user.fullName} mobileRole={user.mobileRole} farmName={user.farmName}>
-      {children}
-    </FarmShell>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <FarmShell fullName={user.fullName} mobileRole={user.mobileRole} farmName={user.farmName}>
+        {children}
+      </FarmShell>
+    </NextIntlClientProvider>
   );
 }

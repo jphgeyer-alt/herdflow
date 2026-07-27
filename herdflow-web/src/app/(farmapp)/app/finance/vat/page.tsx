@@ -2,9 +2,10 @@
 // VAT201-preparation summary -- field numbers match SARS's actual VAT201
 // return layout so a tax practitioner can map these straight across.
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { getFinanceTotals } from "@/lib/farm-finance/queries";
-import { resolvePeriod, PERIOD_LABELS, type Period } from "@/lib/farm-finance/periods";
+import { resolvePeriod, type Period } from "@/lib/farm-finance/periods";
 import { formatCurrency } from "@/lib/farm-finance/format";
 import { Card, CardHeader } from "@/components/farm/Card";
 import { PeriodSelector } from "@/components/farm/PeriodSelector";
@@ -17,12 +18,13 @@ export default async function VatSummaryPage({
 }: {
   searchParams: Promise<{ period?: string; from?: string; to?: string }>;
 }) {
+  const t = await getTranslations("finance");
   const user = await getFarmWebUser();
   if (!user) return null;
 
   const params = await searchParams;
   const { period, range } = resolvePeriod(params);
-  const periodLabel = period === "custom" ? "Custom Range" : PERIOD_LABELS[period as Exclude<Period, "custom">];
+  const periodLabel = period === "custom" ? t("custom_range") : t(period as Exclude<Period, "custom">);
 
   const totals = await getFinanceTotals(user.effectiveFarmerId, range);
   const owing = totals.vatOwing;
@@ -32,8 +34,8 @@ export default async function VatSummaryPage({
     <div className="space-y-6 pb-10">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-navy-600 text-2xl font-semibold">VAT Summary</h1>
-          <p className="text-sm text-navy-300">VAT201 preparation — {periodLabel}</p>
+          <h1 className="text-navy-600 text-2xl font-semibold">{t("vat_summary")}</h1>
+          <p className="text-sm text-navy-300">{t("vat201_preparation", { period: periodLabel })}</p>
         </div>
         <div className="flex items-center gap-3">
           <PeriodSelector current={period} />
@@ -43,27 +45,30 @@ export default async function VatSummaryPage({
 
       <div className="flex gap-2 text-sm">
         <Link href={`/app/finance/reports?${qs}`} className="rounded-lg px-3 py-1.5 text-navy-400 hover:bg-navy-25">
-          Income Statement
+          {t("income_statement")}
         </Link>
-        <span className="rounded-lg bg-navy-600 px-3 py-1.5 font-semibold text-white">VAT Summary</span>
+        <span className="rounded-lg bg-navy-600 px-3 py-1.5 font-semibold text-white">{t("vat_summary")}</span>
         <Link
           href={`/app/finance/reports/cash-flow?${qs}`}
           className="rounded-lg px-3 py-1.5 text-navy-400 hover:bg-navy-25"
         >
-          Cash Flow Statement
+          {t("cash_flow_statement")}
         </Link>
       </div>
 
       <Card>
-        <CardHeader title="VAT201 Field Summary" description={`${user.farmName || "Farm"} — ${periodLabel}`} />
+        <CardHeader
+          title={t("vat201_field_summary")}
+          description={`${user.farmName || t("farm_fallback")} — ${periodLabel}`}
+        />
         <div className="divide-y divide-navy-50 p-4 text-sm">
-          <VatRow field="Field 1" label="Total Sales (Output Tax)" value={totals.income} />
-          <VatRow field="Field 4A" label="Total VAT on Sales" value={totals.vatCollected} bold />
-          <VatRow field="Field 14" label="Total Purchases (Input Tax)" value={totals.expenses} />
-          <VatRow field="Field 15" label="Total VAT on Purchases" value={totals.vatPaid} bold />
+          <VatRow field="Field 1" label={t("vat_field_1")} value={totals.income} />
+          <VatRow field="Field 4A" label={t("vat_field_4a")} value={totals.vatCollected} bold />
+          <VatRow field="Field 14" label={t("vat_field_14")} value={totals.expenses} />
+          <VatRow field="Field 15" label={t("vat_field_15")} value={totals.vatPaid} bold />
           <div className="flex items-center justify-between border-t border-navy-100 pt-3">
             <span className="font-semibold text-navy-600">
-              Field 19 — {owing >= 0 ? "VAT Payable" : "VAT Refundable"}
+              {owing >= 0 ? t("vat_field_19_payable") : t("vat_field_19_refundable")}
             </span>
             <span
               className={`text-lg font-semibold ${
@@ -77,8 +82,7 @@ export default async function VatSummaryPage({
       </Card>
 
       <div className="rounded-lg border border-[var(--status-warning-bg)] bg-[var(--status-warning-bg)] p-4 text-sm text-[var(--status-warning-text)]">
-        This is a management summary only. Verify with your registered tax practitioner before
-        submission to SARS.
+        {t("vat_disclaimer")}
       </div>
     </div>
   );
