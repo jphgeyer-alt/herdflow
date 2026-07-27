@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 
 export default function ContactPage() {
+  const t = useTranslations("marketing");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -36,10 +38,10 @@ export default function ContactPage() {
         setSubject("");
         setMessage("");
       } else {
-        setError(data.error || "Failed to send message");
+        setError(data.error || t("failed_to_send_message"));
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("network_error_retry"));
     } finally {
       setLoading(false);
     }
@@ -50,8 +52,8 @@ export default function ContactPage() {
       {/* Hero Header */}
       <div className="bg-[#1B3A6B] px-4 py-12 text-white md:px-8">
         <div className="mx-auto max-w-7xl">
-          <h1 className="mb-2 text-4xl font-black">Contact Us</h1>
-          <p className="text-lg text-white/80">We&apos;re here to help. Get in touch with our team.</p>
+          <h1 className="mb-2 text-4xl font-black">{t("contact_hero_title")}</h1>
+          <p className="text-lg text-white/80">{t("contact_hero_sub")}</p>
         </div>
       </div>
 
@@ -61,10 +63,9 @@ export default function ContactPage() {
           {/* Contact Info */}
           <div className="space-y-8">
             <div>
-              <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">Get in Touch</h2>
+              <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">{t("get_in_touch_title")}</h2>
               <p className="leading-relaxed text-[#5d7497]">
-                Whether you&apos;re a buyer, seller, or logistics partner, our team is ready to assist
-                you with any questions or concerns.
+                {t("get_in_touch_desc")}
               </p>
             </div>
 
@@ -74,7 +75,7 @@ export default function ContactPage() {
                   <Mail size={24} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="mb-1 font-bold text-[#244367]">Email</h3>
+                  <h3 className="mb-1 font-bold text-[#244367]">{t("email_label")}</h3>
                   <p className="text-[#5d7497]">info@herdflow.co.za</p>
                 </div>
               </div>
@@ -84,7 +85,7 @@ export default function ContactPage() {
                   <Phone size={24} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="mb-1 font-bold text-[#244367]">Phone</h3>
+                  <h3 className="mb-1 font-bold text-[#244367]">{t("phone_label")}</h3>
                   <p className="text-[#5d7497]">+27 60 522 6267</p>
                 </div>
               </div>
@@ -94,7 +95,7 @@ export default function ContactPage() {
                   <MapPin size={24} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="mb-1 font-bold text-[#244367]">Address</h3>
+                  <h3 className="mb-1 font-bold text-[#244367]">{t("address_label")}</h3>
                   <p className="text-[#5d7497]">
                     Geyer Holdings
                     <br />
@@ -117,7 +118,7 @@ export default function ContactPage() {
                 </svg>
                 <div>
                   <p className="text-sm font-semibold text-[#244367]">
-                    Follow HerdFlow on Facebook
+                    {t("follow_facebook_label")}
                   </p>
                   <a
                     href="https://www.facebook.com/share/1cUWCfQwut/"
@@ -125,26 +126,26 @@ export default function ContactPage() {
                     rel="noopener noreferrer"
                     className="text-sm font-medium text-[#1877F2] hover:underline"
                   >
-                    Follow our Facebook page →
+                    {t("follow_facebook_link_text")}
                   </a>
                 </div>
               </div>
             </div>
 
             <div className="rounded-2xl border border-[#e4ebf5] bg-white p-6 shadow-lg">
-              <h3 className="mb-3 font-bold text-[#244367]">Business Hours</h3>
+              <h3 className="mb-3 font-bold text-[#244367]">{t("business_hours_title")}</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[#5d7497]">Monday - Friday</span>
-                  <span className="font-semibold text-[#244367]">8:00 AM - 5:00 PM</span>
+                  <span className="text-[#5d7497]">{t("weekday_label")}</span>
+                  <span className="font-semibold text-[#244367]">{t("weekday_hours")}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#5d7497]">Saturday</span>
-                  <span className="font-semibold text-[#244367]">9:00 AM - 1:00 PM</span>
+                  <span className="text-[#5d7497]">{t("saturday_label")}</span>
+                  <span className="font-semibold text-[#244367]">{t("saturday_hours")}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#5d7497]">Sunday</span>
-                  <span className="font-semibold text-[#244367]">Closed</span>
+                  <span className="text-[#5d7497]">{t("sunday_label")}</span>
+                  <span className="font-semibold text-[#244367]">{t("closed_label")}</span>
                 </div>
               </div>
             </div>
@@ -152,11 +153,11 @@ export default function ContactPage() {
 
           {/* Contact Form */}
           <div className="rounded-2xl border border-[#e4ebf5] bg-white p-8 shadow-xl">
-            <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">Send us a Message</h2>
+            <h2 className="mb-6 text-2xl font-black text-[#1B3A6B]">{t("send_message_title")}</h2>
 
             {success && (
               <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-                Thank you! Your message has been sent successfully. We&apos;ll get back to you soon.
+                {t("message_sent_success")}
               </div>
             )}
 
@@ -169,7 +170,7 @@ export default function ContactPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="mb-2 block text-sm font-semibold text-[#244367]">
-                  Full Name *
+                  {t("full_name_label")}
                 </label>
                 <input
                   type="text"
@@ -177,13 +178,13 @@ export default function ContactPage() {
                   onChange={(e) => setFullName(e.target.value)}
                   required
                   className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
-                  placeholder="John Smith"
+                  placeholder={t("full_name_placeholder")}
                 />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-[#244367]">
-                  Email Address *
+                  {t("email_address_label")}
                 </label>
                 <input
                   type="email"
@@ -191,44 +192,44 @@ export default function ContactPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
-                  placeholder="your.email@example.com"
+                  placeholder={t("email_placeholder")}
                 />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-[#244367]">
-                  Phone Number (Optional)
+                  {t("phone_optional_label")}
                 </label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
-                  placeholder="+27 82 123 4567"
+                  placeholder={t("phone_placeholder")}
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#244367]">Subject *</label>
+                <label className="mb-2 block text-sm font-semibold text-[#244367]">{t("subject_label")}</label>
                 <input
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   required
                   className="w-full rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
-                  placeholder="How can we help you?"
+                  placeholder={t("subject_placeholder")}
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#244367]">Message *</label>
+                <label className="mb-2 block text-sm font-semibold text-[#244367]">{t("message_label")}</label>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   required
                   rows={6}
                   className="w-full resize-none rounded-lg border border-[#cdd8e7] px-4 py-3 focus:border-[#1B3A6B] focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20"
-                  placeholder="Tell us more about your inquiry..."
+                  placeholder={t("message_placeholder")}
                 />
               </div>
 
@@ -238,11 +239,11 @@ export default function ContactPage() {
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2E7D32] py-4 font-bold uppercase tracking-wide text-white shadow-lg transition hover:bg-[#1d5e20] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? (
-                  "Sending..."
+                  t("sending_ellipsis")
                 ) : (
                   <>
                     <Send size={20} />
-                    Send Message
+                    {t("send_message_button")}
                   </>
                 )}
               </button>

@@ -18,6 +18,7 @@ import enZAHerd from "../locales/en-ZA/herd.json";
 import enZABreeding from "../locales/en-ZA/breeding.json";
 import enZARecords from "../locales/en-ZA/records.json";
 import enZAReports from "../locales/en-ZA/reports.json";
+import enZAMarketing from "../locales/en-ZA/marketing.json";
 
 export const SUPPORTED_LOCALES = ["en-ZA"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -32,6 +33,7 @@ const MESSAGES: Record<SupportedLocale, Record<string, unknown>> = {
     breeding: enZABreeding,
     records: enZARecords,
     reports: enZAReports,
+    marketing: enZAMarketing,
   },
 };
 
