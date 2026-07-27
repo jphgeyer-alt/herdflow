@@ -819,6 +819,18 @@ model FarmerProfile {
   @@index([ownerUserId])
 }
 
+// G4: one row per farm (tenant), not per team member -- farmerId is the same
+// effective-farmer id (ownerUserId ?? userId) used to scope every other
+// Farmer* table, so the owner and any invited managers/workers all resolve
+// to the same LocaleConfig row and see the app in the same language.
+model LocaleConfig {
+  id        String   @id @default(cuid())
+  farmerId  String   @unique
+  locale    String   @default("en-ZA")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model FarmInvite {
   id            String    @id @default(cuid())
   farmOwnerId   String
