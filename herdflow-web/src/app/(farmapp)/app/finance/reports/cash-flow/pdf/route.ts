@@ -1,15 +1,17 @@
 // WEBSITE — herdflow-web/src/app/(farmapp)/app/finance/reports/cash-flow/pdf/route.ts
 import { renderToBuffer } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { getCashFlowStatement } from "@/lib/farm-finance/queries";
-import { resolvePeriod, PERIOD_LABELS, type Period } from "@/lib/farm-finance/periods";
+import { resolvePeriod, type Period } from "@/lib/farm-finance/periods";
 import { CashFlowStatementPdf } from "@/lib/farm-finance/pdf/CashFlowStatementPdf";
 import { formatDateTime } from "@/lib/farm-finance/format";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  const t = await getTranslations("finance");
   const user = await getFarmWebUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
@@ -19,19 +21,32 @@ export async function GET(request: Request) {
     from: searchParams.get("from") ?? undefined,
     to: searchParams.get("to") ?? undefined,
   });
-  const periodLabel = period === "custom" ? "Custom Range" : PERIOD_LABELS[period as Exclude<Period, "custom">];
+  const periodLabel = period === "custom" ? t("custom_range") : t(period as Exclude<Period, "custom">);
 
   const cf = await getCashFlowStatement(user.effectiveFarmerId, range);
 
+  const generatedAt = formatDateTime(new Date());
   const buffer = await renderToBuffer(
     CashFlowStatementPdf({
-      farmName: user.farmName || "Farm",
+      farmName: user.farmName || t("farm_fallback"),
       ownerName: user.fullName,
       periodLabel,
-      generatedAt: formatDateTime(new Date()),
       operating: cf.operating,
       investing: cf.investing,
       financing: cf.financing,
+      labels: {
+        tagline: t("platform_tagline"),
+        reportTitle: t("cash_flow_statement"),
+        reportMeta: `${periodLabel} · ${t("unaudited_management_accounts")}`,
+        operating: t("net_cash_operating"),
+        investing: t("net_cash_investing"),
+        investingNote: t("net_cash_investing_note"),
+        financing: t("net_cash_financing"),
+        financingNote: t("cash_flow_financing_pdf_note"),
+        netMovement: t("net_movement_in_cash"),
+        preparedText: t("prepared_using_pdf_footer"),
+        generatedText: t("generated_on", { date: generatedAt }),
+      },
     }),
   );
 

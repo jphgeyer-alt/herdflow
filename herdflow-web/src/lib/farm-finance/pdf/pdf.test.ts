@@ -14,7 +14,60 @@ const common = {
   farmName: "Geyer Farms",
   ownerName: "J. Geyer",
   periodLabel: "This Month",
-  generatedAt: "26 Jul 2026, 14:30",
+};
+
+// PDF components take pre-translated strings as props (see IncomeStatementPdf.tsx
+// for why) -- these fixtures stand in for what a route handler's
+// getTranslations("finance") call would produce.
+const preparedText = "Prepared using HerdFlow · Unaudited management accounts";
+const generatedText = "Generated 26 Jul 2026, 14:30";
+
+const incomeLabels = {
+  tagline: "Farm Management Platform",
+  reportTitle: "Income Statement (Profit & Loss)",
+  reportMeta: "This Month · Unaudited management accounts",
+  grossIncome: "Gross Income",
+  costOfSales: "Cost of Sales (livestock purchases)",
+  grossProfit: "Gross Profit",
+  operatingExpenses: "Operating Expenses",
+  noOperatingExpenses: "No operating expenses recorded this period.",
+  totalOperatingExpenses: "Total Operating Expenses",
+  netProfit: "Net Profit",
+  netLoss: "Net Loss",
+  preparedText,
+  generatedText,
+};
+
+const vatLabels = {
+  tagline: "Farm Management Platform",
+  reportTitle: "VAT Report — VAT201 Preparation Summary",
+  reportMeta: "This Month · VAT rate 15%",
+  fieldSummaryTitle: "VAT201 Field Summary",
+  field1: "Total Sales (Output Tax)",
+  field4a: "Total VAT on Sales",
+  field14: "Total Purchases (Input Tax)",
+  field15: "Total VAT on Purchases",
+  field19Payable: "Field 19 — VAT Payable",
+  field19Refundable: "Field 19 — VAT Refundable",
+  disclaimer:
+    "This is a management summary only. Verify with your registered tax practitioner before submission to SARS.",
+  preparedText,
+  generatedText,
+};
+
+const cashFlowLabels = {
+  tagline: "Farm Management Platform",
+  reportTitle: "Cash Flow Statement",
+  reportMeta: "This Month · Unaudited management accounts",
+  operating: "Net Cash from Operating Activities",
+  investing: "Net Cash from Investing Activities",
+  investingNote: "livestock and equipment purchases",
+  financing: "Net Cash from Financing Activities",
+  financingNote:
+    "no financing transactions recorded — loans, owner contributions, etc. are not yet tracked by HerdFlow",
+  netMovement: "Net Movement in Cash",
+  preparedText,
+  generatedText,
 };
 
 function expectRealPdf(buf: Buffer) {
@@ -33,6 +86,7 @@ describe("Finance PDF reports (F4)", () => {
           { label: "Feed", amount: 20000 },
           { label: "Veterinary", amount: 5000 },
         ],
+        labels: incomeLabels,
       }),
     );
     expectRealPdf(buf);
@@ -40,7 +94,7 @@ describe("Finance PDF reports (F4)", () => {
 
   it("renders the Income Statement with zero operating expenses (empty state)", async () => {
     const buf = await renderToBuffer(
-      IncomeStatementPdf({ ...common, grossIncome: 0, costOfSales: 0, operatingExpenses: [] }),
+      IncomeStatementPdf({ ...common, grossIncome: 0, costOfSales: 0, operatingExpenses: [], labels: incomeLabels }),
     );
     expectRealPdf(buf);
   });
@@ -54,6 +108,7 @@ describe("Finance PDF reports (F4)", () => {
         totalPurchases: 65000,
         vatOnPurchases: 9750,
         vatOwing: 12750,
+        labels: vatLabels,
       }),
     );
     expectRealPdf(buf);
@@ -68,6 +123,7 @@ describe("Finance PDF reports (F4)", () => {
         totalPurchases: 80000,
         vatOnPurchases: 12000,
         vatOwing: -10500,
+        labels: vatLabels,
       }),
     );
     expectRealPdf(buf);
@@ -75,7 +131,7 @@ describe("Finance PDF reports (F4)", () => {
 
   it("renders the Cash Flow Statement", async () => {
     const buf = await renderToBuffer(
-      CashFlowStatementPdf({ ...common, operating: 85000, investing: -40000, financing: 0 }),
+      CashFlowStatementPdf({ ...common, operating: 85000, investing: -40000, financing: 0, labels: cashFlowLabels }),
     );
     expectRealPdf(buf);
   });

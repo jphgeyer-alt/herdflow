@@ -109,11 +109,13 @@ export const pdfStyles = StyleSheet.create({
 export function PdfHeader({
   farmName,
   ownerName,
+  tagline,
   reportTitle,
   reportMeta,
 }: {
   farmName: string;
   ownerName: string;
+  tagline: string;
   reportTitle: string;
   reportMeta: string;
 }) {
@@ -122,7 +124,7 @@ export function PdfHeader({
       <View style={pdfStyles.headerTopRow}>
         <View>
           <Text style={pdfStyles.brand}>HerdFlow</Text>
-          <Text style={pdfStyles.brandSub}>Farm Management Platform</Text>
+          <Text style={pdfStyles.brandSub}>{tagline}</Text>
         </View>
         <View style={pdfStyles.headerRight}>
           <Text style={pdfStyles.farmName}>{farmName}</Text>
@@ -135,12 +137,16 @@ export function PdfHeader({
   );
 }
 
-export function PdfFooter({ generatedAt }: { generatedAt: string }) {
+// preparedText/generatedText arrive pre-translated from the calling route
+// handler -- this file has no async translation-hook context of its own
+// (it's rendered synchronously by @react-pdf/renderer, not part of the
+// Next.js request-render tree).
+export function PdfFooter({ preparedText, generatedText }: { preparedText: string; generatedText: string }) {
   return (
     <View style={pdfStyles.footer} fixed>
       <View style={pdfStyles.footerRow}>
-        <Text style={pdfStyles.footerText}>Prepared using HerdFlow · Unaudited management accounts</Text>
-        <Text style={pdfStyles.footerText}>Generated {generatedAt}</Text>
+        <Text style={pdfStyles.footerText}>{preparedText}</Text>
+        <Text style={pdfStyles.footerText}>{generatedText}</Text>
       </View>
       <Text
         style={[pdfStyles.footerText, { marginTop: 3 }]}

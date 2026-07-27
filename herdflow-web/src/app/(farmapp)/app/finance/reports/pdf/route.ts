@@ -4,16 +4,18 @@
 // preview so the two can never disagree.
 import { renderToBuffer } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
-import { resolvePeriod, PERIOD_LABELS, type Period } from "@/lib/farm-finance/periods";
-import { categoryLabel } from "@/lib/farm-finance/categories";
+import { resolvePeriod, type Period } from "@/lib/farm-finance/periods";
+import { categoryLabelKey } from "@/lib/farm-finance/categories";
 import { IncomeStatementPdf } from "@/lib/farm-finance/pdf/IncomeStatementPdf";
 import { formatDateTime } from "@/lib/farm-finance/format";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  const t = await getTranslations("finance");
   const user = await getFarmWebUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
@@ -23,7 +25,7 @@ export async function GET(request: Request) {
     from: searchParams.get("from") ?? undefined,
     to: searchParams.get("to") ?? undefined,
   });
-  const periodLabel = period === "custom" ? "Custom Range" : PERIOD_LABELS[period as Exclude<Period, "custom">];
+  const periodLabel = period === "custom" ? t("custom_range") : t(period as Exclude<Period, "custom">);
 
   const rows = await withFarmerContext(user.effectiveFarmerId, (tx) =>
     tx.farmerTransaction.findMany({
@@ -43,17 +45,32 @@ export async function GET(request: Request) {
   }
   const operatingExpenses = [...opExByCategory.entries()]
     .sort((a, b) => b[1] - a[1])
-    .map(([cat, amount]) => ({ label: categoryLabel(cat), amount }));
+    .map(([cat, amount]) => ({ label: t(categoryLabelKey(cat)), amount }));
 
+  const generatedAt = formatDateTime(new Date());
   const buffer = await renderToBuffer(
     IncomeStatementPdf({
-      farmName: user.farmName || "Farm",
+      farmName: user.farmName || t("farm_fallback"),
       ownerName: user.fullName || "",
       periodLabel,
-      generatedAt: formatDateTime(new Date()),
       grossIncome,
       costOfSales,
       operatingExpenses,
+      labels: {
+        tagline: t("platform_tagline"),
+        reportTitle: t("income_statement_full_title"),
+        reportMeta: `${periodLabel} · ${t("unaudited_management_accounts")}`,
+        grossIncome: t("gross_income"),
+        costOfSales: t("cost_of_sales"),
+        grossProfit: t("gross_profit"),
+        operatingExpenses: t("operating_expenses"),
+        noOperatingExpenses: t("no_operating_expenses"),
+        totalOperatingExpenses: t("total_operating_expenses"),
+        netProfit: t("net_profit"),
+        netLoss: t("net_loss"),
+        preparedText: t("prepared_using_pdf_footer"),
+        generatedText: t("generated_on", { date: generatedAt }),
+      },
     }),
   );
 

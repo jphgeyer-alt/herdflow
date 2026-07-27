@@ -7,10 +7,24 @@ export interface CashFlowStatementPdfProps {
   farmName: string;
   ownerName: string;
   periodLabel: string;
-  generatedAt: string;
   operating: number;
   investing: number;
   financing: number;
+  // Pre-translated strings -- see IncomeStatementPdf.tsx for why this
+  // component can't call getTranslations()/useTranslations() itself.
+  labels: {
+    tagline: string;
+    reportTitle: string;
+    reportMeta: string;
+    operating: string;
+    investing: string;
+    investingNote: string;
+    financing: string;
+    financingNote: string;
+    netMovement: string;
+    preparedText: string;
+    generatedText: string;
+  };
 }
 
 function activityValue(n: number): string {
@@ -21,10 +35,10 @@ export function CashFlowStatementPdf({
   farmName,
   ownerName,
   periodLabel,
-  generatedAt,
   operating,
   investing,
   financing,
+  labels,
 }: CashFlowStatementPdfProps) {
   const netMovement = operating + investing + financing;
 
@@ -34,37 +48,25 @@ export function CashFlowStatementPdf({
         <PdfHeader
           farmName={farmName}
           ownerName={ownerName}
-          reportTitle="Cash Flow Statement"
-          reportMeta={`${periodLabel} · Unaudited management accounts`}
+          tagline={labels.tagline}
+          reportTitle={labels.reportTitle}
+          reportMeta={labels.reportMeta}
         />
 
         <View style={pdfStyles.section}>
-          <PdfRow
-            label="Net Cash from Operating Activities"
-            value={activityValue(operating)}
-            negative={operating < 0}
-          />
-          <PdfRow
-            label="Net Cash from Investing Activities"
-            value={activityValue(investing)}
-            negative={investing < 0}
-          />
+          <PdfRow label={labels.operating} value={activityValue(operating)} negative={operating < 0} />
+          <PdfRow label={labels.investing} value={activityValue(investing)} negative={investing < 0} />
           <Text style={[pdfStyles.rowLabelIndent, { marginTop: -4, marginBottom: 4 }]}>
-            (livestock and equipment purchases)
+            ({labels.investingNote})
           </Text>
-          <PdfRow
-            label="Net Cash from Financing Activities"
-            value={activityValue(financing)}
-            negative={financing < 0}
-          />
+          <PdfRow label={labels.financing} value={activityValue(financing)} negative={financing < 0} />
           <Text style={[pdfStyles.rowLabelIndent, { marginTop: -4, marginBottom: 4 }]}>
-            (no financing transactions recorded — loans, owner contributions, etc. are not yet
-            tracked by HerdFlow)
+            ({labels.financingNote})
           </Text>
-          <PdfBigRow label="Net Movement in Cash" value={activityValue(netMovement)} />
+          <PdfBigRow label={labels.netMovement} value={activityValue(netMovement)} />
         </View>
 
-        <PdfFooter generatedAt={generatedAt} />
+        <PdfFooter preparedText={labels.preparedText} generatedText={labels.generatedText} />
       </Page>
     </Document>
   );

@@ -7,12 +7,28 @@ export interface VatReportPdfProps {
   farmName: string;
   ownerName: string;
   periodLabel: string;
-  generatedAt: string;
   totalSales: number;
   vatOnSales: number;
   totalPurchases: number;
   vatOnPurchases: number;
   vatOwing: number;
+  // Pre-translated strings -- see IncomeStatementPdf.tsx for why this
+  // component can't call getTranslations()/useTranslations() itself.
+  labels: {
+    tagline: string;
+    reportTitle: string;
+    reportMeta: string;
+    fieldSummaryTitle: string;
+    field1: string;
+    field4a: string;
+    field14: string;
+    field15: string;
+    field19Payable: string;
+    field19Refundable: string;
+    disclaimer: string;
+    preparedText: string;
+    generatedText: string;
+  };
 }
 
 function VatFieldRow({ field, label, value }: { field: string; label: string; value: string }) {
@@ -31,12 +47,12 @@ export function VatReportPdf({
   farmName,
   ownerName,
   periodLabel,
-  generatedAt,
   totalSales,
   vatOnSales,
   totalPurchases,
   vatOnPurchases,
   vatOwing,
+  labels,
 }: VatReportPdfProps) {
   return (
     <Document title={`${farmName} - VAT Report - ${periodLabel}`}>
@@ -44,30 +60,26 @@ export function VatReportPdf({
         <PdfHeader
           farmName={farmName}
           ownerName={ownerName}
-          reportTitle="VAT Report — VAT201 Preparation Summary"
-          reportMeta={`${periodLabel} · VAT rate 15%`}
+          tagline={labels.tagline}
+          reportTitle={labels.reportTitle}
+          reportMeta={labels.reportMeta}
         />
 
         <View style={pdfStyles.section}>
-          <Text style={pdfStyles.sectionTitle}>VAT201 Field Summary</Text>
-          <VatFieldRow field="Field 1" label="Total Sales (Output Tax)" value={formatCurrency(totalSales)} />
-          <VatFieldRow field="Field 4A" label="Total VAT on Sales" value={formatCurrency(vatOnSales)} />
-          <VatFieldRow field="Field 14" label="Total Purchases (Input Tax)" value={formatCurrency(totalPurchases)} />
-          <VatFieldRow field="Field 15" label="Total VAT on Purchases" value={formatCurrency(vatOnPurchases)} />
+          <Text style={pdfStyles.sectionTitle}>{labels.fieldSummaryTitle}</Text>
+          <VatFieldRow field="Field 1" label={labels.field1} value={formatCurrency(totalSales)} />
+          <VatFieldRow field="Field 4A" label={labels.field4a} value={formatCurrency(vatOnSales)} />
+          <VatFieldRow field="Field 14" label={labels.field14} value={formatCurrency(totalPurchases)} />
+          <VatFieldRow field="Field 15" label={labels.field15} value={formatCurrency(vatOnPurchases)} />
           <View style={pdfStyles.bigRow}>
-            <Text style={pdfStyles.bigLabel}>
-              Field 19 — {vatOwing >= 0 ? "VAT Payable" : "VAT Refundable"}
-            </Text>
+            <Text style={pdfStyles.bigLabel}>{vatOwing >= 0 ? labels.field19Payable : labels.field19Refundable}</Text>
             <Text style={pdfStyles.bigValue}>{formatCurrency(Math.abs(vatOwing))}</Text>
           </View>
         </View>
 
-        <Text style={pdfStyles.disclaimer}>
-          This is a management summary only. Verify with your registered tax practitioner before
-          submission to SARS.
-        </Text>
+        <Text style={pdfStyles.disclaimer}>{labels.disclaimer}</Text>
 
-        <PdfFooter generatedAt={generatedAt} />
+        <PdfFooter preparedText={labels.preparedText} generatedText={labels.generatedText} />
       </Page>
     </Document>
   );

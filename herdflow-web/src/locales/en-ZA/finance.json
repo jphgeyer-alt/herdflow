@@ -167,5 +167,12 @@
   "recurrence_monthly": "Monthly",
   "recurrence_annually": "Annually",
   "yes": "Yes",
-  "no": "No"
+  "no": "No",
+  "platform_tagline": "Farm Management Platform",
+  "prepared_using_pdf_footer": "Prepared using HerdFlow · Unaudited management accounts",
+  "generated_on": "Generated {{date}}",
+  "income_statement_full_title": "Income Statement (Profit & Loss)",
+  "vat_report_pdf_title": "VAT Report — VAT201 Preparation Summary",
+  "vat_rate_meta": "VAT rate {{rate}}%",
+  "cash_flow_financing_pdf_note": "no financing transactions recorded — loans, owner contributions, etc. are not yet tracked by HerdFlow"
 }
