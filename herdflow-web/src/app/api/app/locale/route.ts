@@ -5,7 +5,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
-import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from "@/i18n/request";
+import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from "../../../../../i18n/request";
 
 export async function GET(request: Request) {
   const auth = await requireMobileUser(request);

@@ -1,9 +1,18 @@
-import path from "path";
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 import createNextIntlPlugin from "next-intl/plugin";
 
-const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+// i18n/request.ts lives at the project root (next-intl's default expected
+// location) rather than under src/ -- explicit resolveAlias overrides for
+// "next-intl/config" (tried first, in both the turbopack and webpack config
+// blocks below) fixed the plugin's alias resolution during `next build`'s
+// static-generation-attempt phase, but had no effect on the actual compiled
+// production server bundle that `next start` loads to serve live requests
+// -- that bundle kept hitting next-intl's internal fallback stub (a bare
+// throw with no message) on every request needing translations. Moving the
+// file to the location next-intl resolves by convention, instead of relying
+// on an alias override, is what actually fixed the live-request path.
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 // Using webpack instead of Turbopack for production builds to sidestep
 // upstream next-intl bug amannn/next-intl#2339: Turbopack's production
@@ -18,13 +27,6 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
-    resolveAlias: {
-      "next-intl/config": "./src/i18n/request.ts",
-    },
-  },
-  webpack: (config) => {
-    config.resolve.alias["next-intl/config"] = path.resolve("./src/i18n/request.ts");
-    return config;
   },
   // Caps static-generation build workers to 2, regardless of what the host
   // reports as available CPUs -- Render's Starter plan's actual RAM budget
