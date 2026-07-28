@@ -28,9 +28,10 @@ export const env = {
   WEATHER_API_KEY: process.env.WEATHER_API_KEY || "",
   // Server-side only. OAuth2 client credentials for the Copernicus Data
   // Space Ecosystem (dataspace.copernicus.eu) — free, unrestricted-for-
-  // commercial-use Sentinel-2 satellite data, used by /api/app/satellite/ndvi
-  // for a camp's vegetation-health (NDVI) reading. Register a free account +
-  // OAuth client at dataspace.copernicus.eu to get these.
+  // commercial-use Sentinel-2 satellite data, used by
+  // /api/app/camps/[id]/ndvi (see src/lib/ndvi.ts) for a camp's
+  // vegetation-health (NDVI) reading. Register a free account + OAuth
+  // client at dataspace.copernicus.eu to get these.
   COPERNICUS_CLIENT_ID: process.env.COPERNICUS_CLIENT_ID || "",
   COPERNICUS_CLIENT_SECRET: process.env.COPERNICUS_CLIENT_SECRET || "",
 };

@@ -4,16 +4,16 @@ import { useState, useRef, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Menu, ChevronDown, LogOut, ChevronRight } from "lucide-react";
-import { FARM_FINANCE_NAV } from "@/lib/farm-nav";
+import { FARM_FINANCE_NAV, type FarmNavItem } from "@/lib/farm-nav";
 import { Badge } from "./Card";
 
-function currentPageLabelKey(pathname: string) {
-  const exact = FARM_FINANCE_NAV.find((i) => i.href === pathname);
+function currentPageLabelKey(pathname: string, navItems: FarmNavItem[], fallback: string) {
+  const exact = navItems.find((i) => i.href === pathname);
   if (exact) return exact.labelKey;
-  const prefixMatch = [...FARM_FINANCE_NAV]
+  const prefixMatch = [...navItems]
     .sort((a, b) => b.href.length - a.href.length)
     .find((i) => pathname.startsWith(`${i.href}/`));
-  return prefixMatch?.labelKey ?? "nav_dashboard";
+  return prefixMatch?.labelKey ?? fallback;
 }
 
 const ROLE_LABEL_KEY: Record<string, string> = {
@@ -26,14 +26,24 @@ export function Topbar({
   fullName,
   mobileRole,
   onMenuClick,
+  navItems = FARM_FINANCE_NAV,
+  namespace = "finance",
+  homeHref = "/app/finance",
+  sectionLabelKey = "farm_financials",
+  fallbackLabelKey = "nav_dashboard",
 }: {
   fullName: string;
   mobileRole: string;
   onMenuClick: () => void;
+  navItems?: FarmNavItem[];
+  namespace?: string;
+  homeHref?: string;
+  sectionLabelKey?: string;
+  fallbackLabelKey?: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const t = useTranslations("finance");
+  const t = useTranslations(namespace);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -70,11 +80,13 @@ export function Topbar({
           <Menu size={20} />
         </button>
         <nav className="flex items-center gap-1.5 text-sm text-navy-300">
-          <span>{t("farm_financials")}</span>
-          {pathname !== "/app/finance" && (
+          <span>{t(sectionLabelKey)}</span>
+          {pathname !== homeHref && (
             <>
               <ChevronRight size={14} />
-              <span className="font-semibold text-navy-600">{t(currentPageLabelKey(pathname))}</span>
+              <span className="font-semibold text-navy-600">
+                {t(currentPageLabelKey(pathname, navItems, fallbackLabelKey))}
+              </span>
             </>
           )}
         </nav>

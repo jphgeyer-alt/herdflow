@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
 import { env } from "@/lib/env";
+import { callClaudeForJson } from "@/lib/anthropic";
 
 export const dynamic = "force-dynamic";
 
@@ -107,50 +108,9 @@ export async function POST(request: Request) {
           },
         ];
 
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-5",
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [{ role: "user", content }],
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text().catch(() => "");
-      console.error("Vision API error:", response.status, errText);
-      return NextResponse.json({ error: "Vision analysis failed. Please try again." }, { status: 502 });
-    }
-
-    const data = await response.json();
-    const rawText = data?.content?.[0]?.text ?? "";
-    // The prompts explicitly say "no markdown code fences", but Claude wraps
-    // its JSON in ```json ... ``` fairly often regardless -- stripping them
-    // defensively is the standard, robust fix rather than relying on the
-    // model to always comply with that instruction.
-    const text = rawText
-      .trim()
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/\s*```$/, "")
-      .trim();
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      console.error("Vision API returned non-JSON:", rawText);
-      return NextResponse.json({ error: "Could not parse the vision analysis result." }, { status: 502 });
-    }
-
-    return NextResponse.json({ result: parsed });
-  } catch (err) {
-    console.error("Vision analyze error:", err);
-    return NextResponse.json({ error: "Vision analysis failed. Please try again." }, { status: 500 });
+  const { result, error } = await callClaudeForJson(systemPrompt, content);
+  if (error) {
+    return NextResponse.json({ error }, { status: 502 });
   }
+  return NextResponse.json({ result });
 }

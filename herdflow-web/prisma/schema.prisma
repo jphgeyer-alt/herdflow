@@ -958,6 +958,15 @@ model FarmerAnimal {
   sellerName         String?
   prevFarm           String?
   camp               String?
+  // The camp's actual id (mobile already sends this as assignedCampId on
+  // create/move — `camp` above has been holding that same id string all
+  // along, just under a display-oriented name). campId is the source of
+  // truth for live per-camp head counts (CAMPS-MAP); `camp` is kept as-is
+  // for existing display code. No @relation, matching every other
+  // camp cross-reference in this schema (FarmerCampMovement.toCampId/
+  // fromCampId, FarmerTreatment.campId, etc.) — validated at the
+  // application layer instead (see getCampForFarmer in tenant-lookups.ts).
+  campId             String?
   notes              String?
   status             String    @default("ACTIVE")
   isDeleted          Boolean   @default(false)
@@ -969,6 +978,7 @@ model FarmerAnimal {
 
   @@index([farmerId, isDeleted])
   @@index([farmerId, species])
+  @@index([campId])
 }
 
 // Auditable record of an animal's departure from the herd (sale, death, or
@@ -1388,6 +1398,67 @@ model FarmerNutritionItem {
   updatedAt       DateTime @updatedAt
 
   @@index([farmerId])
+}
+
+// ── Copernicus/Sentinel-2 NDVI pasture advisory ───────────────────────────────
+
+// Global/admin-managed config -- NOT farmer-scoped, no RLS, same convention
+// as PlatformFee/ExpenseCategory (admin-only write via application-level
+// checks). Deliberately a real table, not a hardcoded map like
+// complianceConfig.ts, because these thresholds must be adjustable without a
+// redeploy (per explicit product requirement). A row with both
+// livestockType and countryCode null is the global default that always
+// exists (seeded by this migration); a more specific row overrides it for
+// that lookup when present.
+model NdviThresholdConfig {
+  id                  String   @id @default(cuid())
+  livestockType       String?  // matches FarmerAnimal.species, e.g. "cattle" -- null = all types
+  countryCode         String?  // matches FarmerProfile.country, e.g. "ZA" -- null = all countries
+  poorMax             Decimal  @db.Decimal(3, 2) @default(0.20) // below this: poor (red)
+  moderateMax         Decimal  @db.Decimal(3, 2) @default(0.40) // below this: fair/moderate (amber)
+  goodMax             Decimal  @db.Decimal(3, 2) @default(0.60) // below this: good; above: excellent (green)
+  // Sentinel-2 revisit cadence. Default of 5 confirmed by product owner --
+  // FLAG: verify current effective revisit time at sentinels.copernicus.eu
+  // before go-live (the constellation now includes Sentinel-2C alongside
+  // 2A/2B, which may have changed this since it was last checked).
+  refreshIntervalDays Int      @default(5)
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([livestockType, countryCode])
+}
+
+// Farmer-scoped (RLS), one row per satellite reading -- this is what makes
+// NDVI *history* possible at all; before this, NDVI was fetched live and
+// cached client-side only (48h AsyncStorage TTL on mobile), with no
+// server-side record and therefore no way to compute a trend.
+model FarmerCampNdviReading {
+  id                 String    @id @default(cuid())
+  farmerId           String
+  campId             String
+  ndvi               Decimal   @db.Decimal(4, 3) // raw -1..1, e.g. 0.452
+  score10            Int       // 1-10 farmer-facing score -- clamp(round(ndvi*10), 1, 10)
+  interpretation     String    // "poor" | "fair" | "good" | "excellent"
+  // Which config row's bands were applied -- keeps old readings explainable
+  // if thresholds are retuned later. No @relation (matches every other
+  // camp cross-reference in this schema -- see FarmerCampMovement.toCampId
+  // etc.), and NdviThresholdConfig isn't farmer-scoped so a relation across
+  // the RLS boundary would be awkward anyway.
+  thresholdConfigId  String?
+  satellitePassDate  DateTime  // actual Sentinel-2 image date from Copernicus, not fetch time
+  fetchedAt          DateTime  @default(now())
+  thumbnailUrl       String?   // null unless/until the optional thumbnail phase is built
+  // Claude-generated recommendation, cached so re-opening a camp's detail
+  // panel never re-spends an API call -- only a genuinely new reading (or
+  // an explicit refresh) generates a new one.
+  aiAdvisory         String?
+  aiAdvisoryPriority String?   // "info" | "consider_soon" | "act_now"
+  aiAdvisoryAt       DateTime?
+  isDeleted          Boolean   @default(false)
+
+  @@index([farmerId])
+  @@index([campId, satellitePassDate])
 }
 
 // ─── Commercial system: subscriptions + unified payments ────────────────────

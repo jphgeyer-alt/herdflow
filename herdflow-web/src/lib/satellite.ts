@@ -72,8 +72,11 @@ async function getAccessToken(): Promise<string | null> {
 // Builds a square lat/lon bounding box centered on (lat, lon), sized so its
 // area approximates `hectares`. 1 hectare = 10,000 m². Degree-per-meter
 // conversion is approximate (WGS84 sphere), fine at this scale (a few
-// hundred meters across).
-function buildBoundingBox(lat: number, lon: number, hectares: number) {
+// hundred meters across). Exported for the CAMPS-MAP NDVI overlay (see
+// CampsMapPage), which draws this same approximate box as the map's
+// colored NDVI polygon per camp -- same geometry the statistical NDVI
+// query itself was computed over, so the overlay always matches the number.
+export function buildBoundingBox(lat: number, lon: number, hectares: number) {
   const areaM2 = hectares * 10_000;
   const sideM = Math.sqrt(areaM2);
   const halfDegLat = sideM / 2 / 111_320;
@@ -92,19 +95,16 @@ function buildBoundingBox(lat: number, lon: number, hectares: number) {
   };
 }
 
-export type VegetationInterpretation = "poor" | "fair" | "good" | "excellent";
-
-function interpretNdvi(ndvi: number): VegetationInterpretation {
-  if (ndvi < 0.2) return "poor";
-  if (ndvi < 0.4) return "fair";
-  if (ndvi < 0.7) return "good";
-  return "excellent";
-}
-
+// Interpretation (poor/fair/good/excellent) is deliberately NOT computed
+// here anymore -- it used to be a hardcoded 0.2/0.4/0.7-band function, but
+// thresholds are now config-driven and camp-specific (see
+// NdviThresholdConfig + computeInterpretation() in src/lib/ndvi.ts, which is
+// the only caller of getVegetationHealth below). This file's job is just
+// "get the raw NDVI number and pass date from Copernicus" -- nothing about
+// what that number means.
 export interface VegetationHealthResult {
   ndvi: number;
   date: string;
-  interpretation: VegetationInterpretation;
   approximate: true;
   disclaimer: string;
 }
@@ -161,7 +161,6 @@ export async function getVegetationHealth(
     return {
       ndvi: Math.round(mean * 100) / 100,
       date: latest.interval?.to ?? now.toISOString(),
-      interpretation: interpretNdvi(mean),
       approximate: true,
       disclaimer: NDVI_DISCLAIMER,
     };

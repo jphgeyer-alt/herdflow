@@ -58,3 +58,20 @@ export async function getCampForFarmer(
   if (byId) return byId;
   return tx.farmerCamp.findFirst({ where: { localId: id, farmerId, isDeleted: false } });
 }
+
+// CAMPS-MAP: FarmerAnimal.campId is what per-camp head counts (GET
+// /api/app/camps) group by, so an unvalidated client-supplied value would be
+// the exact "orphan write" risk described up top -- a campId pointing at
+// another farm's camp. Resolves the client's raw id/localId to the real
+// camp id via getCampForFarmer, or null if it doesn't belong to this farmer
+// (silently dropped by callers rather than erroring, same as every other
+// optional child-reference field on these routes).
+export async function resolveCampId(
+  tx: Prisma.TransactionClient,
+  rawId: string | undefined | null,
+  farmerId: string,
+): Promise<string | null> {
+  if (!rawId) return null;
+  const camp = await getCampForFarmer(tx, rawId, farmerId);
+  return camp?.id ?? null;
+}

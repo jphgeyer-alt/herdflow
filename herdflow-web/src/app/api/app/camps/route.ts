@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
+import { getCampsWithHeadCounts } from "@/lib/camps";
 
 export const dynamic = "force-dynamic";
 
@@ -10,13 +11,11 @@ export async function GET(request: Request) {
   const auth = await requireMobileUser(request);
   if (!isMobileUser(auth)) return auth;
 
-  const camps = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
-    tx.farmerCamp.findMany({
-      where: { farmerId: auth.effectiveFarmerId, isDeleted: false },
-      orderBy: { name: "asc" },
-    }),
+  const campsWithCounts = await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+    getCampsWithHeadCounts(tx, auth.effectiveFarmerId),
   );
-  return NextResponse.json(camps);
+
+  return NextResponse.json(campsWithCounts);
 }
 
 export async function POST(request: Request) {

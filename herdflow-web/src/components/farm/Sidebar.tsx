@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
-import { FARM_FINANCE_NAV } from "@/lib/farm-nav";
+import { FARM_FINANCE_NAV, type FarmNavItem } from "@/lib/farm-nav";
 
-function isActive(pathname: string, href: string) {
-  if (href === "/app/finance") return pathname === "/app/finance";
+function isActive(pathname: string, href: string, homeHref: string) {
+  if (href === homeHref) return pathname === homeHref;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -15,13 +15,21 @@ export function Sidebar({
   open,
   onClose,
   farmName,
+  navItems = FARM_FINANCE_NAV,
+  namespace = "finance",
+  homeHref = "/app/finance",
+  sectionLabelKey = "farm_financials",
 }: {
   open: boolean;
   onClose: () => void;
   farmName: string;
+  navItems?: FarmNavItem[];
+  namespace?: string;
+  homeHref?: string;
+  sectionLabelKey?: string;
 }) {
   const pathname = usePathname();
-  const t = useTranslations("finance");
+  const t = useTranslations(namespace);
 
   return (
     <>
@@ -39,12 +47,12 @@ export function Sidebar({
         }`}
       >
         <div className="flex items-center justify-between px-5 py-5">
-          <Link href="/app/finance" className="flex items-center gap-2">
+          <Link href={homeHref} className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy-600 text-sm font-black text-white">
               HF
             </div>
             <div className="min-w-0">
-              <p className="text-navy-600 text-sm font-bold leading-tight">{t("farm_financials")}</p>
+              <p className="text-navy-600 text-sm font-bold leading-tight">{t(sectionLabelKey)}</p>
               <p className="truncate text-xs leading-tight text-navy-300">{farmName || "HerdFlow"}</p>
             </div>
           </Link>
@@ -59,8 +67,8 @@ export function Sidebar({
         </div>
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-6">
-          {FARM_FINANCE_NAV.map((item) => {
-            const active = isActive(pathname, item.href);
+          {navItems.map((item) => {
+            const active = isActive(pathname, item.href, homeHref);
             const Icon = item.icon;
             return (
               <Link

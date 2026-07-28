@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
-import { getAnimalForFarmer } from "@/lib/tenant-lookups";
+import { getAnimalForFarmer, resolveCampId } from "@/lib/tenant-lookups";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +65,19 @@ export async function PATCH(request: Request, ctx: Ctx) {
   }
   const b = body as Record<string, unknown>;
 
+  // Resolves + ownership-checks the raw campId/assignedCampId up front (its
+  // own withFarmerContext call, same pattern as the `existing` lookup above)
+  // so a campId pointing at another farm's camp is silently dropped rather
+  // than written — see resolveCampId in tenant-lookups.ts.
+  const rawCampId =
+    (b.campId as string | undefined) ?? (b.assignedCampId as string | undefined) ?? null;
+  const resolvedCampId =
+    rawCampId != null
+      ? await withFarmerContext(auth.effectiveFarmerId, (tx) =>
+          resolveCampId(tx, rawCampId, auth.effectiveFarmerId),
+        )
+      : null;
+
   const data = {
     ...(b.tag != null && { tagNumber: String(b.tag) }),
     ...(b.name != null && { name: String(b.name) }),
@@ -73,8 +86,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
     ...(b.gender != null && { gender: String(b.gender) }),
     ...(b.birthDate != null && { dateOfBirth: new Date(b.birthDate as string) }),
     ...(b.weight != null && { weight: Number(b.weight) }),
-    ...(b.campId != null && { camp: String(b.campId) }),
-    ...(b.campId == null && b.assignedCampId != null && { camp: String(b.assignedCampId) }),
+    ...(rawCampId != null && { camp: resolvedCampId, campId: resolvedCampId }),
     ...(b.note != null && { notes: String(b.note) }),
     ...(b.status != null && { status: String(b.status) }),
     ...(b.healthStatus != null && { healthStatus: String(b.healthStatus) }),

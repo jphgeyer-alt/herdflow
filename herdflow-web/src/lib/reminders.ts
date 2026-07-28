@@ -3,6 +3,7 @@ import { withAdminContext } from "@/lib/tenant-prisma";
 import { sendListingExpiringEmail, sendTrialEndingEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { getWeather } from "@/lib/weather";
+import { parseGpsCoordinates } from "@/lib/geo";
 import Expo from "expo-server-sdk";
 
 const expo = new Expo();
@@ -131,9 +132,9 @@ async function sendSevereWeatherAlerts(): Promise<number> {
 
   let alerted = 0;
   for (const camp of campsWithGps) {
-    const parts = (camp.gpsCoordinates ?? "").split(",").map((s) => parseFloat(s.trim()));
-    if (parts.length !== 2 || parts.some((n) => Number.isNaN(n))) continue;
-    const [lat, lon] = parts;
+    const coords = parseGpsCoordinates(camp.gpsCoordinates);
+    if (!coords) continue;
+    const { lat, lon } = coords;
 
     const weather = await getWeather(lat, lon).catch(() => null);
     if (!weather) continue;

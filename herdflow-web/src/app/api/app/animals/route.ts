@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { requireMobileUser, isMobileUser } from "@/lib/mobile-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
+import { resolveCampId } from "@/lib/tenant-lookups";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,15 @@ export async function POST(request: Request) {
         if (existing) return { record: existing, created: false };
       }
 
+      // AddAnimalScreen's local field is `assignedCampId`, not `campId` —
+      // accept either. resolveCampId also guards against a campId pointing
+      // at another farm's camp (see tenant-lookups.ts) — silently dropped
+      // (null) rather than erroring, same as every other optional
+      // child-reference field on this route.
+      const rawCampId =
+        (b.campId as string | undefined) ?? (b.assignedCampId as string | undefined) ?? null;
+      const campId = await resolveCampId(tx, rawCampId, auth.effectiveFarmerId);
+
       const created = await tx.farmerAnimal.create({
         data: {
           localId,
@@ -62,10 +72,8 @@ export async function POST(request: Request) {
           gender: (b.gender as string | undefined) ?? null,
           dateOfBirth: b.birthDate ? new Date(b.birthDate as string) : null,
           weight: b.weight != null ? Number(b.weight) : null,
-          // AddAnimalScreen's local field is `assignedCampId`, not `campId` —
-          // accept either so the camp actually gets recorded on create.
-          camp:
-            (b.campId as string | undefined) ?? (b.assignedCampId as string | undefined) ?? null,
+          camp: campId,
+          campId,
           notes: (b.note as string | undefined) ?? null,
           status: (b.status as string | undefined) ?? "ACTIVE",
           healthStatus: (b.healthStatus as string | undefined) ?? "HEALTHY",
