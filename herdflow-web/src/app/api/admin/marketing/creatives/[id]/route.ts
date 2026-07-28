@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getAdminFromRequest } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-import { VALID_PLACEMENTS, VALID_STATUSES, VALID_TEMPLATES } from "../route";
+import { VALID_PLACEMENTS, VALID_STATUSES, VALID_TEMPLATES } from "../constants";
 
 type Params = { params: Promise<{ id: string }> };
 

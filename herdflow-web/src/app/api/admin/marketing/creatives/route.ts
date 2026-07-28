@@ -2,21 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getAdminFromRequest } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-
-export const VALID_PLACEMENTS = [
-  "HOMEPAGE",
-  "SHOP",
-  "LISTINGS",
-  "APP_HOME_BANNER",
-  "APP_ANNOUNCEMENT",
-  "WEB_HOMEPAGE",
-  "WEB_MARKETPLACE",
-  "EMAIL_HEADER",
-  "PUSH_NOTIFICATION",
-];
-
-export const VALID_STATUSES = ["DRAFT", "SCHEDULED", "LIVE", "PAUSED", "ENDED"];
-export const VALID_TEMPLATES = ["banner-classic", "banner-photo", "banner-product", "banner-minimal"];
+import { VALID_PLACEMENTS, VALID_STATUSES, VALID_TEMPLATES } from "./constants";
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
