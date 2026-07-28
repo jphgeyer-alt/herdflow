@@ -44,3 +44,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Code local tool config -- accumulates literal Bash command strings
+# (including, historically, ones with secrets pasted directly into curl
+# calls). Never commit this; it belongs on disk only, per-machine.
+.claude/
