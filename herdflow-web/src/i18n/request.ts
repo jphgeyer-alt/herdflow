@@ -66,31 +66,41 @@ export function resolveFromAcceptLanguage(header: string | null): SupportedLocal
 }
 
 export default getRequestConfig(async () => {
-  const farmUser = await getFarmWebUser();
-  if (farmUser) {
-    const config = await prisma.localeConfig.findUnique({
-      where: { farmerId: farmUser.effectiveFarmerId },
-      select: { locale: true },
-    });
-    if (config && (SUPPORTED_LOCALES as readonly string[]).includes(config.locale)) {
-      const locale = config.locale as SupportedLocale;
-      return { locale, messages: MESSAGES[locale] };
+  try {
+    const farmUser = await getFarmWebUser();
+    if (farmUser) {
+      const config = await prisma.localeConfig.findUnique({
+        where: { farmerId: farmUser.effectiveFarmerId },
+        select: { locale: true },
+      });
+      if (config && (SUPPORTED_LOCALES as readonly string[]).includes(config.locale)) {
+        const locale = config.locale as SupportedLocale;
+        return { locale, messages: MESSAGES[locale] };
+      }
     }
+
+    const cookieStore = await cookies();
+    const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value;
+
+    let locale: SupportedLocale = DEFAULT_LOCALE;
+    if (cookieLocale && (SUPPORTED_LOCALES as readonly string[]).includes(cookieLocale)) {
+      locale = cookieLocale as SupportedLocale;
+    } else {
+      const headerList = await headers();
+      locale = resolveFromAcceptLanguage(headerList.get("accept-language")) ?? DEFAULT_LOCALE;
+    }
+
+    return {
+      locale,
+      messages: MESSAGES[locale],
+    };
+  } catch (error) {
+    console.error("[next-intl] getRequestConfig REAL ERROR:", error);
+    console.error(
+      "[next-intl] error message:",
+      error instanceof Error ? error.message : String(error),
+    );
+    console.error("[next-intl] error stack:", error instanceof Error ? error.stack : "no stack");
+    throw error;
   }
-
-  const cookieStore = await cookies();
-  const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value;
-
-  let locale: SupportedLocale = DEFAULT_LOCALE;
-  if (cookieLocale && (SUPPORTED_LOCALES as readonly string[]).includes(cookieLocale)) {
-    locale = cookieLocale as SupportedLocale;
-  } else {
-    const headerList = await headers();
-    locale = resolveFromAcceptLanguage(headerList.get("accept-language")) ?? DEFAULT_LOCALE;
-  }
-
-  return {
-    locale,
-    messages: MESSAGES[locale],
-  };
 });
