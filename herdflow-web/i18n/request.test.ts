@@ -1,4 +1,4 @@
-// herdflow-web/src/i18n/request.test.ts
+// herdflow-web/i18n/request.test.ts
 // G2: unit-tests the Accept-Language parsing this module uses to
 // auto-detect a farmer's browser language on first visit -- easy to get
 // subtly wrong (q-value ordering, region-vs-language-only matches).

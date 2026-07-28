@@ -1,4 +1,4 @@
-// WEBSITE — herdflow-web/src/i18n/request.ts
+// WEBSITE — herdflow-web/i18n/request.ts
 // G2: resolves the active locale + its messages for next-intl. Deliberately
 // NOT using next-intl's [locale] URL-segment/middleware pattern -- the
 // finance routes (/app/finance/*) were already built without a locale
@@ -13,14 +13,14 @@ import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 
-import enZACommon from "../locales/en-ZA/common.json";
-import enZAFinance from "../locales/en-ZA/finance.json";
-import enZAHerd from "../locales/en-ZA/herd.json";
-import enZABreeding from "../locales/en-ZA/breeding.json";
-import enZARecords from "../locales/en-ZA/records.json";
-import enZAReports from "../locales/en-ZA/reports.json";
-import enZAMarketing from "../locales/en-ZA/marketing.json";
-import enZACamps from "../locales/en-ZA/camps.json";
+import enZACommon from "../src/locales/en-ZA/common.json";
+import enZAFinance from "../src/locales/en-ZA/finance.json";
+import enZAHerd from "../src/locales/en-ZA/herd.json";
+import enZABreeding from "../src/locales/en-ZA/breeding.json";
+import enZARecords from "../src/locales/en-ZA/records.json";
+import enZAReports from "../src/locales/en-ZA/reports.json";
+import enZAMarketing from "../src/locales/en-ZA/marketing.json";
+import enZACamps from "../src/locales/en-ZA/camps.json";
 
 export const SUPPORTED_LOCALES = ["en-ZA", "af-ZA", "sw", "fr", "pt"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
