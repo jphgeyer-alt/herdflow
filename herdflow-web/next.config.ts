@@ -8,6 +8,18 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Caps static-generation build workers to 2, regardless of what the host
+  // reports as available CPUs -- Render's Starter plan's actual RAM budget
+  // doesn't support the worker count Next.js otherwise spawns (47, matching
+  // the container's reported CPU count), causing an OOM-killed worker
+  // during the 124-page static generation pass. That surfaced as an opaque,
+  // message-less digest error on whatever page's render task was in flight
+  // (consistently /contact, by position in the generation order -- not
+  // because /contact itself was ever the actual problem).
+  experimental: {
+    workerThreads: false,
+    cpus: 2,
+  },
   images: {
     remotePatterns: [
       {
