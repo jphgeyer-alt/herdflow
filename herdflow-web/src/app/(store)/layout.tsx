@@ -1,17 +1,30 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import { StoreHeader } from "@/components/store-header";
 import { prisma } from "@/lib/prisma";
 
+// This layout wraps every page under (store)/, so its query previously ran
+// once per page during `next build`'s static generation (~20-30 pages) --
+// far more concurrent DB load than accounted for. A P1001 (can't reach
+// server) on one of those calls is a socket-level failure that can surface
+// as an unhandled rejection outside this promise's own .catch(), crashing
+// whatever unrelated page is rendering concurrently on the same worker
+// (observed as /contact's opaque, message-less digest). Skipping the query
+// entirely during the build phase removes that load; real request-time
+// rendering (ISR/dynamic) still runs it normally.
 export default async function StoreLayout({ children }: { children: ReactNode }) {
-  const partnerLinks = await prisma.affiliateLink
-    .findMany({
-      where: { placement: "FOOTER", isActive: true },
-      select: { id: true, name: true },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-    })
-    .catch(() => []);
+  const partnerLinks =
+    process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD
+      ? []
+      : await prisma.affiliateLink
+          .findMany({
+            where: { placement: "FOOTER", isActive: true },
+            select: { id: true, name: true },
+            orderBy: { createdAt: "desc" },
+            take: 6,
+          })
+          .catch(() => []);
 
   return (
     <>
