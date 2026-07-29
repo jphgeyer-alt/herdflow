@@ -6,6 +6,7 @@ import { useState } from "react";
 
 export function HomeNav() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
 
   return (
     <nav className="sticky top-0 z-50 w-full shadow-lg" style={{ backgroundColor: "#1B3A6B" }}>
@@ -55,27 +56,73 @@ export function HomeNav() {
             <Link href="/classifieds" className="whitespace-nowrap text-white transition hover:text-white/80">
               Classifieds
             </Link>
-            <Link href="/directory" className="whitespace-nowrap text-white transition hover:text-white/80">
-              Directory
-            </Link>
-            <Link href="/resources" className="whitespace-nowrap text-white transition hover:text-white/80">
-              Resources
-            </Link>
-            <Link
-              href="/register/logistics"
-              className="whitespace-nowrap text-white transition hover:text-white/80"
-            >
-              Transport
-            </Link>
-            <Link href="/marketing" className="whitespace-nowrap text-white transition hover:text-white/80">
-              Marketing
-            </Link>
             <Link href="/pricing" className="whitespace-nowrap text-white transition hover:text-white/80">
               Pricing
             </Link>
             <Link href="/contact" className="whitespace-nowrap text-white transition hover:text-white/80">
               Contact
             </Link>
+
+            {/* More - consolidates lower-traffic links so the primary row
+                never overflows the header, regardless of window width */}
+            <div className="relative">
+              <button
+                onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                className="whitespace-nowrap text-white transition hover:text-white/80"
+              >
+                More
+              </button>
+
+              {moreMenuOpen && (
+                <div
+                  className="absolute right-0 mt-3 w-48 rounded-lg border border-[#e4ebf5] bg-white py-2 normal-case shadow-xl"
+                  onMouseLeave={() => setMoreMenuOpen(false)}
+                >
+                  <Link
+                    href="/about"
+                    className="block px-4 py-2 text-sm font-normal text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    About Us
+                  </Link>
+                  <Link
+                    href="#features"
+                    className="block px-4 py-2 text-sm font-normal text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    Features
+                  </Link>
+                  <Link
+                    href="/directory"
+                    className="block px-4 py-2 text-sm font-normal text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    Directory
+                  </Link>
+                  <Link
+                    href="/resources"
+                    className="block px-4 py-2 text-sm font-normal text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    Resources
+                  </Link>
+                  <Link
+                    href="/register/logistics"
+                    className="block px-4 py-2 text-sm font-normal text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    Transport
+                  </Link>
+                  <Link
+                    href="/marketing"
+                    className="block px-4 py-2 text-sm font-normal text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    Marketing & Ads
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Login Button */}
