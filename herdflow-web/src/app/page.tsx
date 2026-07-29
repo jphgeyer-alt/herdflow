@@ -159,8 +159,9 @@ export default async function Home() {
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: `url('${card.image}')` }}
                   />
-                  {/* Dark Overlay */}
-                  <div className="absolute inset-0 bg-black/50 transition group-hover:bg-black/40" />
+                  {/* Dark Overlay - anchored to the bottom so the text block always has
+                      strong contrast, regardless of how bright the underlying photo is there */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/10 transition group-hover:from-black/80 group-hover:via-black/40" />
 
                   {/* Content */}
                   <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
