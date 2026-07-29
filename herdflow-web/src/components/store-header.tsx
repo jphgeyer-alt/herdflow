@@ -30,6 +30,7 @@ export function StoreHeader() {
   const { totalItems, openDrawer } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -78,26 +79,12 @@ export function StoreHeader() {
           </Link>
 
           {/* Navigation - Desktop */}
-          <nav className="scrollbar-none hidden flex-nowrap items-center gap-4 overflow-x-auto md:flex xl:gap-5">
+          <nav className="hidden flex-nowrap items-center gap-4 md:flex xl:gap-5">
             <Link
               href="/"
               className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
             >
               Home
-              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
-            </Link>
-            <Link
-              href="/about"
-              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
-            >
-              About Us
-              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
-            </Link>
-            <Link
-              href="/#features"
-              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
-            >
-              Features
               <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
             <Link
@@ -136,40 +123,75 @@ export function StoreHeader() {
               <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
             <Link
-              href="/directory"
-              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
-            >
-              Directory
-              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
-            </Link>
-            <Link
-              href="/resources"
-              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
-            >
-              Resources
-              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
-            </Link>
-            <Link
-              href="/register/logistics"
-              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
-            >
-              Transport
-              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
-            </Link>
-            <Link
-              href="/marketing"
-              className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
-            >
-              Marketing & Ads
-              <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
-            </Link>
-            <Link
               href="/contact"
               className="group relative whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
             >
               Contact
               <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
             </Link>
+
+            {/* More - consolidates lower-traffic links so the primary row
+                never overflows the header, regardless of window width */}
+            <div className="relative">
+              <button
+                onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                className="group relative flex items-center gap-1 whitespace-nowrap text-sm font-medium text-white transition hover:text-[#A07C3A]"
+              >
+                More
+                <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#A07C3A] transition-all group-hover:w-full" />
+              </button>
+
+              {moreMenuOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-48 rounded-lg border border-[#e4ebf5] bg-white py-2 shadow-xl"
+                  onMouseLeave={() => setMoreMenuOpen(false)}
+                >
+                  <Link
+                    href="/about"
+                    className="block px-4 py-2 text-sm text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    About Us
+                  </Link>
+                  <Link
+                    href="/#features"
+                    className="block px-4 py-2 text-sm text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    Features
+                  </Link>
+                  <Link
+                    href="/directory"
+                    className="block px-4 py-2 text-sm text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    Directory
+                  </Link>
+                  <Link
+                    href="/resources"
+                    className="block px-4 py-2 text-sm text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    Resources
+                  </Link>
+                  <Link
+                    href="/register/logistics"
+                    className="block px-4 py-2 text-sm text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    Transport
+                  </Link>
+                  <Link
+                    href="/marketing"
+                    className="block px-4 py-2 text-sm text-[#244367] transition hover:bg-[#f5f8fd]"
+                    onClick={() => setMoreMenuOpen(false)}
+                  >
+                    Marketing & Ads
+                  </Link>
+                </div>
+              )}
+            </div>
+
             <Link
               href="/download"
               className="ml-1 whitespace-nowrap rounded-lg bg-[#A07C3A] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#8a6830]"
