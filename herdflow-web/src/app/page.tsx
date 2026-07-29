@@ -31,7 +31,7 @@ const featureCards: FeatureCard[] = [
     href: "/shop",
   },
   {
-    title: "TRANSPORT SOLUTIONS",
+    title: "TRANSPORT",
     description: "A verified network of transport partners, matched to your route",
     image: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=600&q=80",
     href: "/logistics",
