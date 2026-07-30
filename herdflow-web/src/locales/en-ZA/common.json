@@ -23,5 +23,21 @@
     "generic": "Something went wrong. Please try again.",
     "load_failed": "Failed to load data.",
     "pdf_generation_failed": "Failed to generate PDF. Please try again."
+  },
+  "hub": {
+    "title": "Welcome back{name}",
+    "subtitle": "Everything from the HerdFlow mobile app, now on your laptop",
+    "finance_title": "Finance",
+    "finance_desc": "Income, expenses, VAT, and reports",
+    "camps_title": "Camps",
+    "camps_desc": "Pasture reports and camp map",
+    "herd_title": "Herd",
+    "herd_desc": "Animals, weights, and records",
+    "health_title": "Health",
+    "health_desc": "Health history, vaccinations, medicines",
+    "market_title": "Market",
+    "market_desc": "Livestock prices and value estimator",
+    "profile_title": "Profile",
+    "profile_desc": "Farm profile, team, and activity"
   }
 }

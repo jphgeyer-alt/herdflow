@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
-import { FARM_FINANCE_NAV, type FarmNavItem } from "@/lib/farm-nav";
+import { FARM_SECTIONS, type FarmSectionKey } from "@/lib/farm-nav";
 
 function isActive(pathname: string, href: string, homeHref: string) {
   if (href === homeHref) return pathname === homeHref;
@@ -15,20 +15,15 @@ export function Sidebar({
   open,
   onClose,
   farmName,
-  navItems = FARM_FINANCE_NAV,
-  namespace = "finance",
-  homeHref = "/app/finance",
-  sectionLabelKey = "farm_financials",
+  section = "finance",
 }: {
   open: boolean;
   onClose: () => void;
   farmName: string;
-  navItems?: FarmNavItem[];
-  namespace?: string;
-  homeHref?: string;
-  sectionLabelKey?: string;
+  section?: FarmSectionKey;
 }) {
   const pathname = usePathname();
+  const { navItems, namespace, homeHref, sectionLabelKey } = FARM_SECTIONS[section];
   const t = useTranslations(namespace);
 
   return (

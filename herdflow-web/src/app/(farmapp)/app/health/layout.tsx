@@ -1,7 +1,6 @@
-// WEBSITE — herdflow-web/src/app/(farmapp)/app/camps/layout.tsx
-// CAMPS-MAP: first web/desktop UI for camps (previously mobile-only, web
-// had only sync API routes) -- mirrors finance/layout.tsx's auth guard +
-// FarmShell wrap, pointed at the camps nav/namespace instead.
+// WEBSITE — herdflow-web/src/app/(farmapp)/app/health/layout.tsx
+// Health section -- mirrors finance/layout.tsx's auth guard + FarmShell
+// wrap, pointed at the health nav/namespace instead.
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
@@ -11,11 +10,11 @@ import { FarmShell } from "@/components/farm/FarmShell";
 
 export const dynamic = "force-dynamic";
 
-export default async function FarmCampsLayout({ children }: { children: ReactNode }) {
+export default async function FarmHealthLayout({ children }: { children: ReactNode }) {
   const user = await getFarmWebUser();
 
   if (!user) {
-    redirect("/auth/login?redirect=/app/camps");
+    redirect("/auth/login?redirect=/app/health");
   }
 
   const locale = await getLocale();
@@ -27,7 +26,7 @@ export default async function FarmCampsLayout({ children }: { children: ReactNod
         fullName={user.fullName}
         mobileRole={user.mobileRole}
         farmName={user.farmName}
-        section="camps"
+        section="health"
       >
         {children}
       </FarmShell>

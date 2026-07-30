@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Toaster } from "sonner";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
-import { FARM_FINANCE_NAV, type FarmNavItem } from "@/lib/farm-nav";
+import { FARM_SECTIONS, type FarmSectionKey } from "@/lib/farm-nav";
 
 // F8: keyboard shortcuts for power users -- N = new transaction, R =
 // reports, F = filter. Ignored while typing in a form field so a farmer
@@ -50,21 +50,16 @@ export function FarmShell({
   mobileRole,
   farmName,
   children,
-  navItems = FARM_FINANCE_NAV,
-  namespace = "finance",
-  homeHref = "/app/finance",
-  sectionLabelKey = "farm_financials",
+  section = "finance",
 }: {
   fullName: string;
   mobileRole: string;
   farmName: string;
   children: React.ReactNode;
-  navItems?: FarmNavItem[];
-  namespace?: string;
-  homeHref?: string;
-  sectionLabelKey?: string;
+  section?: FarmSectionKey;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { homeHref } = FARM_SECTIONS[section];
   useFinanceShortcuts(homeHref);
 
   return (
@@ -73,20 +68,14 @@ export function FarmShell({
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         farmName={farmName}
-        navItems={navItems}
-        namespace={namespace}
-        homeHref={homeHref}
-        sectionLabelKey={sectionLabelKey}
+        section={section}
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar
           fullName={fullName}
           mobileRole={mobileRole}
           onMenuClick={() => setSidebarOpen(true)}
-          navItems={navItems}
-          namespace={namespace}
-          homeHref={homeHref}
-          sectionLabelKey={sectionLabelKey}
+          section={section}
         />
         <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6">{children}</main>
       </div>

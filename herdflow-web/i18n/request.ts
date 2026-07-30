@@ -21,6 +21,9 @@ import enZARecords from "../src/locales/en-ZA/records.json";
 import enZAReports from "../src/locales/en-ZA/reports.json";
 import enZAMarketing from "../src/locales/en-ZA/marketing.json";
 import enZACamps from "../src/locales/en-ZA/camps.json";
+import enZAHealth from "../src/locales/en-ZA/health.json";
+import enZAMarket from "../src/locales/en-ZA/market.json";
+import enZAProfile from "../src/locales/en-ZA/profile.json";
 
 export const SUPPORTED_LOCALES = ["en-ZA", "af-ZA", "sw", "fr", "pt"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -42,6 +45,9 @@ const EN_ZA_MESSAGES = {
   reports: enZAReports,
   marketing: enZAMarketing,
   camps: enZACamps,
+  health: enZAHealth,
+  market: enZAMarket,
+  profile: enZAProfile,
 };
 
 const MESSAGES: Record<SupportedLocale, Record<string, unknown>> = {

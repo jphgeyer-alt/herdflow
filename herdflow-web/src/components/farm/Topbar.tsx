@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Menu, ChevronDown, LogOut, ChevronRight } from "lucide-react";
-import { FARM_FINANCE_NAV, type FarmNavItem } from "@/lib/farm-nav";
+import { FARM_SECTIONS, type FarmSectionKey, type FarmNavItem } from "@/lib/farm-nav";
 import { Badge } from "./Card";
 
 function currentPageLabelKey(pathname: string, navItems: FarmNavItem[], fallback: string) {
@@ -26,23 +26,18 @@ export function Topbar({
   fullName,
   mobileRole,
   onMenuClick,
-  navItems = FARM_FINANCE_NAV,
-  namespace = "finance",
-  homeHref = "/app/finance",
-  sectionLabelKey = "farm_financials",
+  section = "finance",
   fallbackLabelKey = "nav_dashboard",
 }: {
   fullName: string;
   mobileRole: string;
   onMenuClick: () => void;
-  navItems?: FarmNavItem[];
-  namespace?: string;
-  homeHref?: string;
-  sectionLabelKey?: string;
+  section?: FarmSectionKey;
   fallbackLabelKey?: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { navItems, namespace, homeHref, sectionLabelKey } = FARM_SECTIONS[section];
   const t = useTranslations(namespace);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
