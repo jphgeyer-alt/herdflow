@@ -8,6 +8,9 @@ import { createMedicine } from "@/lib/farm-health/queries";
 
 export interface AddMedicineState {
   error?: string;
+  success?: boolean;
+  successMessage?: string;
+  redirectTo?: string;
 }
 
 export async function addMedicine(
@@ -43,5 +46,5 @@ export async function addMedicine(
   }
 
   revalidatePath("/app/health/medicines");
-  redirect("/app/health/medicines");
+  return { success: true, successMessage: t("medicine_saved"), redirectTo: "/app/health/medicines" };
 }

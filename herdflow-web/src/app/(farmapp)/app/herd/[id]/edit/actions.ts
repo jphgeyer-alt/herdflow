@@ -8,6 +8,9 @@ import { updateAnimal } from "@/lib/farm-herd/queries";
 
 export interface EditAnimalState {
   error?: string;
+  success?: boolean;
+  successMessage?: string;
+  redirectTo?: string;
 }
 
 export async function editAnimal(
@@ -49,5 +52,5 @@ export async function editAnimal(
 
   revalidatePath("/app/herd");
   revalidatePath(`/app/herd/${id}`);
-  redirect(`/app/herd/${id}`);
+  return { success: true, successMessage: t("changes_saved"), redirectTo: `/app/herd/${id}` };
 }

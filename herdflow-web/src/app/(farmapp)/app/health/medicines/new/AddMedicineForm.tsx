@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle } from "lucide-react";
 import { Card } from "@/components/farm/Card";
+import { useActionToast } from "@/components/farm/useActionToast";
 import { addMedicine, type AddMedicineState } from "./actions";
 
 const INPUT_CLASS = "w-full rounded-lg border border-navy-100 px-3 py-2 text-sm text-navy-600";
@@ -12,6 +13,7 @@ const initialState: AddMedicineState = {};
 export function AddMedicineForm() {
   const t = useTranslations("health");
   const [state, formAction, isPending] = useActionState(addMedicine, initialState);
+  useActionToast(state);
 
   return (
     <form action={formAction} className="space-y-6">

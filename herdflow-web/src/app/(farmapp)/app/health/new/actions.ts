@@ -8,6 +8,9 @@ import { createHealthEvent } from "@/lib/farm-health/queries";
 
 export interface AddHealthEventState {
   error?: string;
+  success?: boolean;
+  successMessage?: string;
+  redirectTo?: string;
 }
 
 export async function addHealthEvent(
@@ -49,5 +52,5 @@ export async function addHealthEvent(
 
   revalidatePath("/app/health");
   revalidatePath(`/app/herd/${animalId}`);
-  redirect("/app/health");
+  return { success: true, successMessage: t("event_saved"), redirectTo: "/app/health" };
 }

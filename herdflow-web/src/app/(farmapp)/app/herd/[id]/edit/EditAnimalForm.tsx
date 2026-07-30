@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle } from "lucide-react";
 import { Card } from "@/components/farm/Card";
+import { useActionToast } from "@/components/farm/useActionToast";
 import { editAnimal, type EditAnimalState } from "./actions";
 
 const SPECIES = ["cattle", "sheep", "goat", "pig", "poultry", "other"] as const;
@@ -28,6 +29,7 @@ export interface EditableAnimal {
 export function EditAnimalForm({ animal }: { animal: EditableAnimal }) {
   const t = useTranslations("herd");
   const [state, formAction, isPending] = useActionState(editAnimal, initialState);
+  useActionToast(state);
 
   return (
     <form action={formAction} className="space-y-6">

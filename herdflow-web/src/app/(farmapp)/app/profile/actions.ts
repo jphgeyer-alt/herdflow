@@ -9,6 +9,7 @@ import { updateFarmProfile } from "@/lib/farm-profile/queries";
 export interface SaveFarmProfileState {
   error?: string;
   success?: boolean;
+  successMessage?: string;
 }
 
 export async function saveFarmProfile(
@@ -36,5 +37,5 @@ export async function saveFarmProfile(
   }
 
   revalidatePath("/app/profile");
-  return { success: true };
+  return { success: true, successMessage: t("profile_saved") };
 }

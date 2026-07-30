@@ -37,22 +37,22 @@ export function Sidebar({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col border-r border-navy-50 bg-white transition-transform lg:sticky lg:top-0 lg:z-0 lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-60 shrink-0 flex-col bg-[var(--sidebar-bg)] transition-transform lg:sticky lg:top-0 lg:z-0 lg:h-screen lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between px-5 py-5">
           <Link href={homeHref} className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy-600 text-sm font-black text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--sidebar-active-border)] text-sm font-black text-[var(--sidebar-bg)]">
               HF
             </div>
             <div className="min-w-0">
-              <p className="text-navy-600 text-sm font-bold leading-tight">{t(sectionLabelKey)}</p>
-              <p className="truncate text-xs leading-tight text-navy-300">{farmName || "HerdFlow"}</p>
+              <p className="text-sm font-bold leading-tight text-[var(--sidebar-text)]">{t(sectionLabelKey)}</p>
+              <p className="truncate text-xs leading-tight text-[var(--sidebar-text-muted)]">{farmName || "HerdFlow"}</p>
             </div>
           </Link>
           <button
-            className="rounded-lg p-1.5 text-navy-300 hover:bg-navy-25 lg:hidden"
+            className="rounded-lg p-1.5 text-[var(--sidebar-text-muted)] hover:bg-white/5 lg:hidden"
             onClick={onClose}
             aria-label={t("close_menu")}
             type="button"
@@ -70,22 +70,22 @@ export function Sidebar({
                 key={item.href}
                 href={item.href}
                 onClick={onClose}
-                className={`flex items-center justify-between gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center justify-between gap-2.5 rounded-lg border-l-[3px] px-2.5 py-2 text-sm font-medium transition-colors ${
                   active
-                    ? "bg-navy-600 text-white"
-                    : "text-navy-500 hover:bg-navy-25 hover:text-navy-600"
+                    ? "border-[var(--sidebar-active-border)] bg-[var(--sidebar-active-bg)] text-[var(--sidebar-active-text)] font-semibold"
+                    : "border-transparent text-[var(--sidebar-text-muted)] hover:bg-white/5 hover:text-[var(--sidebar-text)]"
                 }`}
               >
                 <span className="flex items-center gap-2.5">
-                  <Icon size={16} className={active ? "text-white" : "text-navy-300"} />
+                  <Icon size={16} className={active ? "text-[var(--sidebar-active-text)]" : "text-[var(--sidebar-text-muted)]"} />
                   {t(item.labelKey)}
                 </span>
                 {item.shortcut && (
                   <kbd
                     className={`hidden rounded border px-1.5 py-0.5 text-[10px] font-semibold lg:inline-block ${
                       active
-                        ? "border-white/30 text-white/70"
-                        : "border-navy-100 text-navy-200"
+                        ? "border-[var(--sidebar-active-text)]/30 text-[var(--sidebar-active-text)]/70"
+                        : "border-white/10 text-[var(--sidebar-text-muted)]"
                     }`}
                   >
                     {item.shortcut}
@@ -96,8 +96,8 @@ export function Sidebar({
           })}
         </nav>
 
-        <div className="border-t border-navy-50 px-5 py-4">
-          <Link href="/" className="text-xs font-medium text-navy-300 hover:text-navy-600">
+        <div className="border-t border-white/10 px-5 py-4">
+          <Link href="/" className="text-xs font-medium text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text)]">
             {t("back_to_herdflow")}
           </Link>
         </div>

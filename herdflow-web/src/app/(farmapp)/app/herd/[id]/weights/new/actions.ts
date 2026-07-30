@@ -8,6 +8,9 @@ import { addWeightRecord } from "@/lib/farm-herd/queries";
 
 export interface AddWeightState {
   error?: string;
+  success?: boolean;
+  successMessage?: string;
+  redirectTo?: string;
 }
 
 export async function addWeight(_prev: AddWeightState, formData: FormData): Promise<AddWeightState> {
@@ -34,5 +37,5 @@ export async function addWeight(_prev: AddWeightState, formData: FormData): Prom
   if (!record) return { error: t("failed_to_save_weight") };
 
   revalidatePath(`/app/herd/${animalId}`);
-  redirect(`/app/herd/${animalId}`);
+  return { success: true, successMessage: t("weight_saved"), redirectTo: `/app/herd/${animalId}` };
 }

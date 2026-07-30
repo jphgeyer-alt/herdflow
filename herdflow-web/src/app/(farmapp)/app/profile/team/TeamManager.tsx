@@ -1,9 +1,11 @@
 "use client";
 // WEBSITE — herdflow-web/src/app/(farmapp)/app/profile/team/TeamManager.tsx
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle, Trash2, XCircle } from "lucide-react";
 import { Card, CardHeader } from "@/components/farm/Card";
+import { ConfirmModal } from "@/components/farm/ConfirmModal";
+import { useActionToast } from "@/components/farm/useActionToast";
 import { formatDate } from "@/lib/farm-finance/format";
 import {
   generateInviteCode,
@@ -39,6 +41,7 @@ export function TeamManager({
 }) {
   const t = useTranslations("profile");
   const [genState, genAction, genPending] = useActionState(generateInviteCode, initialState);
+  useActionToast(genState);
 
   return (
     <div className="space-y-6">
@@ -126,44 +129,74 @@ export function TeamManager({
 
 function RevokeButton({ inviteCode }: { inviteCode: string }) {
   const t = useTranslations("profile");
-  const [, action, pending] = useActionState(revokeInviteCode, initialState);
+  const [state, action, pending] = useActionState(revokeInviteCode, initialState);
+  useActionToast(state);
+  const [confirming, setConfirming] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
   return (
-    <form
-      action={action}
-      onSubmit={(e) => {
-        if (!confirm(t("confirm_revoke_invite"))) e.preventDefault();
-      }}
-    >
-      <input type="hidden" name="inviteCode" value={inviteCode} />
-      <button
-        type="submit"
-        disabled={pending}
-        className="flex items-center gap-1 rounded-lg border border-navy-100 px-3 py-1.5 text-xs font-semibold text-navy-500 hover:bg-navy-25 disabled:opacity-60"
-      >
-        <XCircle size={14} /> {t("revoke")}
-      </button>
-    </form>
+    <>
+      <form ref={formRef} action={action}>
+        <input type="hidden" name="inviteCode" value={inviteCode} />
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          disabled={pending}
+          className="flex items-center gap-1 rounded-lg border border-navy-100 px-3 py-1.5 text-xs font-semibold text-navy-500 hover:bg-navy-25 disabled:opacity-60"
+        >
+          <XCircle size={14} /> {t("revoke")}
+        </button>
+      </form>
+      <ConfirmModal
+        open={confirming}
+        title={t("revoke")}
+        description={t("confirm_revoke_invite")}
+        confirmLabel={t("revoke")}
+        cancelLabel={t("cancel")}
+        pending={pending}
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => {
+          setConfirming(false);
+          formRef.current?.requestSubmit();
+        }}
+      />
+    </>
   );
 }
 
 function RemoveButton({ staffUserId }: { staffUserId: string }) {
   const t = useTranslations("profile");
-  const [, action, pending] = useActionState(removeMember, initialState);
+  const [state, action, pending] = useActionState(removeMember, initialState);
+  useActionToast(state);
+  const [confirming, setConfirming] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
   return (
-    <form
-      action={action}
-      onSubmit={(e) => {
-        if (!confirm(t("confirm_remove_member"))) e.preventDefault();
-      }}
-    >
-      <input type="hidden" name="staffUserId" value={staffUserId} />
-      <button
-        type="submit"
-        disabled={pending}
-        className="flex items-center gap-1 rounded-lg border border-[var(--status-danger-text)]/20 px-3 py-1.5 text-xs font-semibold text-[var(--status-danger-text)] hover:bg-[var(--status-danger-bg)] disabled:opacity-60"
-      >
-        <Trash2 size={14} /> {t("remove_member")}
-      </button>
-    </form>
+    <>
+      <form ref={formRef} action={action}>
+        <input type="hidden" name="staffUserId" value={staffUserId} />
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          disabled={pending}
+          className="flex items-center gap-1 rounded-lg border border-[var(--status-danger-text)]/20 px-3 py-1.5 text-xs font-semibold text-[var(--status-danger-text)] hover:bg-[var(--status-danger-bg)] disabled:opacity-60"
+        >
+          <Trash2 size={14} /> {t("remove_member")}
+        </button>
+      </form>
+      <ConfirmModal
+        open={confirming}
+        title={t("remove_member")}
+        description={t("confirm_remove_member")}
+        confirmLabel={t("remove_member")}
+        cancelLabel={t("cancel")}
+        pending={pending}
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => {
+          setConfirming(false);
+          formRef.current?.requestSubmit();
+        }}
+      />
+    </>
   );
 }

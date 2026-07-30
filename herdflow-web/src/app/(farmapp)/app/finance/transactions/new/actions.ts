@@ -9,6 +9,9 @@ import { getComplianceConfig } from "@/lib/farm-finance/complianceConfig";
 
 export interface AddTransactionState {
   error?: string;
+  success?: boolean;
+  successMessage?: string;
+  redirectTo?: string;
 }
 
 export async function addTransaction(
@@ -87,5 +90,9 @@ export async function addTransaction(
 
   revalidatePath("/app/finance");
   revalidatePath("/app/finance/transactions");
-  redirect("/app/finance/transactions");
+  return {
+    success: true,
+    successMessage: t("transaction_saved"),
+    redirectTo: "/app/finance/transactions",
+  };
 }

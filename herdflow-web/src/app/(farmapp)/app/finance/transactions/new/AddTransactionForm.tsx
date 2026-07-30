@@ -7,6 +7,7 @@ import { INCOME_CATS, EXPENSE_CATS, categoryLabelKey } from "@/lib/farm-finance/
 import { formatCurrency, formatDate } from "@/lib/farm-finance/format";
 import { getComplianceConfig } from "@/lib/farm-finance/complianceConfig";
 import { Card } from "@/components/farm/Card";
+import { useActionToast } from "@/components/farm/useActionToast";
 import { addTransaction, type AddTransactionState } from "./actions";
 
 const initialState: AddTransactionState = {};
@@ -30,6 +31,7 @@ export function AddTransactionForm({
 }) {
   const t = useTranslations("finance");
   const [state, formAction, isPending] = useActionState(addTransaction, initialState);
+  useActionToast(state);
   const [step, setStep] = useState<"form" | "review">("form");
   const [type, setType] = useState<"income" | "expense">("expense");
   const [category, setCategory] = useState("");

@@ -8,6 +8,9 @@ import { createAnimal } from "@/lib/farm-herd/queries";
 
 export interface AddAnimalState {
   error?: string;
+  success?: boolean;
+  successMessage?: string;
+  redirectTo?: string;
 }
 
 export async function addAnimal(_prev: AddAnimalState, formData: FormData): Promise<AddAnimalState> {
@@ -53,5 +56,5 @@ export async function addAnimal(_prev: AddAnimalState, formData: FormData): Prom
   }
 
   revalidatePath("/app/herd");
-  redirect(`/app/herd/${animal.id}`);
+  return { success: true, successMessage: t("animal_saved"), redirectTo: `/app/herd/${animal.id}` };
 }

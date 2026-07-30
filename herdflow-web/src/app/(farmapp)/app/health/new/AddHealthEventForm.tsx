@@ -4,6 +4,7 @@ import { useActionState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle } from "lucide-react";
 import { Card } from "@/components/farm/Card";
+import { useActionToast } from "@/components/farm/useActionToast";
 import { addHealthEvent, type AddHealthEventState } from "./actions";
 
 const EVENT_TYPES = ["illness", "injury", "treatment", "vaccine", "checkup", "other"] as const;
@@ -20,6 +21,7 @@ export interface AnimalOption {
 export function AddHealthEventForm({ animals }: { animals: AnimalOption[] }) {
   const t = useTranslations("health");
   const [state, formAction, isPending] = useActionState(addHealthEvent, initialState);
+  useActionToast(state);
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   return (

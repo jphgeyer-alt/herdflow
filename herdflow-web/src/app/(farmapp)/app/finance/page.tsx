@@ -8,7 +8,7 @@ import { resolvePeriod, trendLabel, type Period } from "@/lib/farm-finance/perio
 import { formatCurrency, formatDate } from "@/lib/farm-finance/format";
 import { withFarmerContext } from "@/lib/tenant-prisma";
 import { categoryLabelKey } from "@/lib/farm-finance/categories";
-import { Card, CardHeader, StatCard } from "@/components/farm/Card";
+import { Card, CardHeader, StatCard, Badge } from "@/components/farm/Card";
 import { PeriodSelector } from "@/components/farm/PeriodSelector";
 import { CashFlowChart } from "@/components/farm/charts/CashFlowChart";
 
@@ -117,22 +117,18 @@ export default async function FinanceDashboardPage({
           </div>
         </Card>
 
-        {/* Budget vs Actual placeholder -- no budget data model exists yet */}
+        {/* Budget vs Actual -- no budget data model exists yet (F-future); a
+            clean "coming soon" placeholder, not a dead disabled button. */}
         <Card>
-          <CardHeader title={t("budget_vs_actual")} />
+          <CardHeader
+            title={t("budget_vs_actual")}
+            action={<Badge variant="info">{t("coming_soon")}</Badge>}
+          />
           <div className="flex flex-col items-center gap-3 p-6 text-center">
             <div className="rounded-full bg-navy-25 p-3 text-navy-600">
               <Target size={22} />
             </div>
-            <p className="text-sm text-navy-500">{t("no_budget_set_message")}</p>
-            <button
-              type="button"
-              disabled
-              title={t("budget_future_update_tooltip")}
-              className="mt-1 rounded-lg border border-navy-100 px-4 py-2 text-sm font-semibold text-navy-300"
-            >
-              {t("set_budget")}
-            </button>
+            <p className="text-sm text-navy-500">{t("budget_coming_soon_message")}</p>
           </div>
         </Card>
       </div>

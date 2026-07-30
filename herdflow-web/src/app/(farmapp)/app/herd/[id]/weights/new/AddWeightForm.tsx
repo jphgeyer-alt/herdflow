@@ -4,6 +4,7 @@ import { useActionState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle } from "lucide-react";
 import { Card } from "@/components/farm/Card";
+import { useActionToast } from "@/components/farm/useActionToast";
 import { addWeight, type AddWeightState } from "./actions";
 
 const INPUT_CLASS = "w-full rounded-lg border border-navy-100 px-3 py-2 text-sm text-navy-600";
@@ -13,6 +14,7 @@ const initialState: AddWeightState = {};
 export function AddWeightForm({ animalId }: { animalId: string }) {
   const t = useTranslations("herd");
   const [state, formAction, isPending] = useActionState(addWeight, initialState);
+  useActionToast(state);
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   return (

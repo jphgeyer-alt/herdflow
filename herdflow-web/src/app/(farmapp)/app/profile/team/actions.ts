@@ -8,6 +8,8 @@ import { generateInvite, revokeInvite, removeTeamMember } from "@/lib/farm-profi
 
 export interface TeamActionState {
   error?: string;
+  success?: boolean;
+  successMessage?: string;
 }
 
 // Only the farm owner (effectiveFarmerId === own id — i.e. not a manager/
@@ -35,7 +37,7 @@ export async function generateInviteCode(
   if (!invite) return { error: t("only_owner_can_manage_team") };
 
   revalidatePath("/app/profile/team");
-  return {};
+  return { success: true, successMessage: t("invite_generated") };
 }
 
 export async function revokeInviteCode(
@@ -50,7 +52,7 @@ export async function revokeInviteCode(
   await revokeInvite(user.id, inviteCode);
 
   revalidatePath("/app/profile/team");
-  return {};
+  return { success: true, successMessage: t("invite_revoked") };
 }
 
 export async function removeMember(_prev: TeamActionState, formData: FormData): Promise<TeamActionState> {
@@ -62,5 +64,5 @@ export async function removeMember(_prev: TeamActionState, formData: FormData): 
   await removeTeamMember(user.id, staffUserId);
 
   revalidatePath("/app/profile/team");
-  return {};
+  return { success: true, successMessage: t("member_removed") };
 }
