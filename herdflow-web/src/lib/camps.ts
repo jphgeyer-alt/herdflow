@@ -20,7 +20,10 @@ export async function getCampLivestockSummary(
 ): Promise<CampLivestockSummary> {
   const groups = await tx.farmerAnimal.groupBy({
     by: ["species"],
-    where: { campId, farmerId, isDeleted: false, status: "ACTIVE" },
+    // Case-insensitive: mobile writes "Active" (mixed case) for most rows,
+    // not the Prisma schema's uppercase default -- see the same fix in
+    // getCampsWithHeadCounts below and farm-herd/queries.ts.
+    where: { campId, farmerId, isDeleted: false, status: { equals: "ACTIVE", mode: "insensitive" } },
     _count: true,
     orderBy: { _count: { species: "desc" } },
   });
