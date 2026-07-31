@@ -136,12 +136,12 @@ export function HerdListTable({ animals }: { animals: AnimalRow[] }) {
                   <td className="px-4 py-2.5 text-navy-500">{a.breed || "—"}</td>
                   <td className="px-4 py-2.5 text-navy-500">{formatWeight(a.weight)}</td>
                   <td className="px-4 py-2.5">
-                    <Badge variant={a.healthStatus === "HEALTHY" ? "success" : "danger"}>
+                    <Badge variant={a.healthStatus.toUpperCase() === "HEALTHY" ? "success" : "danger"}>
                       {t(`health_${a.healthStatus.toLowerCase()}`)}
                     </Badge>
                   </td>
                   <td className="px-4 py-2.5">
-                    <Badge variant={a.status === "ACTIVE" ? "success" : "neutral"}>
+                    <Badge variant={a.status.toUpperCase() === "ACTIVE" ? "success" : "neutral"}>
                       {t(`status_${a.status.toLowerCase()}`)}
                     </Badge>
                   </td>

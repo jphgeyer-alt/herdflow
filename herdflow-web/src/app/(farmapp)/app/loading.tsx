@@ -1,22 +1,22 @@
-import { Skeleton } from "@/components/farm/Skeleton";
+import { Skeleton, SkeletonStatRow, SkeletonCard } from "@/components/farm/Skeleton";
 
 export default function HubLoading() {
   return (
-    <div className="min-h-screen bg-navy-25 px-4 py-10 sm:px-8">
-      <div className="mx-auto max-w-5xl space-y-8">
-        <div>
-          <Skeleton className="mb-3 h-8 w-64" />
-          <Skeleton className="h-4 w-80" />
+    <div className="space-y-6 pb-10">
+      <div>
+        <Skeleton className="mb-2 h-7 w-56" />
+        <Skeleton className="h-4 w-40" />
+      </div>
+      <SkeletonStatRow count={4} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <SkeletonCard lines={5} />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="rounded-xl border border-navy-50 bg-white p-5 shadow-sm">
-              <Skeleton className="mb-4 h-9 w-9 rounded-lg" />
-              <Skeleton className="mb-2 h-4 w-20" />
-              <Skeleton className="h-3 w-32" />
-            </div>
-          ))}
-        </div>
+        <SkeletonCard lines={4} />
+      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <SkeletonCard lines={3} />
+        <SkeletonCard lines={3} />
       </div>
     </div>
   );

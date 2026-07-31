@@ -16,6 +16,50 @@ export async function listAnimals(farmerId: string) {
   );
 }
 
+/**
+ * Hub dashboard KPI -- both counts in one transaction, not the full list.
+ * Case-insensitive on status/healthStatus: the mobile app writes "Active"
+ * (mixed case) for most rows while the Prisma schema default is "ACTIVE" --
+ * a strict-case match here silently undercounts nearly every real animal.
+ */
+export async function getHerdSummary(farmerId: string) {
+  const [activeCount, sickCount] = await withFarmerContext(farmerId, (tx) =>
+    Promise.all([
+      tx.farmerAnimal.count({
+        where: { farmerId, isDeleted: false, status: { equals: "ACTIVE", mode: "insensitive" } },
+      }),
+      tx.farmerAnimal.count({
+        where: { farmerId, isDeleted: false, healthStatus: { equals: "SICK", mode: "insensitive" } },
+      }),
+    ]),
+  );
+  return { activeCount, sickCount };
+}
+
+export interface UpcomingBreeding {
+  id: string;
+  femaleAnimalTag: string;
+  species: string;
+  expectedDueDate: Date;
+}
+
+/** Hub dashboard "upcoming tasks" -- pending breedings with a future due date, soonest first. */
+export async function getUpcomingBreedings(farmerId: string, limit = 3): Promise<UpcomingBreeding[]> {
+  return withFarmerContext(farmerId, (tx) =>
+    tx.farmerBreedingRecord.findMany({
+      where: {
+        farmerId,
+        isDeleted: false,
+        outcome: "PENDING",
+        expectedDueDate: { not: null, gte: new Date() },
+      },
+      orderBy: { expectedDueDate: "asc" },
+      take: limit,
+      select: { id: true, femaleAnimalTag: true, species: true, expectedDueDate: true },
+    }),
+  ) as Promise<UpcomingBreeding[]>;
+}
+
 export async function getAnimalDetail(farmerId: string, id: string) {
   return withFarmerContext(farmerId, async (tx) => {
     const animal = await getAnimalForFarmer(tx, id, farmerId);

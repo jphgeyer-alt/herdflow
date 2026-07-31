@@ -61,9 +61,9 @@ export default async function AnimalDetailPage({ params }: { params: Promise<{ i
             <Row label={t("camp")} value={animal.camp || "—"} />
             <Row
               label={t("health_status")}
-              value={<Badge variant={animal.healthStatus === "HEALTHY" ? "success" : "danger"}>{animal.healthStatus}</Badge>}
+              value={<Badge variant={animal.healthStatus.toUpperCase() === "HEALTHY" ? "success" : "danger"}>{animal.healthStatus}</Badge>}
             />
-            <Row label={t("status")} value={<Badge variant={animal.status === "ACTIVE" ? "success" : "neutral"}>{animal.status}</Badge>} />
+            <Row label={t("status")} value={<Badge variant={animal.status.toUpperCase() === "ACTIVE" ? "success" : "neutral"}>{animal.status}</Badge>} />
             {animal.notes && <Row label={t("notes")} value={animal.notes} />}
           </dl>
         </Card>

@@ -28,8 +28,11 @@ export default async function HerdPage() {
     weight: a.weight != null ? Number(a.weight) : null,
   }));
 
-  const activeCount = rows.filter((a) => a.status === "ACTIVE").length;
-  const sickCount = rows.filter((a) => a.healthStatus === "SICK").length;
+  // Case-insensitive: the mobile app writes "Active"/"Sick" (mixed case)
+  // for most rows, not the Prisma schema's uppercase default -- a strict
+  // match here silently undercounted almost every real animal.
+  const activeCount = rows.filter((a) => a.status.toUpperCase() === "ACTIVE").length;
+  const sickCount = rows.filter((a) => a.healthStatus.toUpperCase() === "SICK").length;
 
   return (
     <div className="space-y-6 pb-10">
