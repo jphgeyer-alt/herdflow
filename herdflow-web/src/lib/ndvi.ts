@@ -164,6 +164,45 @@ export async function getLatestStoredReading(
   };
 }
 
+// Batched sibling of getLatestStoredReading -- one query for ALL camps
+// instead of one withFarmerContext transaction per camp. buildPastureReport
+// used to call getLatestStoredReading once per camp inside Promise.all,
+// which opens N concurrent transactions and reliably exhausts the DB's
+// connection_limit=3 pool on farms with more than a couple of camps. This
+// fetches every camp's reading history in a single query and groups by
+// campId in JS, so the caller pays 1 query no matter how many camps exist.
+export async function getLatestStoredReadingsForCamps(
+  farmerId: string,
+  campIds: string[],
+): Promise<Map<string, CampNdviSnapshot>> {
+  if (campIds.length === 0) return new Map();
+
+  const readings = await withFarmerContext(farmerId, (tx) =>
+    tx.farmerCampNdviReading.findMany({
+      where: { farmerId, campId: { in: campIds }, isDeleted: false },
+      orderBy: [{ campId: "asc" }, { satellitePassDate: "desc" }],
+    }),
+  );
+
+  const byCamp = new Map<string, typeof readings>();
+  for (const r of readings) {
+    const list = byCamp.get(r.campId);
+    if (list) list.push(r);
+    else byCamp.set(r.campId, [r]);
+  }
+
+  const result = new Map<string, CampNdviSnapshot>();
+  for (const [campId, rows] of byCamp) {
+    const [latest, previous] = rows; // already ordered latest-first per camp
+    result.set(campId, {
+      reading: toSnapshotReading(latest),
+      trend: computeTrend(Number(latest.ndvi), previous ? Number(previous.ndvi) : null),
+      stale: false,
+    });
+  }
+  return result;
+}
+
 // Returns the latest stored reading for a camp, refreshing from Copernicus
 // first if there is no reading yet, the latest is older than the configured
 // refreshIntervalDays, or `force` is set (manual refresh button). Never

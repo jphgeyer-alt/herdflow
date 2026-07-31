@@ -2,12 +2,12 @@
 // Shared "all camps, ranked worst NDVI first" data used by both the web
 // camps map's ranking side panel and the Pasture Report PDF export -- one
 // place computing the ranking so the two can never disagree. Read-only
-// (getLatestStoredReading, no live Copernicus calls) so viewing the page or
-// generating a PDF never blocks on satellite fetches -- freshness comes
-// from the proactive cron job / manual per-camp refresh instead.
+// (getLatestStoredReadingsForCamps, no live Copernicus calls) so viewing the
+// page or generating a PDF never blocks on satellite fetches -- freshness
+// comes from the proactive cron job / manual per-camp refresh instead.
 import { withFarmerContext } from "@/lib/tenant-prisma";
 import { getCampsWithHeadCounts } from "@/lib/camps";
-import { getLatestStoredReading, type CampNdviSnapshot } from "@/lib/ndvi";
+import { getLatestStoredReadingsForCamps, type CampNdviSnapshot } from "@/lib/ndvi";
 
 export interface PastureReportCamp {
   id: string;
@@ -27,19 +27,20 @@ export interface PastureReport {
 
 export async function buildPastureReport(farmerId: string): Promise<PastureReport> {
   const camps = await withFarmerContext(farmerId, (tx) => getCampsWithHeadCounts(tx, farmerId));
+  if (camps.length === 0) return { generatedAt: new Date(), camps: [] };
 
-  const withNdvi: PastureReportCamp[] = await Promise.all(
-    camps.map(async (camp) => ({
-      id: camp.id,
-      name: camp.name,
-      currentStatus: camp.currentStatus,
-      notes: camp.notes,
-      hectares: camp.hectares != null ? Number(camp.hectares) : null,
-      currentHeadCount: camp.currentHeadCount,
-      gpsCoordinates: camp.gpsCoordinates,
-      ndvi: await getLatestStoredReading(farmerId, camp.id),
-    })),
-  );
+  const readingsByCamp = await getLatestStoredReadingsForCamps(farmerId, camps.map((c) => c.id));
+
+  const withNdvi: PastureReportCamp[] = camps.map((camp) => ({
+    id: camp.id,
+    name: camp.name,
+    currentStatus: camp.currentStatus,
+    notes: camp.notes,
+    hectares: camp.hectares != null ? Number(camp.hectares) : null,
+    currentHeadCount: camp.currentHeadCount,
+    gpsCoordinates: camp.gpsCoordinates,
+    ndvi: readingsByCamp.get(camp.id) ?? null,
+  }));
 
   // No-reading camps sort last (99) -- nothing actionable to rank them by
   // yet, and putting them first would bury the camps that actually need

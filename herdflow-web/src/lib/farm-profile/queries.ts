@@ -6,7 +6,7 @@
 // User account settings at /account/settings (name/email/password) — see
 // the plan's Profile section scope.
 import { prisma } from "@/lib/prisma";
-import { withAdminContext } from "@/lib/tenant-prisma";
+import { withAdminContext, withFarmerContext } from "@/lib/tenant-prisma";
 
 export async function getFarmProfile(userId: string) {
   return prisma.farmerProfile.findUnique({ where: { userId } });
@@ -117,8 +117,9 @@ export async function listActivity(farmOwnerId: string) {
   });
   const userIds = [farmOwnerId, ...staffProfiles.map((s) => s.userId)];
 
+  let logs;
   try {
-    return await withAdminContext((tx) =>
+    logs = await withAdminContext((tx) =>
       tx.farmerActivityLog.findMany({
         where: { userId: { in: userIds } },
         orderBy: { createdAt: "desc" },
@@ -128,4 +129,24 @@ export async function listActivity(farmOwnerId: string) {
   } catch {
     return [];
   }
+
+  // ANIMAL_EDITED entries are logged with the raw animal id instead of a
+  // name ("Updated animal cm..."), unlike every other activity type -- the
+  // mobile write path is out of scope here, so resolve real names at read
+  // time in one batched query instead of leaking ids to the UI.
+  const editedIds = [
+    ...new Set(logs.filter((l) => l.activityType === "ANIMAL_EDITED" && l.entityId).map((l) => l.entityId as string)),
+  ];
+  if (editedIds.length === 0) return logs;
+
+  const animals = await withFarmerContext(farmOwnerId, (tx) =>
+    tx.farmerAnimal.findMany({ where: { id: { in: editedIds } }, select: { id: true, name: true, tagNumber: true } }),
+  );
+  const nameById = new Map(animals.map((a) => [a.id, a.name || a.tagNumber]));
+
+  return logs.map((log) => {
+    if (log.activityType !== "ANIMAL_EDITED" || !log.entityId) return log;
+    const name = nameById.get(log.entityId);
+    return name ? { ...log, description: `Updated ${name}` } : log; // animal since deleted -- keep original text
+  });
 }
