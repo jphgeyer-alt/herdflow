@@ -41,7 +41,10 @@ export async function getCampsWithHeadCounts(tx: Prisma.TransactionClient, farme
     }),
     tx.farmerAnimal.groupBy({
       by: ["campId"],
-      where: { farmerId, isDeleted: false, status: "ACTIVE", campId: { not: null } },
+      // Case-insensitive: mobile writes "Active" (mixed case) for most rows,
+      // not the Prisma schema's uppercase default -- see the same fix in
+      // farm-herd/queries.ts and HerdListTable.tsx.
+      where: { farmerId, isDeleted: false, status: { equals: "ACTIVE", mode: "insensitive" }, campId: { not: null } },
       _count: true,
     }),
   ]);
