@@ -12,6 +12,8 @@
   "all_species": "All Species",
   "species": "Species",
   "no_animals_filtered": "No animals match your search",
+  "no_animals_yet_message": "Add your first animal to start tracking weight and health records.",
+  "no_animals_filtered_hint": "Try a different search term or species filter.",
   "animals_label": "animals",
   "name": "Name",
   "tag": "Tag",

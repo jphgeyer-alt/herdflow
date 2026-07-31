@@ -23,6 +23,36 @@ export interface EquipmentRow {
 
 type SortKey = "date" | "supplier" | "description" | "unitCost" | "quantity" | "vatAmount" | "amount" | "invoiceNumber";
 
+function SortHeader({
+  label,
+  sortKeyId,
+  right,
+  sortKey,
+  sortDir,
+  onToggle,
+}: {
+  label: string;
+  sortKeyId: SortKey;
+  right?: boolean;
+  sortKey: SortKey;
+  sortDir: "asc" | "desc";
+  onToggle: (key: SortKey) => void;
+}) {
+  const active = sortKey === sortKeyId;
+  return (
+    <th className={`sticky top-0 z-10 bg-white px-4 py-2 ${right ? "text-right" : "text-left"}`}>
+      <button
+        type="button"
+        onClick={() => onToggle(sortKeyId)}
+        className={`inline-flex items-center gap-1 hover:text-navy-600 ${active ? "text-navy-600" : ""}`}
+      >
+        {label}
+        {active ? sortDir === "asc" ? <ChevronUp size={12} /> : <ChevronDown size={12} /> : null}
+      </button>
+    </th>
+  );
+}
+
 export function EquipmentTable({ rows }: { rows: EquipmentRow[] }) {
   const t = useTranslations("finance");
   const [sortKey, setSortKey] = useState<SortKey>("date");
@@ -67,36 +97,66 @@ export function EquipmentTable({ rows }: { rows: EquipmentRow[] }) {
     }
   }
 
-  function SortHeader({ label, sortKeyId, right }: { label: string; sortKeyId: SortKey; right?: boolean }) {
-    const active = sortKey === sortKeyId;
-    return (
-      <th className={`px-4 py-2 ${right ? "text-right" : "text-left"}`}>
-        <button
-          type="button"
-          onClick={() => toggleSort(sortKeyId)}
-          className={`inline-flex items-center gap-1 hover:text-navy-600 ${active ? "text-navy-600" : ""}`}
-        >
-          {label}
-          {active ? sortDir === "asc" ? <ChevronUp size={12} /> : <ChevronDown size={12} /> : null}
-        </button>
-      </th>
-    );
-  }
-
   return (
-    <div className="overflow-x-auto">
+    <div className="max-h-[65vh] overflow-y-auto overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-navy-50 text-xs font-semibold tracking-wide text-navy-300 uppercase">
-            <SortHeader label={t("date")} sortKeyId="date" />
-            <SortHeader label={t("supplier")} sortKeyId="supplier" />
-            <SortHeader label={t("description")} sortKeyId="description" />
-            <SortHeader label={t("unit_cost")} sortKeyId="unitCost" right />
-            <SortHeader label={t("qty")} sortKeyId="quantity" right />
-            <SortHeader label={t("vat")} sortKeyId="vatAmount" right />
-            <SortHeader label={t("total_cost")} sortKeyId="amount" right />
-            <SortHeader label={t("invoice_number")} sortKeyId="invoiceNumber" />
-            <th className="px-4 py-2 text-left">{t("asset")}</th>
+            <SortHeader label={t("date")} sortKeyId="date" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+            <SortHeader
+              label={t("supplier")}
+              sortKeyId="supplier"
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onToggle={toggleSort}
+            />
+            <SortHeader
+              label={t("description")}
+              sortKeyId="description"
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onToggle={toggleSort}
+            />
+            <SortHeader
+              label={t("unit_cost")}
+              sortKeyId="unitCost"
+              right
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onToggle={toggleSort}
+            />
+            <SortHeader
+              label={t("qty")}
+              sortKeyId="quantity"
+              right
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onToggle={toggleSort}
+            />
+            <SortHeader
+              label={t("vat")}
+              sortKeyId="vatAmount"
+              right
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onToggle={toggleSort}
+            />
+            <SortHeader
+              label={t("total_cost")}
+              sortKeyId="amount"
+              right
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onToggle={toggleSort}
+            />
+            <SortHeader
+              label={t("invoice_number")}
+              sortKeyId="invoiceNumber"
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onToggle={toggleSort}
+            />
+            <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("asset")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-navy-50">

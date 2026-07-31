@@ -164,7 +164,7 @@ export function AddTransactionForm({
             setType("income");
             setCategory("");
           }}
-          className={`rounded-xl border-2 py-4 text-sm font-bold tracking-wide uppercase transition-colors ${
+          className={`rounded-lg border-2 py-4 text-sm font-bold tracking-wide uppercase transition-colors ${
             type === "income"
               ? "border-[var(--status-success-text)] bg-[var(--status-success-text)] text-white"
               : "border-navy-100 text-navy-500 hover:bg-navy-25"
@@ -178,7 +178,7 @@ export function AddTransactionForm({
             setType("expense");
             setCategory("");
           }}
-          className={`rounded-xl border-2 py-4 text-sm font-bold tracking-wide uppercase transition-colors ${
+          className={`rounded-lg border-2 py-4 text-sm font-bold tracking-wide uppercase transition-colors ${
             type === "expense"
               ? "border-[var(--status-danger-text)] bg-[var(--status-danger-text)] text-white"
               : "border-navy-100 text-navy-500 hover:bg-navy-25"

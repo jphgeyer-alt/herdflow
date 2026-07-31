@@ -5,8 +5,10 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { PawPrint } from "lucide-react";
 import { Badge } from "@/components/farm/Card";
 import { Pagination } from "@/components/farm/Pagination";
+import { EmptyState } from "@/components/farm/EmptyState";
 import { formatWeight } from "@/lib/farm-finance/format";
 
 const PAGE_SIZE = 20;
@@ -89,22 +91,36 @@ export function HerdListTable({ animals }: { animals: AnimalRow[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="rounded-lg border border-navy-100 bg-white p-6 text-center text-sm text-navy-300">
-          {animals.length === 0 ? t("no_animals_yet") : t("no_animals_filtered")}
-        </p>
+        <div className="rounded-lg border border-navy-100 bg-white">
+          {animals.length === 0 ? (
+            <EmptyState
+              icon={<PawPrint size={20} />}
+              title={t("no_animals_yet")}
+              message={t("no_animals_yet_message")}
+              ctaLabel={t("add_animal")}
+              ctaHref="/app/herd/new"
+            />
+          ) : (
+            <EmptyState
+              icon={<PawPrint size={20} />}
+              title={t("no_animals_filtered")}
+              message={t("no_animals_filtered_hint")}
+            />
+          )}
+        </div>
       ) : (
         <div className="rounded-lg border border-navy-100 bg-white">
-          <div className="overflow-x-auto">
+          <div className="max-h-[65vh] overflow-y-auto overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-navy-50 text-xs font-semibold tracking-wide text-navy-300 uppercase">
-                <th className="px-4 py-2 text-left">{t("name")}</th>
-                <th className="px-4 py-2 text-left">{t("tag")}</th>
-                <th className="px-4 py-2 text-left">{t("species")}</th>
-                <th className="px-4 py-2 text-left">{t("breed")}</th>
-                <th className="px-4 py-2 text-left">{t("weight")}</th>
-                <th className="px-4 py-2 text-left">{t("health_status")}</th>
-                <th className="px-4 py-2 text-left">{t("status")}</th>
+                <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("name")}</th>
+                <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("tag")}</th>
+                <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("species")}</th>
+                <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("breed")}</th>
+                <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("weight")}</th>
+                <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("health_status")}</th>
+                <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("status")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy-50">

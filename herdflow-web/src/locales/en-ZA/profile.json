@@ -37,6 +37,7 @@
   "activity_title": "Activity Feed",
   "activity_subtitle": "Recent actions across your farm team",
   "no_activity_yet": "No activity recorded yet",
+  "no_activity_yet_message": "Actions your farm team takes -- adding animals, recording transactions, and more -- will show up here.",
   "activity_label": "entries",
   "only_owner_can_manage_team": "Only the farm owner can manage the team.",
   "cancel": "Cancel",

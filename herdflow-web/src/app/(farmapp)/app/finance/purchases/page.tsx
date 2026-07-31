@@ -7,13 +7,16 @@
 // isDepreciableAsset (migration 20260726130000).
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { Wallet, ShoppingBag, Calculator, CalendarRange } from "lucide-react";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { withFarmerContext } from "@/lib/tenant-prisma";
-import { formatCurrency, formatDate } from "@/lib/farm-finance/format";
+import { formatCurrency } from "@/lib/farm-finance/format";
 import { resolvePeriod, periodRange, type Period } from "@/lib/farm-finance/periods";
-import { Card, CardHeader } from "@/components/farm/Card";
+import { Card, CardHeader, StatCard } from "@/components/farm/Card";
+import { EmptyState } from "@/components/farm/EmptyState";
 import { PeriodSelector } from "@/components/farm/PeriodSelector";
 import { EquipmentTable } from "./EquipmentTable";
+import { LivestockTable } from "./LivestockTable";
 
 export const dynamic = "force-dynamic";
 
@@ -132,50 +135,38 @@ async function LivestockTab({
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-        <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">
-            {t("total_spent_period", { period: periodLabel })}
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(totalSpend)}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("purchases")}</p>
-          <p className="mt-2 text-2xl font-semibold text-navy-600">{periodAnimals.length}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("avg_cost_unit")}</p>
-          <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(avgPrice)}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("ytd_total")}</p>
-          <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(ytdTotal)}</p>
-        </Card>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label={t("total_spent_period", { period: periodLabel })}
+          value={formatCurrency(totalSpend)}
+          icon={<Wallet size={18} />}
+        />
+        <StatCard label={t("purchases")} value={periodAnimals.length} icon={<ShoppingBag size={18} />} />
+        <StatCard label={t("avg_cost_unit")} value={formatCurrency(avgPrice)} icon={<Calculator size={18} />} />
+        <StatCard label={t("ytd_total")} value={formatCurrency(ytdTotal)} icon={<CalendarRange size={18} />} />
       </div>
 
       <Card>
         <CardHeader title={t("livestock_purchases_tab")} description={periodLabel} />
         {periodAnimals.length === 0 ? (
-          <p className="p-6 text-center text-sm text-navy-300">{t("no_livestock_purchases_period")}</p>
+          <EmptyState
+            icon={<ShoppingBag size={20} />}
+            title={t("no_livestock_purchases_title")}
+            message={t("no_livestock_purchases_period")}
+            ctaLabel={t("add_animal_cta")}
+            ctaHref="/app/herd/new"
+          />
         ) : (
-          <div className="divide-y divide-navy-50">
-            {periodAnimals.map((a) => (
-              <div key={a.id} className="flex items-center justify-between gap-4 px-4 py-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-navy-600">
-                    {a.tagNumber || a.name || t("unnamed")}
-                  </p>
-                  <p className="text-xs text-navy-300">
-                    {a.source} · {a.sellerName || a.auctionHouse || a.prevFarm || "—"} ·{" "}
-                    {formatDate(a.dateAcquired)}
-                  </p>
-                </div>
-                <p className="shrink-0 font-semibold text-navy-600">
-                  {formatCurrency(Number(a.purchasePrice ?? 0))}
-                </p>
-              </div>
-            ))}
-          </div>
+          <LivestockTable
+            rows={periodAnimals.map((a) => ({
+              id: a.id,
+              label: a.tagNumber || a.name || t("unnamed"),
+              source: a.source,
+              counterparty: a.sellerName || a.auctionHouse || a.prevFarm || null,
+              dateAcquired: a.dateAcquired ? a.dateAcquired.toISOString() : null,
+              purchasePrice: Number(a.purchasePrice ?? 0),
+            }))}
+          />
         )}
       </Card>
     </>
@@ -227,31 +218,27 @@ async function EquipmentTab({
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-        <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">
-            {t("total_spent_period", { period: periodLabel })}
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(totalSpend)}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("purchases")}</p>
-          <p className="mt-2 text-2xl font-semibold text-navy-600">{periodRows.length}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("avg_cost_unit")}</p>
-          <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(avgUnitCost)}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs font-semibold tracking-wide text-navy-300 uppercase">{t("ytd_total")}</p>
-          <p className="mt-2 text-2xl font-semibold text-navy-600">{formatCurrency(ytdTotal)}</p>
-        </Card>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label={t("total_spent_period", { period: periodLabel })}
+          value={formatCurrency(totalSpend)}
+          icon={<Wallet size={18} />}
+        />
+        <StatCard label={t("purchases")} value={periodRows.length} icon={<ShoppingBag size={18} />} />
+        <StatCard label={t("avg_cost_unit")} value={formatCurrency(avgUnitCost)} icon={<Calculator size={18} />} />
+        <StatCard label={t("ytd_total")} value={formatCurrency(ytdTotal)} icon={<CalendarRange size={18} />} />
       </div>
 
       <Card>
         <CardHeader title={t("equipment_other_purchases_title")} description={periodLabel} />
         {periodRows.length === 0 ? (
-          <p className="p-6 text-center text-sm text-navy-300">{t("no_equipment_purchases_period")}</p>
+          <EmptyState
+            icon={<Wallet size={20} />}
+            title={t("no_equipment_purchases_title")}
+            message={t("no_equipment_purchases_period")}
+            ctaLabel={t("add_transaction")}
+            ctaHref="/app/finance/transactions/new"
+          />
         ) : (
           <EquipmentTable
             rows={periodRows.map((r) => ({

@@ -39,7 +39,7 @@ export function PeriodSelector({ current }: { current: Period }) {
           key={p}
           type="button"
           onClick={() => setPeriod(p)}
-          className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
             current === p
               ? "border-navy-600 bg-navy-600 text-white"
               : "border-navy-100 text-navy-500 hover:bg-navy-25"

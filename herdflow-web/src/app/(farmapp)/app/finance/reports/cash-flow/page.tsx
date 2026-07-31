@@ -9,7 +9,7 @@ import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { getCashFlowStatement } from "@/lib/farm-finance/queries";
 import { resolvePeriod, type Period } from "@/lib/farm-finance/periods";
 import { formatCurrency } from "@/lib/farm-finance/format";
-import { Card, CardHeader } from "@/components/farm/Card";
+import { Card, CardHeader, Badge } from "@/components/farm/Card";
 import { PeriodSelector } from "@/components/farm/PeriodSelector";
 import { DownloadPdfButton } from "@/components/farm/DownloadPdfButton";
 
@@ -69,6 +69,7 @@ export default async function CashFlowStatementPage({
             label={t("net_cash_financing")}
             value={cf.financing}
             sub={t("net_cash_financing_note")}
+            notTrackedLabel={t("not_tracked_yet_label")}
           />
           <Row label={t("net_movement_in_cash")} value={cf.netMovement} bold border big />
         </div>
@@ -84,6 +85,7 @@ function Row({
   bold,
   border,
   big,
+  notTrackedLabel,
 }: {
   label: string;
   value: number;
@@ -91,18 +93,28 @@ function Row({
   bold?: boolean;
   border?: boolean;
   big?: boolean;
+  /** This category has no data model yet (e.g. loans/owner contributions) --
+   * the underlying value is always 0, which would otherwise be
+   * indistinguishable from "genuinely zero activity this period". Pass a
+   * label to show instead of a currency figure, so farmers don't misread
+   * "unsupported" as "nothing happened". */
+  notTrackedLabel?: string;
 }) {
   return (
     <div className={`py-2 ${border ? "border-t border-navy-100 pt-2.5" : ""}`}>
       <div className="flex items-center justify-between">
         <span className={bold ? "font-semibold text-navy-600" : "text-navy-600"}>{label}</span>
-        <span
-          className={`${bold ? "font-semibold" : ""} ${big ? "text-lg" : ""} ${
-            value < 0 ? "text-[var(--status-danger-text)]" : "text-navy-600"
-          }`}
-        >
-          {value < 0 ? `(${formatCurrency(Math.abs(value))})` : formatCurrency(value)}
-        </span>
+        {notTrackedLabel ? (
+          <Badge variant="neutral">{notTrackedLabel}</Badge>
+        ) : (
+          <span
+            className={`${bold ? "font-semibold" : ""} ${big ? "text-lg" : ""} ${
+              value < 0 ? "text-[var(--status-danger-text)]" : "text-navy-600"
+            }`}
+          >
+            {value < 0 ? `(${formatCurrency(Math.abs(value))})` : formatCurrency(value)}
+          </span>
+        )}
       </div>
       {sub && <p className="text-xs text-navy-300">{sub}</p>}
     </div>

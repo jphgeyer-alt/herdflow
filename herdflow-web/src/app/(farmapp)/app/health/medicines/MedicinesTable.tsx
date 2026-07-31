@@ -3,8 +3,10 @@
 // Search + category filter + pagination, mirroring HerdListTable's pattern.
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Pill } from "lucide-react";
 import { Badge } from "@/components/farm/Card";
 import { Pagination } from "@/components/farm/Pagination";
+import { EmptyState } from "@/components/farm/EmptyState";
 
 const PAGE_SIZE = 20;
 
@@ -73,20 +75,34 @@ export function MedicinesTable({ medicines }: { medicines: MedicineRow[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="rounded-lg border border-navy-100 bg-white p-6 text-center text-sm text-navy-300">
-          {medicines.length === 0 ? t("no_medicines_yet") : t("no_medicines_filtered")}
-        </p>
+        <div className="rounded-lg border border-navy-100 bg-white">
+          {medicines.length === 0 ? (
+            <EmptyState
+              icon={<Pill size={20} />}
+              title={t("no_medicines_yet")}
+              message={t("no_medicines_yet_message")}
+              ctaLabel={t("add_medicine")}
+              ctaHref="/app/health/medicines/new"
+            />
+          ) : (
+            <EmptyState
+              icon={<Pill size={20} />}
+              title={t("no_medicines_filtered")}
+              message={t("no_medicines_filtered_hint")}
+            />
+          )}
+        </div>
       ) : (
         <div className="rounded-lg border border-navy-100 bg-white">
-          <div className="overflow-x-auto">
+          <div className="max-h-[65vh] overflow-y-auto overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-navy-50 text-xs font-semibold tracking-wide text-navy-300 uppercase">
-                  <th className="px-4 py-2 text-left">{t("medicine_name")}</th>
-                  <th className="px-4 py-2 text-left">{t("category")}</th>
-                  <th className="px-4 py-2 text-right">{t("quantity_in_stock")}</th>
-                  <th className="px-4 py-2 text-left">{t("dosage_unit")}</th>
-                  <th className="px-4 py-2 text-left">{t("status")}</th>
+                  <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("medicine_name")}</th>
+                  <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("category")}</th>
+                  <th className="sticky top-0 z-10 bg-white px-4 py-2 text-right">{t("quantity_in_stock")}</th>
+                  <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("dosage_unit")}</th>
+                  <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-navy-50">

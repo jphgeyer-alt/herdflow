@@ -1,8 +1,10 @@
 // WEBSITE — herdflow-web/src/app/(farmapp)/app/profile/activity/page.tsx
 import { getTranslations } from "next-intl/server";
+import { Activity } from "lucide-react";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { listActivity } from "@/lib/farm-profile/queries";
 import { Card, CardHeader } from "@/components/farm/Card";
+import { EmptyState } from "@/components/farm/EmptyState";
 import { ActivityFeedList, type ActivityLogRow } from "./ActivityFeedList";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +32,11 @@ export default async function ActivityFeedPage() {
       <Card>
         <CardHeader title={t("activity_title")} />
         {rows.length === 0 ? (
-          <p className="p-6 text-center text-sm text-navy-300">{t("no_activity_yet")}</p>
+          <EmptyState
+            icon={<Activity size={20} />}
+            title={t("no_activity_yet")}
+            message={t("no_activity_yet_message")}
+          />
         ) : (
           <ActivityFeedList logs={rows} />
         )}

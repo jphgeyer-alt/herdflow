@@ -306,7 +306,7 @@ export function CampsMap({
       <button
         type="button"
         onClick={() => setRankingOpen((v) => !v)}
-        className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-navy-600 shadow-lg hover:bg-navy-25"
+        className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-navy-600 shadow-lg hover:bg-navy-25"
       >
         <ListOrdered size={16} />
         {t("ranking_panel_toggle")}
@@ -316,7 +316,7 @@ export function CampsMap({
         type="button"
         onClick={locateMe}
         disabled={locating}
-        className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-full bg-navy-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-navy-700 disabled:opacity-60"
+        className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-lg bg-navy-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-navy-700 disabled:opacity-60"
       >
         <LocateFixed size={16} />
         {t("locate_me")}
@@ -371,7 +371,7 @@ export function CampsMap({
               <div>
                 <h3 className="text-navy-600 text-lg font-semibold">{selected.name}</h3>
                 <span
-                  className="mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-white"
+                  className="mt-1 inline-flex items-center rounded-lg px-2.5 py-0.5 text-xs font-semibold text-white"
                   style={{ backgroundColor: STATUS_COLOR[selected.currentStatus] || "#6B6B6B" }}
                 >
                   {t(`status_${selected.currentStatus.toLowerCase()}`)}

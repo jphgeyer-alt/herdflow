@@ -5,8 +5,10 @@
 // server-side, bounded to 200 rows).
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { HeartPulse } from "lucide-react";
 import { Badge } from "@/components/farm/Card";
 import { Pagination } from "@/components/farm/Pagination";
+import { EmptyState } from "@/components/farm/EmptyState";
 import { formatDate, formatCurrency } from "@/lib/farm-finance/format";
 
 const PAGE_SIZE = 20;
@@ -80,21 +82,35 @@ export function HealthHistoryTable({ records }: { records: HealthRecordRow[] }) 
       </div>
 
       {filtered.length === 0 ? (
-        <p className="rounded-lg border border-navy-100 bg-white p-6 text-center text-sm text-navy-300">
-          {records.length === 0 ? t("no_health_records_yet") : t("no_health_records_filtered")}
-        </p>
+        <div className="rounded-lg border border-navy-100 bg-white">
+          {records.length === 0 ? (
+            <EmptyState
+              icon={<HeartPulse size={20} />}
+              title={t("no_health_records_yet")}
+              message={t("no_health_records_yet_message")}
+              ctaLabel={t("add_health_event")}
+              ctaHref="/app/health/new"
+            />
+          ) : (
+            <EmptyState
+              icon={<HeartPulse size={20} />}
+              title={t("no_health_records_filtered")}
+              message={t("no_health_records_filtered_hint")}
+            />
+          )}
+        </div>
       ) : (
         <div className="rounded-lg border border-navy-100 bg-white">
-          <div className="overflow-x-auto">
+          <div className="max-h-[65vh] overflow-y-auto overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-navy-50 text-xs font-semibold tracking-wide text-navy-300 uppercase">
-                  <th className="px-4 py-2 text-left">{t("event_date")}</th>
-                  <th className="px-4 py-2 text-left">{t("animal")}</th>
-                  <th className="px-4 py-2 text-left">{t("event_type")}</th>
-                  <th className="px-4 py-2 text-left">{t("description")}</th>
-                  <th className="px-4 py-2 text-left">{t("status")}</th>
-                  <th className="px-4 py-2 text-right">{t("cost")}</th>
+                  <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("event_date")}</th>
+                  <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("animal")}</th>
+                  <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("event_type")}</th>
+                  <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("description")}</th>
+                  <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("status")}</th>
+                  <th className="sticky top-0 z-10 bg-white px-4 py-2 text-right">{t("cost")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-navy-50">

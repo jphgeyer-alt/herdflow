@@ -6,9 +6,10 @@
 // list is already loaded, so filtering/sorting/export need no round trip.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronUp, ChevronDown, Download } from "lucide-react";
+import { ChevronUp, ChevronDown, Download, ArrowLeftRight } from "lucide-react";
 import { INCOME_CATS, EXPENSE_CATS, categoryLabelKey } from "@/lib/farm-finance/categories";
 import { formatCurrency, formatDate } from "@/lib/farm-finance/format";
+import { EmptyState } from "@/components/farm/EmptyState";
 
 export interface TxRow {
   id: string;
@@ -26,6 +27,36 @@ export interface TxRow {
 type SortKey = "date" | "description" | "category" | "supplier" | "amount" | "vatAmount" | "inclVat" | "invoiceNumber";
 type TypeFilter = "all" | "income" | "expense";
 type VatFilter = "all" | "vat" | "no-vat";
+
+function SortHeader({
+  label,
+  sortKeyId,
+  right,
+  sortKey,
+  sortDir,
+  onToggle,
+}: {
+  label: string;
+  sortKeyId: SortKey;
+  right?: boolean;
+  sortKey: SortKey;
+  sortDir: "asc" | "desc";
+  onToggle: (key: SortKey) => void;
+}) {
+  const active = sortKey === sortKeyId;
+  return (
+    <th className={`sticky top-0 z-10 bg-white px-4 py-2 ${right ? "text-right" : "text-left"}`}>
+      <button
+        type="button"
+        onClick={() => onToggle(sortKeyId)}
+        className={`inline-flex items-center gap-1 hover:text-navy-600 ${active ? "text-navy-600" : ""}`}
+      >
+        {label}
+        {active ? sortDir === "asc" ? <ChevronUp size={12} /> : <ChevronDown size={12} /> : null}
+      </button>
+    </th>
+  );
+}
 
 const ALL_CATS = [...INCOME_CATS, ...EXPENSE_CATS];
 
@@ -156,28 +187,6 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
     URL.revokeObjectURL(url);
   }
 
-  function SortHeader({ label, sortKeyId, right }: { label: string; sortKeyId: SortKey; right?: boolean }) {
-    const active = sortKey === sortKeyId;
-    return (
-      <th className={`px-4 py-2 ${right ? "text-right" : "text-left"}`}>
-        <button
-          type="button"
-          onClick={() => toggleSort(sortKeyId)}
-          className={`inline-flex items-center gap-1 hover:text-navy-600 ${active ? "text-navy-600" : ""}`}
-        >
-          {label}
-          {active ? (
-            sortDir === "asc" ? (
-              <ChevronUp size={12} />
-            ) : (
-              <ChevronDown size={12} />
-            )
-          ) : null}
-        </button>
-      </th>
-    );
-  }
-
   return (
     <div className="space-y-4">
       {/* Filter bar */}
@@ -261,24 +270,83 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
       </div>
 
       {sorted.length === 0 ? (
-        <p className="rounded-lg border border-navy-100 bg-white p-6 text-center text-sm text-navy-300">
-          {rows.length === 0 ? t("no_transactions_yet") : t("no_transactions_filtered_csv")}
-        </p>
+        <div className="rounded-lg border border-navy-100 bg-white">
+          {rows.length === 0 ? (
+            <EmptyState
+              icon={<ArrowLeftRight size={20} />}
+              title={t("no_transactions_yet")}
+              message={t("no_transactions_yet_message")}
+              ctaLabel={t("add_transaction")}
+              ctaHref="/app/finance/transactions/new"
+            />
+          ) : (
+            <EmptyState
+              icon={<ArrowLeftRight size={20} />}
+              title={t("no_transactions_filtered_csv")}
+              message={t("no_transactions_filtered_hint")}
+            />
+          )}
+        </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-navy-100 bg-white">
+        <div className="max-h-[65vh] overflow-y-auto overflow-x-auto rounded-lg border border-navy-100 bg-white">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-navy-50 text-xs font-semibold tracking-wide text-navy-300 uppercase">
-                <SortHeader label={t("date")} sortKeyId="date" />
-                <SortHeader label={t("description")} sortKeyId="description" />
-                <SortHeader label={t("category")} sortKeyId="category" />
-                <SortHeader label={t("supplier")} sortKeyId="supplier" />
-                <SortHeader label={t("excl_vat")} sortKeyId="amount" right />
-                <SortHeader label={t("vat")} sortKeyId="vatAmount" right />
-                <SortHeader label={t("incl_vat")} sortKeyId="inclVat" right />
-                <SortHeader label={t("invoice_number")} sortKeyId="invoiceNumber" />
-                <th className="px-4 py-2 text-left">{t("status")}</th>
-                <th className="px-4 py-2 text-right">{t("balance")}</th>
+                <SortHeader label={t("date")} sortKeyId="date" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                <SortHeader
+                  label={t("description")}
+                  sortKeyId="description"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
+                <SortHeader
+                  label={t("category")}
+                  sortKeyId="category"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
+                <SortHeader
+                  label={t("supplier")}
+                  sortKeyId="supplier"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
+                <SortHeader
+                  label={t("excl_vat")}
+                  sortKeyId="amount"
+                  right
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
+                <SortHeader
+                  label={t("vat")}
+                  sortKeyId="vatAmount"
+                  right
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
+                <SortHeader
+                  label={t("incl_vat")}
+                  sortKeyId="inclVat"
+                  right
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
+                <SortHeader
+                  label={t("invoice_number")}
+                  sortKeyId="invoiceNumber"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
+                <th className="sticky top-0 z-10 bg-white px-4 py-2 text-left">{t("status")}</th>
+                <th className="sticky top-0 z-10 bg-white px-4 py-2 text-right">{t("balance")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy-50">
@@ -299,7 +367,7 @@ export function TransactionsTable({ rows }: { rows: TxRow[] }) {
                   </td>
                   <td className="px-4 py-2.5 text-navy-500">{tx.invoiceNumber || "—"}</td>
                   <td className="px-4 py-2.5">
-                    <span className="rounded-full bg-[var(--status-success-bg)] px-2 py-0.5 text-xs font-semibold text-[var(--status-success-text)]">
+                    <span className="rounded-lg bg-[var(--status-success-bg)] px-2 py-0.5 text-xs font-semibold text-[var(--status-success-text)]">
                       {t("recorded")}
                     </span>
                   </td>
