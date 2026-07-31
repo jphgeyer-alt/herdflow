@@ -4,7 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { PlusCircle } from "lucide-react";
 import { getFarmWebUser } from "@/lib/farm-web-auth";
 import { listMedicines } from "@/lib/farm-health/queries";
-import { Card, CardHeader, Badge } from "@/components/farm/Card";
+import { Card, CardHeader } from "@/components/farm/Card";
+import { MedicinesTable, type MedicineRow } from "./MedicinesTable";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,14 @@ export default async function MedicinesPage() {
   if (!user) return null;
 
   const medicines = await listMedicines(user.effectiveFarmerId);
+  const rows: MedicineRow[] = medicines.map((m) => ({
+    id: m.id,
+    name: m.name,
+    category: m.category,
+    quantityInStock: Number(m.quantityInStock),
+    reorderLevel: m.reorderLevel != null ? Number(m.reorderLevel) : null,
+    dosageUnit: m.dosageUnit,
+  }));
 
   return (
     <div className="space-y-6 pb-10">
@@ -29,41 +38,9 @@ export default async function MedicinesPage() {
 
       <Card>
         <CardHeader title={t("medicines_title")} />
-        {medicines.length === 0 ? (
-          <p className="p-6 text-center text-sm text-navy-300">{t("no_medicines_yet")}</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-navy-50 text-xs font-semibold tracking-wide text-navy-300 uppercase">
-                  <th className="px-4 py-2 text-left">{t("medicine_name")}</th>
-                  <th className="px-4 py-2 text-left">{t("category")}</th>
-                  <th className="px-4 py-2 text-right">{t("quantity_in_stock")}</th>
-                  <th className="px-4 py-2 text-left">{t("dosage_unit")}</th>
-                  <th className="px-4 py-2 text-left">{t("status")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-navy-50">
-                {medicines.map((m) => {
-                  const qty = Number(m.quantityInStock);
-                  const reorder = m.reorderLevel != null ? Number(m.reorderLevel) : null;
-                  const isLow = reorder != null && qty <= reorder;
-                  return (
-                    <tr key={m.id} className="hover:bg-navy-25">
-                      <td className="px-4 py-2.5 font-medium text-navy-600">{m.name}</td>
-                      <td className="px-4 py-2.5 text-navy-500">{m.category}</td>
-                      <td className="px-4 py-2.5 text-right text-navy-500">{qty}</td>
-                      <td className="px-4 py-2.5 text-navy-500">{m.dosageUnit || "—"}</td>
-                      <td className="px-4 py-2.5">
-                        <Badge variant={isLow ? "danger" : "success"}>{isLow ? t("low_stock") : t("in_stock")}</Badge>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="p-4">
+          <MedicinesTable medicines={rows} />
+        </div>
       </Card>
     </div>
   );

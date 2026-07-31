@@ -104,13 +104,14 @@ img {
 /*
  * Farm-app design system (STORE-D1) — scoped retint for the /app section
  * only (finance, camps, herd, health, market, profile). Deliberately NOT
- * touched in :root above: --navy-*/--status-* are shared by ~60 files
- * across (store)/(admin), so overriding them globally would repaint the
- * public storefront and admin panel too. Scoping to .farmapp-theme (applied
- * once, in src/app/(farmapp)/layout.tsx) means every existing navy-*/
- * status-* Tailwind class already used by finance/camps automatically
- * resolves to these new values for anything nested under that wrapper,
- * while (store)/(admin) keep the original navy-blue palette untouched.
+ * touched in :root above: the navy and status color variables are shared
+ * by ~60 files across (store)/(admin), so overriding them globally would
+ * repaint the public storefront and admin panel too. Scoping to
+ * .farmapp-theme (applied once, in src/app/(farmapp)/layout.tsx) means
+ * every existing navy- and status- Tailwind class already used by
+ * finance/camps automatically resolves to these new values for anything
+ * nested under that wrapper, while (store)/(admin) keep the original
+ * navy-blue palette untouched.
  */
 .farmapp-theme {
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
